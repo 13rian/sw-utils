@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+	<!-- file rolling over based in time and size, up to 7 files per day if 
+		log-file gets larger than the specified size here 1MB -->
+	<Appenders>
+		<Console name="Console" target="SYSTEM_OUT">
+			<!-- this pattern outputs time, log level, class name only, line number and the message -->
+      		<PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %-20c{1} (%-4line) - %msg%n"/>
+		</Console>
+		<RollingFile name="RollingFile" fileName="log/app.log" filePattern="log/test/app-%d{MM-dd-yyyy}-%i.log.gz">
+			<PatternLayout>
+				<Pattern>%d %highlight{%-5level} %-20c{1} (%-4line) - %msg%n</Pattern>
+			</PatternLayout>
+			<Policies>
+				<!-- default value, archives will be crated for every day -->
+				<TimeBasedTriggeringPolicy />
+				<!-- save file in the archive that are more than 1MB -->
+				<SizeBasedTriggeringPolicy size="1 MB" />
+			</Policies>
+			<!-- maximal 20 files are kept, the oldest ones get deleted if more than 
+				21 are written per day -->
+			<DefaultRolloverStrategy max="20">
+				<!-- specifies the maximal number of child directories to visit to delete the files -->
+				<Delete basePath="log" maxDepth="2">
+					<!-- specify the filenames to delete -->
+					<IfFileName glob="*/app-*.log.gz">
+						<!-- delete files older than or equal to 5 day -->
+						<IfLastModified age="5d">
+							<!-- keep the most recent 3-1 files or the most recent 100GB <IfAny> 
+								<IfAccumulatedFileSize exceeds="100 GB" /> <IfAccumulatedFileCount exceeds="2"/> </IfAny> -->
+						</IfLastModified>
+					</IfFileName>
+				</Delete>
+			</DefaultRolloverStrategy>
+		</RollingFile>
+	</Appenders>
+
+	<Loggers>
+		<!-- define the log-level of the root logger -->
+		<Root level="debug">
+			<AppenderRef ref="Console" />
+			<AppenderRef ref="RollingFile" />
+		</Root>
+	
+		<!-- define the logger for the logTester class and all its subclasses with level trace -->
+		<Logger name="loggertest.LogTester" level="trace">
+			<!-- another appender ref could be used, if a different policy should be used -->
+			<AppenderRef ref="RollingFile" />
+		</Logger>
+	</Loggers>
+
+	<!-- <Loggers> <Root level="debug"> <AppenderRef ref="Console" /> <AppenderRef 
+		ref="logFile"/> </Root> </Loggers> -->
+</Configuration>

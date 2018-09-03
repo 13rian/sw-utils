@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<XMLTest xmlns="http://www.celsi.ch">
+    <Players>
+        <Player>
+            <name>Paul Morphy</name>
+            <age>27</age>
+        </Player>
+        <Player id="5">
+            <name>Bobby Fischer</name>
+            <age>31</age>
+        </Player>
+    </Players>
+</XMLTest>

@@ -1,0 +1,21 @@
+{
+	"strProp": 			"stringVal",
+	"intProp": 			67,
+	"longProp": 		1564981316,
+	"floatProp":		23.4,
+	"booleanProp": 		true,
+	"strArrProp": 		["str1", "str2", "str3"],
+	"intArrProp": 		[67, 68, 69],
+	"longArrProp": 		[1564981316, 567434245, 234265245614],
+	"floatArrProp":		[23.4, 3.556, 2.4546],
+	"booleanArrProp": 	[true, false, false, true],
+	"objProp": 			{
+		"name": 	"Brian",
+		"weight": 	65.2
+	},
+	"objArrProp": 	[
+		{"name": "Brian", 	"weight": 65.2},
+		{"name": "Roy", 	"weight": 80.3},
+		{"name": "Freddy", 	"weight": 77.7}
+	]		
+}

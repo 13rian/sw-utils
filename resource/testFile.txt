@@ -1,0 +1,2 @@
+This is a simple text in a file.
+To check handling of more than one line, this is another line.
