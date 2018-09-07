@@ -721,26 +721,30 @@ public class CryptoUtils {
 	/** 
 	 * generates a password hash using the PBKDF2WithHmacSHA1 algorithm.
 	 * @param password 		the string password to hash
-	 * @return 				hash:salt:iterationCount, the hash and the salt is in base64
-	 * @throws NoSuchAlgorithmException  	no such algorithm exception
-	 * @throws InvalidKeySpecException  	invalid key spec exception
+	 * @return 				hash:salt:iterationCount, the hash and the salt is in base64 or null if an error occured
 	 */
-	public static String hashPassword(String password) throws NoSuchAlgorithmException, InvalidKeySpecException {
-		int iterations = 1000; 					// the number how often the password is hashed
-		char[] chars = password.toCharArray();
-		
-		// create the salt
-		SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
-		byte[] salt = new byte[16];
-		sr.nextBytes(salt);
+	public static String hashPassword(String password) {
+		try {
+			int iterations = 1000; 					// the number how often the password is hashed
+			char[] chars = password.toCharArray();
 
-		// generate the hash
-		PBEKeySpec spec = new PBEKeySpec(chars, salt, iterations, 64 * 8);
-		SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-		byte[] hash = skf.generateSecret(spec).getEncoded();
+			// create the salt
+			SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
+			byte[] salt = new byte[16];
+			sr.nextBytes(salt);
+
+			// generate the hash
+			PBEKeySpec spec = new PBEKeySpec(chars, salt, iterations, 64 * 8);
+			SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+			byte[] hash = skf.generateSecret(spec).getEncoded();
+
+			// concatenate the hash the salt and the number of iterations
+			return Conversion.byteArrayToBase64(hash) + ":" + Conversion.byteArrayToBase64(salt) + ":" + iterations;
 		
-		// concatenate the hash the salt and the number of iterations
-		return Conversion.byteArrayToBase64(hash) + ":" + Conversion.byteArrayToBase64(salt) + ":" + iterations;
+		} catch (Exception e) {
+			logger.error("error hashing the password");
+			return null;
+		}
 	}
 
 

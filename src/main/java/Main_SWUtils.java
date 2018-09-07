@@ -77,124 +77,124 @@ public class Main_SWUtils {
 		/////////////////////////////////////////////////////////////////////////////////////////////////
 		// 											AES crypto							   			   //
 		/////////////////////////////////////////////////////////////////////////////////////////////////
-		System.out.println("\n AES CRYPTO");
-		
-		// Note: The JCE unlimited strength file needs to be installed for the crypto to work
-		CryptoUtils.registerBC(); 		// register the bouncy castle provider
-		
-		String message = "This is the message to encrypt";
-		logger.info("message to encrypt: "  + message);
-		int keyLength = 256;     								// 128,192,256 bits are allowed
-				
-		// generate the secret key
-		SecretKey secretKey = CryptoUtils.generateKey(keyLength);		
-		
-		// encrypt the message
-		String encryptedMsg = CryptoUtils.encrypt(message, secretKey);
-		logger.info("encrypted String: " + encryptedMsg);		
-		
-		// decrypt the cipher text
-		String decryptedMsg = CryptoUtils.decrypt(encryptedMsg, secretKey);
-		logger.info("decrypted cipher text: " + decryptedMsg);
-		
-		
-		// test only encrypting byte arrays
-		String msg2 = "message2";
-		logger.info("message2 to encrypt: " + msg2);
-		
-		// encrypt
-		byte[] encryptedBytes = CryptoUtils.encrypt(msg2.getBytes(StandardCharsets.UTF_8), secretKey);
-		
-		// decrypt
-		byte[] decryptedBytes = CryptoUtils.decrypt(encryptedBytes, secretKey);
-		logger.info("message decrypted: " + new String(decryptedBytes, StandardCharsets.UTF_8));
-		
-		// unregister the bouncy castle provider
-		CryptoUtils.unregisterBC(); 		
+//		System.out.println("\n AES CRYPTO");
+//		
+//		// Note: The JCE unlimited strength file needs to be installed for the crypto to work
+//		CryptoUtils.registerBC(); 		// register the bouncy castle provider
+//		
+//		String message = "This is the message to encrypt";
+//		logger.info("message to encrypt: "  + message);
+//		int keyLength = 256;     								// 128,192,256 bits are allowed
+//				
+//		// generate the secret key
+//		SecretKey secretKey = CryptoUtils.generateKey(keyLength);		
+//		
+//		// encrypt the message
+//		String encryptedMsg = CryptoUtils.encrypt(message, secretKey);
+//		logger.info("encrypted String: " + encryptedMsg);		
+//		
+//		// decrypt the cipher text
+//		String decryptedMsg = CryptoUtils.decrypt(encryptedMsg, secretKey);
+//		logger.info("decrypted cipher text: " + decryptedMsg);
+//		
+//		
+//		// test only encrypting byte arrays
+//		String msg2 = "message2";
+//		logger.info("message2 to encrypt: " + msg2);
+//		
+//		// encrypt
+//		byte[] encryptedBytes = CryptoUtils.encrypt(msg2.getBytes(StandardCharsets.UTF_8), secretKey);
+//		
+//		// decrypt
+//		byte[] decryptedBytes = CryptoUtils.decrypt(encryptedBytes, secretKey);
+//		logger.info("message decrypted: " + new String(decryptedBytes, StandardCharsets.UTF_8));
+//		
+//		// unregister the bouncy castle provider
+//		CryptoUtils.unregisterBC(); 		
 		
 		
 		
 		/////////////////////////////////////////////////////////////////////////////////////////////////
 		// 											CMS crypto							   			   //
 		/////////////////////////////////////////////////////////////////////////////////////////////////
-		System.out.println("\n CMS CRYPTO");
-		
-		// Note: The JCE unlimited strength file needs to be installed for the crypto to work
-		CryptoUtils.registerBC(); 		// register the bouncy castle provider
-			
-		
-		// define the certificate directories
-		String sep = File.separator;
-		String receiverEncDir = System.getProperty("user.dir") + sep + "cmsCerts" + sep + "encryption" + sep + "receiver" + sep;
-		String senderEncDir = System.getProperty("user.dir") + sep + "cmsCerts" + sep + "encryption" + sep + "sender" + sep;
-		String senderSigDir = System.getProperty("user.dir") + sep + "cmsCerts" + sep + "signature" + sep + "sender" + sep;
-		
-		// load the certificates/keys for encryption
-		X509Certificate receiverEncCert = CryptoUtils.loadCertificate(receiverEncDir + "certificate.pem");  	// receiver certificate
-		X509Certificate senderEncCert = CryptoUtils.loadCertificate(senderEncDir + "certificate.pem"); 		// sender certificate
-		PrivateKey senderEncKey = CryptoUtils.loadPrivateKey(senderEncDir + "key.p12", "celsi-pw");   		// sender private key
-		
-		// load the key for the signature
-		PrivateKey senderSigKey = CryptoUtils.loadPrivateKey(senderSigDir + "key.p12", "celsi-pw");   		// sender private key
-		
-		// load the certificate for the verification
-		X509Certificate senderSigCert = CryptoUtils.loadCertificate(senderSigDir + "certificate.pem"); 		// sender certificate
-		
-
-		// load the certificates/keys for decryption
-		PrivateKey receiverEncKey = CryptoUtils.loadPrivateKey(receiverEncDir + "key.p12", "celsi-pw");   		// sender private key
-	
-		// print out the signature algorithm
-		logger.info("signature algorithm: " + senderEncCert.getSigAlgName());
-		
-		
-		
-		
-		// 									start the encryption 												 //
-		///////////////////////////////////////////////////////////////////////////////////////////////////////////
-		message = "Hello";
-		
-		// sign the original message
-		byte[] messageBytes = message.getBytes(StandardCharsets.UTF_8);
-		byte[] signature = CryptoUtils.sign(senderSigKey, messageBytes);
-				
-		String sigBase64 = Conversion.byteArrayToBase64(signature);
-		logger.info("signature of the message: " + Conversion.byteArrayToBase64(signature));
-		logger.info("signature base64 length: " + sigBase64.length() + " , byte length: " + signature.length);
-		
-		
-		// encrypt: message:signature (this is not standard but the message needs to be transmitted somehow)
-		String dataToEncryptStr = Conversion.byteArrayToBase64(messageBytes) + ":" + sigBase64;
-		byte[] dataToEncrypt = dataToEncryptStr.getBytes(StandardCharsets.UTF_8);
-		encryptedBytes = CryptoUtils.createEnvelopeData(receiverEncCert, senderEncCert, senderEncKey, dataToEncrypt);
-		logger.info(Conversion.byteArrayToBase64(encryptedBytes));
-		
-		
-		
-		
-		// 									start the decryption 												 //
-		///////////////////////////////////////////////////////////////////////////////////////////////////////////
-		// decrypt
-		decryptedBytes = CryptoUtils.decrypt(receiverEncCert, receiverEncKey, encryptedBytes);
-		
-		// extract the signature and the message
-		String decryptedStr = new String(decryptedBytes, StandardCharsets.UTF_8);
-		String[] parts = decryptedStr.split(":");
-		byte[] mes = Conversion.base64StrToByteArray(parts[0]);
-		byte[] sig = Conversion.base64StrToByteArray(parts[1]);
-		
-		String decrypted = new String(mes,  StandardCharsets.UTF_8);
-		logger.info("decrypted: " + decrypted);
-		
-		// verify
-		boolean isValidSig = CryptoUtils.verifySig(senderSigCert, mes, sig);
-		logger.info("is sig valid: " + isValidSig);
-		
-				
-				
-
-		// unregister the bouncy castle provider
-		CryptoUtils.unregisterBC(); 
+//		System.out.println("\n CMS CRYPTO");
+//		
+//		// Note: The JCE unlimited strength file needs to be installed for the crypto to work
+//		CryptoUtils.registerBC(); 		// register the bouncy castle provider
+//			
+//		
+//		// define the certificate directories
+//		String sep = File.separator;
+//		String receiverEncDir = System.getProperty("user.dir") + sep + "cmsCerts" + sep + "encryption" + sep + "receiver" + sep;
+//		String senderEncDir = System.getProperty("user.dir") + sep + "cmsCerts" + sep + "encryption" + sep + "sender" + sep;
+//		String senderSigDir = System.getProperty("user.dir") + sep + "cmsCerts" + sep + "signature" + sep + "sender" + sep;
+//		
+//		// load the certificates/keys for encryption
+//		X509Certificate receiverEncCert = CryptoUtils.loadCertificate(receiverEncDir + "certificate.pem");  	// receiver certificate
+//		X509Certificate senderEncCert = CryptoUtils.loadCertificate(senderEncDir + "certificate.pem"); 		// sender certificate
+//		PrivateKey senderEncKey = CryptoUtils.loadPrivateKey(senderEncDir + "key.p12", "celsi-pw");   		// sender private key
+//		
+//		// load the key for the signature
+//		PrivateKey senderSigKey = CryptoUtils.loadPrivateKey(senderSigDir + "key.p12", "celsi-pw");   		// sender private key
+//		
+//		// load the certificate for the verification
+//		X509Certificate senderSigCert = CryptoUtils.loadCertificate(senderSigDir + "certificate.pem"); 		// sender certificate
+//		
+//
+//		// load the certificates/keys for decryption
+//		PrivateKey receiverEncKey = CryptoUtils.loadPrivateKey(receiverEncDir + "key.p12", "celsi-pw");   		// sender private key
+//	
+//		// print out the signature algorithm
+//		logger.info("signature algorithm: " + senderEncCert.getSigAlgName());
+//		
+//		
+//		
+//		
+//		// 									start the encryption 												 //
+//		///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//		String message = "Hello";
+//		
+//		// sign the original message
+//		byte[] messageBytes = message.getBytes(StandardCharsets.UTF_8);
+//		byte[] signature = CryptoUtils.sign(senderSigKey, messageBytes);
+//				
+//		String sigBase64 = Conversion.byteArrayToBase64(signature);
+//		logger.info("signature of the message: " + Conversion.byteArrayToBase64(signature));
+//		logger.info("signature base64 length: " + sigBase64.length() + " , byte length: " + signature.length);
+//		
+//		
+//		// encrypt: message:signature (this is not standard but the message needs to be transmitted somehow)
+//		String dataToEncryptStr = Conversion.byteArrayToBase64(messageBytes) + ":" + sigBase64;
+//		byte[] dataToEncrypt = dataToEncryptStr.getBytes(StandardCharsets.UTF_8);
+//		byte[] encryptedBytes = CryptoUtils.createEnvelopeData(receiverEncCert, senderEncCert, senderEncKey, dataToEncrypt);
+//		logger.info(Conversion.byteArrayToBase64(encryptedBytes));
+//		
+//		
+//		
+//		
+//		// 									start the decryption 												 //
+//		///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//		// decrypt
+//		byte[] decryptedBytes = CryptoUtils.decrypt(receiverEncCert, receiverEncKey, encryptedBytes);
+//		
+//		// extract the signature and the message
+//		String decryptedStr = new String(decryptedBytes, StandardCharsets.UTF_8);
+//		String[] parts = decryptedStr.split(":");
+//		byte[] mes = Conversion.base64StrToByteArray(parts[0]);
+//		byte[] sig = Conversion.base64StrToByteArray(parts[1]);
+//		
+//		String decrypted = new String(mes,  StandardCharsets.UTF_8);
+//		logger.info("decrypted: " + decrypted);
+//		
+//		// verify
+//		boolean isValidSig = CryptoUtils.verifySig(senderSigCert, mes, sig);
+//		logger.info("is sig valid: " + isValidSig);
+//		
+//				
+//				
+//
+//		// unregister the bouncy castle provider
+//		CryptoUtils.unregisterBC(); 
 		
 		
 		/////////////////////////////////////////////////////////////////////////////////////////////////

@@ -11,26 +11,26 @@ import static org.junit.jupiter.api.Assumptions.*;
 
 import org.junit.jupiter.api.AfterAll;
 
-class Lifecycle {
+public class Lifecycle {
 	 
 	@BeforeAll
-	static void initializeExternalResources() {
+	public static void initializeExternalResources() {
 		System.out.println("Initializing external resources...");
 	}
  
 	@BeforeEach
-	void initializeMockObjects() {
+	public void initializeMockObjects() {
 		System.out.println("Initializing mock objects...");
 	}
  
 	@Test
-	void someTest() {
+	public void someTest() {
 		System.out.println("Running some test...");
 		assertTrue(true);
 	}
  
 	@Test
-	void otherTest() {
+	public void otherTest() {
 		assumeTrue(true);
  
 		System.out.println("Running another test...");
@@ -39,17 +39,17 @@ class Lifecycle {
  
 	@Test
 	@Disabled
-	void disabledTest() {
+	public void disabledTest() {
 		System.exit(1);
 	}
  
 	@AfterEach
-	void tearDown() {
+	public void tearDown() {
 		System.out.println("Tearing down...");
 	}
  
 	@AfterAll
-	static void freeExternalResources() {
+	public static void freeExternalResources() {
 		System.out.println("Freeing external resources...");
 	}
  
