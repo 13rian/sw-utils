@@ -26,13 +26,13 @@ import com.google.gson.JsonElement;
 import com.mongodb.ServerAddress;
 
 import ch.wenkst.sw_utils.Utils;
-import ch.wenkst.sw_utils.conversions.Conversion;
+import ch.wenkst.sw_utils.conversion.Conversion;
 import ch.wenkst.sw_utils.crypto.CryptoUtils;
 import ch.wenkst.sw_utils.dates.DateHandler;
 import ch.wenkst.sw_utils.db.DBHandler;
 import ch.wenkst.sw_utils.db.EntityBase;
-import ch.wenkst.sw_utils.events.EventBoard;
-import ch.wenkst.sw_utils.events.managers.AsyncEventManager;
+import ch.wenkst.sw_utils.event.EventBoard;
+import ch.wenkst.sw_utils.event.managers.AsyncEventManager;
 import ch.wenkst.sw_utils.files.FileHandler;
 import ch.wenkst.sw_utils.files.JsonDoc;
 import ch.wenkst.sw_utils.files.XMLDoc;
@@ -578,44 +578,46 @@ public class Main_SWUtils {
 		///////////////////////////////////////////////////////////////////////////////////////////////
 		// 										test conversions									 //
 		///////////////////////////////////////////////////////////////////////////////////////////////
-		System.out.println("\n CONVERSION TEST");
+//		System.out.println("\n CONVERSION TEST");
+//
+//		// base64 String
+//		String base64Str = "aGVsbG8=";
+//		String base64Dec = Conversion.base64StrToStr(base64Str);
+//		logger.info("base64 decoded: " + base64Dec);
+//		logger.info("base64 encoded: " + Conversion.strToBase64Str(base64Dec));
 
-		// base64 String
-		String base64Str = "aGVsbG8=";
-		String base64Dec = Conversion.base64StrToStr(base64Str);
-		logger.info("base64 decoded: " + base64Dec);
-		logger.info("base64 encoded: " + Conversion.strToBase64Str(base64Dec));
-
-		// hex String
-		String hexStr = "68656C6C6F";   // hello
-		String hexDec = Conversion.hexStrToStr(hexStr);
-		logger.info("hex decoded: " + hexDec);
-		logger.info("hex encoded: " + Conversion.strToHexStr(hexDec));
+//		// hex String
+//		String hexStr = "68656C6C6F";   // hello
+//		String hexDec = Conversion.hexStrToStr(hexStr);
+//		logger.info("hex decoded: " + hexDec);
+//		logger.info("hex encoded: " + Conversion.strToHexStr(hexDec));
 		
 //		String hexString = Conversion.byteArrayToHexStr(Conversion.hexStrToByteArray(hexStr));
 //		String b64String = Conversion.byteArrayToBase64(Conversion.base64StrToByteArray(base64Str));
 
-		String hexStrNum = "B1B2";
-		logger.info(Conversion.hexStrToInt(hexStrNum));
-
-		logger.info(Conversion.intToHexStr(41378));
-		logger.info(Conversion.longToHexStr(45490));
-
-		// concatenate 2 arrays
-		int[] arr1 = {1,2,3};
-		int[] arr2 = {4,5,6};
-		int[] arr3 = {7,8};
-		int[] intConcat = Conversion.concatArrays(arr1, arr2, arr3);
-		logger.info("Concateneated int array: " + Arrays.toString(intConcat));
-
-		String[] arr4 = {"This", "is", "a"};
-		String[] arr5 = {"concatenated", "string"};
-		String[] stringConcat = Conversion.concatArrays(arr4, arr5);
-		logger.info("Concateneated string array: " + Arrays.toString(stringConcat)); 
+//		String hexStrNum = "B1B2";
+//		logger.info(Conversion.hexStrToInt(hexStrNum));
+//
+//		logger.info(Conversion.intToHexStr(41378));
+//		logger.info(Conversion.longToHexStr(45490));
+			
 		
-		// string handling
-		logger.info("expanded String FF: " + Conversion.padLeft("FF", '0', 4));
-		logger.info("reversed string Hello: " + Conversion.strReverse("Hello"));
+//
+//		// concatenate 2 arrays
+//		int[] arr1 = {1,2,3};
+//		int[] arr2 = {4,5,6};
+//		int[] arr3 = {7,8};
+//		int[] intConcat = Conversion.concatArrays(arr1, arr2, arr3);
+//		logger.info("Concateneated int array: " + Arrays.toString(intConcat));
+//
+//		String[] arr4 = {"This", "is", "a"};
+//		String[] arr5 = {"concatenated", "string"};
+//		String[] stringConcat = Conversion.concatArrays(arr4, arr5);
+//		logger.info("Concateneated string array: " + Arrays.toString(stringConcat)); 
+//		
+//		// string handling
+//		logger.info("expanded String FF: " + Conversion.padLeft("FF", '0', 4));
+//		logger.info("reversed string Hello: " + Conversion.strReverse("Hello"));
 
 
 		///////////////////////////////////////////////////////////////////////////////////////////////

@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils.events;
+package ch.wenkst.sw_utils.event;
 
 import java.util.HashMap;
 import java.util.concurrent.Executor;
@@ -6,10 +6,10 @@ import java.util.concurrent.Executor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import ch.wenkst.sw_utils.events.managers.AsyncEventManager;
-import ch.wenkst.sw_utils.events.managers.IEventManager;
-import ch.wenkst.sw_utils.events.managers.SyncEventManager;
-import ch.wenkst.sw_utils.events.managers.SyncSameEventEventManager;
+import ch.wenkst.sw_utils.event.managers.AsyncEventManager;
+import ch.wenkst.sw_utils.event.managers.IEventManager;
+import ch.wenkst.sw_utils.event.managers.SyncEventManager;
+import ch.wenkst.sw_utils.event.managers.SyncSameEventEventManager;
 
 
 /**

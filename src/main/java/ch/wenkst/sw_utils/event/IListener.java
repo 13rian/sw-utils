@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils.events;
+package ch.wenkst.sw_utils.event;
 
 /**
  * defines a listener

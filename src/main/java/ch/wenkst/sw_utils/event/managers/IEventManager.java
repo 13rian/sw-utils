@@ -1,6 +1,6 @@
-package ch.wenkst.sw_utils.events.managers;
+package ch.wenkst.sw_utils.event.managers;
 
-import ch.wenkst.sw_utils.events.IListener;
+import ch.wenkst.sw_utils.event.IListener;
 
 public interface IEventManager {
 	

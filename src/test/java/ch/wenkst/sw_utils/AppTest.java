@@ -1,38 +1,56 @@
 package ch.wenkst.sw_utils;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-/**
- * Unit test for simple App.
- */
-public class AppTest 
-    extends TestCase
-{
-    /**
-     * Create the test case
-     *
-     * @param testName name of the test case
-     */
-    public AppTest( String testName )
-    {
-        super( testName );
-    }
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.*;
 
-    /**
-     * @return the suite of tests being tested
-     */
-    public static Test suite()
-    {
-        return new TestSuite( AppTest.class );
-    }
+import org.junit.jupiter.api.AfterAll;
 
-    /**
-     * Rigourous Test :-)
-     */
-    public void testApp()
-    {
-        assertTrue( true );
-    }
+class Lifecycle {
+	 
+	@BeforeAll
+	static void initializeExternalResources() {
+		System.out.println("Initializing external resources...");
+	}
+ 
+	@BeforeEach
+	void initializeMockObjects() {
+		System.out.println("Initializing mock objects...");
+	}
+ 
+	@Test
+	void someTest() {
+		System.out.println("Running some test...");
+		assertTrue(true);
+	}
+ 
+	@Test
+	void otherTest() {
+		assumeTrue(true);
+ 
+		System.out.println("Running another test...");
+		assertNotEquals(1, 42, "Why would these be the same?");
+	}
+ 
+	@Test
+	@Disabled
+	void disabledTest() {
+		System.exit(1);
+	}
+ 
+	@AfterEach
+	void tearDown() {
+		System.out.println("Tearing down...");
+	}
+ 
+	@AfterAll
+	static void freeExternalResources() {
+		System.out.println("Freeing external resources...");
+	}
+ 
 }

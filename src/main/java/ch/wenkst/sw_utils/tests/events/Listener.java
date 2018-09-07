@@ -2,7 +2,7 @@ package ch.wenkst.sw_utils.tests.events;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import ch.wenkst.sw_utils.events.IListener;
+import ch.wenkst.sw_utils.event.IListener;
 
 public class Listener implements IListener {
 	final static Logger logger = LogManager.getLogger(Listener.class);    // initialize the logger

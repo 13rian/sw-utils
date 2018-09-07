@@ -1,9 +1,9 @@
-package ch.wenkst.sw_utils.events.managers;
+package ch.wenkst.sw_utils.event.managers;
 
 import java.util.HashMap;
 import java.util.concurrent.Executor;
 
-import ch.wenkst.sw_utils.events.IListener;
+import ch.wenkst.sw_utils.event.IListener;
 
 
 public class SyncSameEventEventManager implements IEventManager {

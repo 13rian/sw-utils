@@ -1,9 +1,9 @@
-package ch.wenkst.sw_utils.events.managers;
+package ch.wenkst.sw_utils.event.managers;
 
 import java.util.ArrayList;
 import java.util.concurrent.Executor;
 
-import ch.wenkst.sw_utils.events.IListener;
+import ch.wenkst.sw_utils.event.IListener;
 
 public class AsyncEventManager implements IEventManager {
 	public String eventName = "";      				// name of the event and id of the event manager

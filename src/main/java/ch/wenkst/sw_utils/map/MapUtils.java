@@ -5,7 +5,7 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import ch.wenkst.sw_utils.conversions.Conversion;
+import ch.wenkst.sw_utils.conversion.Conversion;
 
 /**
  * contains utility methods to handle maps
@@ -248,13 +248,15 @@ public class MapUtils {
 	
 	/**
 	 * checks if the passed map contains all passed keys
-	 * @param <T>
+	 * @param <K> 	key type in the map
+	 * @param <V> 	value type in the map
 	 * @param map   Map
 	 * @param keys  the keys to test in the map
 	 * @return 		false if at least one key is missing
 	 */
-	public static <T> boolean containsAllKeys(Map<String, T> map, String... keys) {
-		for (String key : keys) {
+	@SafeVarargs
+	public static <K, V> boolean containsAllKeys(Map<K, V> map, K... keys) {
+		for (K key : keys) {
 			if (!map.containsKey(key)) {
 				// one of the passed keys is missing return false
 				return false;
@@ -268,19 +270,21 @@ public class MapUtils {
 	
 	/**
 	 * checks if the passed map contains all passed keys
-	 * @param <T>
+     * @param <K> 			key type in the map
+	 * @param <V> 			value type in the map
 	 * @param map   		Map
 	 * @param printMissing	true if the missing keys should be logged
 	 * @param keys  		the keys to test in the map
 	 * @return 				false if at least one key is missing
 	 */
-	public static <T> boolean containsAllKeys(Map<String, T> map, boolean printMissing, String... keys) {
+	@SafeVarargs
+	public static <K, V> boolean containsAllKeys(Map<K, V> map, boolean printMissing, K... keys) {
 		if (!printMissing) {
 			return containsAllKeys(map, keys);
 		}
 		
 		boolean retVal = true;
-		for (String key : keys) {
+		for (K key : keys) {
 			if (!map.containsKey(key)) {
 				// one of the passed keys is missing return false
 				logger.error(key + ": is missing from the map");

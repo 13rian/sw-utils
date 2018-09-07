@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils.conversions;
+package ch.wenkst.sw_utils.conversion;
 
 import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
@@ -76,8 +76,6 @@ public class Conversion {
 	 */
 	public static String byteArrayToBase64(byte[] barr) {
 		String result = Base64.getEncoder().encodeToString(barr);
-//		// not usable in java 9 anymore
-//		String result = DatatypeConverter.printBase64Binary(barr);
 		
 		return result;
 	}
@@ -90,8 +88,6 @@ public class Conversion {
 	 */
 	public static byte[] base64StrToByteArray(String str) {
 		byte[] result = Base64.getDecoder().decode(str.getBytes());		
-//		// not usable in java 9 anymore
-//		byte[] result = DatatypeConverter.parseBase64Binary(str);
 		
 		return result;
 	}
@@ -115,15 +111,6 @@ public class Conversion {
 		result = byteArrayToHexStr(myBytes);
 			
 		return result;
-		
-//			byte[] barr = str.getBytes();
-//			
-//		    StringBuilder strBuilder = new StringBuilder();
-//		    for(int i = 0; i < barr.length; i++) {
-//		    	strBuilder.append(String.format("%02x", barr[i]));		    
-//		    }
-//		    
-//		    return strBuilder.toString().toUpperCase();
 	}
 	
 	
@@ -139,13 +126,6 @@ public class Conversion {
 		// create the string with UTF-8 character set
 		String result = new String(barr, StandardCharsets.UTF_8);
 		return result;
-		
-//		StringBuilder strBuilder = new StringBuilder();
-//		for (int i = 0; i < str.length(); i+=2) {
-//			strBuilder.append((char) Integer.parseInt(str.substring(i, i + 2), 16));
-//		}
-//		
-//		return strBuilder.toString();
 	}
 	
 	
@@ -162,9 +142,6 @@ public class Conversion {
 	        hexChars[j * 2 + 1] = hexArray[v & 0x0F];
 	    }
 	    String result = new String(hexChars);
-		
-//		// not usable in java 9 anymore
-//		String result = DatatypeConverter.printHexBinary(barr);
 		
 		return result;
 	}
@@ -183,8 +160,6 @@ public class Conversion {
 	    	result[i / 2] = (byte) ((Character.digit(str.charAt(i), 16) << 4)
 	                             + Character.digit(str.charAt(i+1), 16));
 	    }	
-//		// not usabel in java 9 anymore
-//		byte[] result = DatatypeConverter.parseHexBinary(str);
 		
 		return result;
 	}
@@ -200,13 +175,7 @@ public class Conversion {
 		String result = Integer.toHexString(i).toUpperCase();
 		
 		// add the padding
-		StringBuilder sb = new StringBuilder();
-		sb.append(result);
-		while (sb.length() < length) {
-			sb.insert(0, '0');
-		}
-		
-		result = sb.toString();
+		result = padLeft(result, '0', length);
 		return result;
 	}
 	
@@ -229,6 +198,21 @@ public class Conversion {
 	 */
 	public static long hexStrToInt(String hexStr) {
 		long result = Integer.parseInt(hexStr, 16);
+		return result;
+	}
+	
+	
+	/**
+	 * converts an long to a hex String
+	 * @param l 		long to convert
+	 * @param length 	zeros are added on the left side when the length of the resulting hex-string is smaller than length
+	 * @return 			hex string in capital letters
+	 */
+	public static String longToHexStr(long l, int length) {
+		String result = Long.toHexString(l).toUpperCase();
+		
+		// add the padding
+		result = padLeft(result, '0', length);
 		return result;
 	}
 	
@@ -277,6 +261,20 @@ public class Conversion {
 	}
 	
 	
+	/**
+	 * converts the passed boolean to an integer
+	 * @param bool 	the boolean 
+	 * @return 		integer representation of the boolean
+	 */
+	public static int booleanToInt(boolean bool) {
+		if (bool) {
+			return 1;
+		} else {
+			return 0;
+		}
+	}
+	
+	
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 												Bytes 													   //
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////	
@@ -311,110 +309,45 @@ public class Conversion {
 	
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 										concatenate 2 arrays 											   //
-	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	/**
-	 * generic method to concatenate an arbitrary amount of passed arrays
-	 * @param <T> 		the class of the passed object array
-	 * @param arrays 	arrays of the same object type to concatenate
-	 * @return	 		the concatenated array
-	 */
-	@SuppressWarnings("unchecked")
-	public static <T> T[] concatArrays(T[]... arrays) {
-        int length = 0;
-        for (T[] array : arrays) {
-            length += array.length;
-        }
-
-        //T[] result = new T[length];
-        final T[] result = (T[]) Array.newInstance(arrays[0].getClass().getComponentType(), length);
-
-        int offset = 0;
-        for (T[] array : arrays) {
-            System.arraycopy(array, 0, result, offset, array.length);
-            offset += array.length;
-        }
-
-        return result;
-    }
-
-	
-	/**
-	 * concatenates an arbitrary amount of passed int-arrays
-	 * @param arrays 	arrays of the same object type to concatenate
-	 * @return	 		the concatenated array
-	 */
-    public static int[] concatArrays(int[]... arrays) {
-        int length = 0;
-        for (int[] array : arrays) {
-            length += array.length;
-        }
-
-        final int[] result = new int[length];
-
-        int offset = 0;
-        for (int[] array : arrays) {
-            System.arraycopy(array, 0, result, offset, array.length);
-            offset += array.length;
-        }
-
-        return result;
-    }
-    
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////    
     
 	/**
-	 * concatenates an arbitrary amount of passed byte-arrays
-	 * @param arrays 	arrays of the same object type to concatenate
-	 * @return	 		the concatenated array
+	 * concatenates an arbitrary amount of passed arrays of primitive or object type
+	 * @param <T> 		the array object
+	 * @param arrays 	arrays to concatenate
+	 * @return	 		the concatenated array or null if an error occurred
 	 */
-    public static byte[] concatArrays(byte[]... arrays) {
-        int length = 0;
-        for (byte[] array : arrays) {
-            length += array.length;
-        }
+    @SuppressWarnings("unchecked")
+	@SafeVarargs
+	public static <T> T concatArrays(T... arrays) {
+    	try {
+    		int length = 0;
+    		for (T array : arrays) {
+    			length += Array.getLength(array);
+    		}
 
-        final byte[] result = new byte[length];
+    		T result = (T) Array.newInstance(arrays[0].getClass().getComponentType(), length);
 
-        int offset = 0;
-        for (byte[] array : arrays) {
-            System.arraycopy(array, 0, result, offset, array.length);
-            offset += array.length;
-        }
+    		int offset = 0;
+    		for (T array : arrays) {
+    			int arrLength = Array.getLength(array);
+    			System.arraycopy(array, 0, result, offset, arrLength);
+    			offset += arrLength;
+    		}
 
-        return result;
+    		return result;
+
+    	} catch (Exception e) {
+    		logger.error("error concatenating the passed arrays: ", e);
+    		return null;
+    	}
     }
-	
-    
+   
     
     
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 											string handling  											   //
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//	/**
-//	 * expand the passed string with the specifies character. if the string has already the correct size or is larger
-//	 * just the same string is returned. 
-//	 * @param str 				the string to expand
-//	 * @param length			the length the resulting string should have after the expansion
-//	 * @param expansionChar 	the character that is used to expand the string
-//	 * @param isAppend	 		true if the expansion character should be added at the end of str
-//	 * @return
-//	 */
-//	public static String strExpand(String str, int length, char expansionChar, boolean isAppend) {
-//		// if the string has already the right length just return it
-//		if (str.length() >= length) {
-//			return str;
-//		}
-//
-//		StringBuffer sRes = new StringBuffer(str);
-//		while (sRes.length() < length) {
-//			if (isAppend) {
-//				sRes.append(expansionChar);
-//			} else {
-//				sRes.insert(0, expansionChar);
-//			}
-//		}
-//		return sRes.toString();
-//	}
-	
 	
 	/**
 	 * adds a padding on the left side of the passed string if it is shorter than the passed length

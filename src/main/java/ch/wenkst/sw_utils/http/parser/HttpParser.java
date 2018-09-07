@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import ch.wenkst.sw_utils.conversions.Conversion;
+import ch.wenkst.sw_utils.conversion.Conversion;
 
 public class HttpParser {
 	private static Logger logger = LogManager.getLogger(HttpParser.class);

@@ -61,7 +61,7 @@ import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 import org.bouncycastle.operator.DefaultAlgorithmNameFinder;
 import org.bouncycastle.operator.OutputEncryptor;
 
-import ch.wenkst.sw_utils.conversions.Conversion;
+import ch.wenkst.sw_utils.conversion.Conversion;
 import ch.wenkst.sw_utils.files.FileHandler;
 
 public class CryptoUtils {
