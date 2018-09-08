@@ -11,6 +11,10 @@ import static org.junit.jupiter.api.Assumptions.*;
 
 import org.junit.jupiter.api.AfterAll;
 
+/**
+ * demonstrates the lifecycle of a unit test
+ * in order to execute all the unit tests in the project, rClick on the project, run as, JUnit Test
+ */
 public class Lifecycle {
 	 
 	@BeforeAll
