@@ -28,7 +28,7 @@ import com.mongodb.ServerAddress;
 import ch.wenkst.sw_utils.Utils;
 import ch.wenkst.sw_utils.conversion.Conversion;
 import ch.wenkst.sw_utils.crypto.CryptoUtils;
-import ch.wenkst.sw_utils.dates.DateHandler;
+import ch.wenkst.sw_utils.date.DateUtils;
 import ch.wenkst.sw_utils.db.DBHandler;
 import ch.wenkst.sw_utils.db.EntityBase;
 import ch.wenkst.sw_utils.event.EventBoard;
@@ -200,22 +200,22 @@ public class Main_SWUtils {
 		/////////////////////////////////////////////////////////////////////////////////////////////////
 		// 										Password hash							   			   //
 		/////////////////////////////////////////////////////////////////////////////////////////////////
-		System.out.println("\n PASSWORD HASH");
-		
-		// hash the password
-		String password =  "securePW";
-		String pwHash = "";
-		try {
-			pwHash = CryptoUtils.hashPassword(password);
-		} catch (Exception e) {
-			logger.error("failed to hash the password: ", e);
-		}
-		logger.info("password: " + password + ", hash: " + pwHash);
-		
-		
-		// verify the password
-		boolean passwordValid = CryptoUtils.validatePassword(password, pwHash);
-		logger.info("is the password hash valid: " + passwordValid);
+//		System.out.println("\n PASSWORD HASH");
+//		
+//		// hash the password
+//		String password =  "securePW";
+//		String pwHash = "";
+//		try {
+//			pwHash = CryptoUtils.hashPassword(password);
+//		} catch (Exception e) {
+//			logger.error("failed to hash the password: ", e);
+//		}
+//		logger.info("password: " + password + ", hash: " + pwHash);
+//		
+//		
+//		// verify the password
+//		boolean passwordValid = CryptoUtils.validatePassword(password, pwHash);
+//		logger.info("is the password hash valid: " + passwordValid);
 		
 		
 		
@@ -269,82 +269,82 @@ public class Main_SWUtils {
 		/////////////////////////////////////////////////////////////////////////////////////////////////
 		// 									test date handler										   //
 		/////////////////////////////////////////////////////////////////////////////////////////////////
-		System.out.println("\n DATE HANDLER TEST");
-		
-		// print date of today
-		Calendar now = Calendar.getInstance();
-		//now.setTime(new Date());
-		logger.info("Today date: " + DateHandler.dateToStr(now, "dd.MM.yyyy"));
-		
-		// get a date from a String
-		Calendar exampleDate = DateHandler.strToDate("17.3.1951", "dd.MM.yyyy");
-		logger.info("example date: " + exampleDate.get(Calendar.YEAR) + "_" + (exampleDate.get(Calendar.MONTH)+1) + "_" + exampleDate.get(Calendar.DAY_OF_MONTH));
-		
-		// get the Easter Sunday
-		Calendar easterSunday = DateHandler.easterDate(2017);
-		logger.info("Easter Sunday in 2017: " + DateHandler.dateToStr(easterSunday, "dd.MM.yyyy"));
-		
-		
-		// check if two dates represent the same day
-		Calendar tomorrow = Calendar.getInstance();
-		tomorrow.setTime(new Date());
-		tomorrow.add(Calendar.DATE, 1);
-		logger.info("are today and tomorrow the same dates: " + DateHandler.areDatesEqual(now, tomorrow));
-		
-		Calendar laterToday = Calendar.getInstance();
-		laterToday.setTime(new Date());
-		laterToday.add(Calendar.SECOND, 3);
-		logger.info("are now and 3 seconds later the same dates: " + DateHandler.areDatesEqual(now, laterToday));
-		
-		
-		// check if the timestamp is from today or not
-		long nowTimestamp = System.currentTimeMillis();
-		logger.info("is timestamp of now from today: " + DateHandler.isTimestampToday(nowTimestamp));
-		
-		long yesterdayTimestamp = nowTimestamp - 24*60*60*1000;
-		logger.info("is timestamp of yesterday from today: " + DateHandler.isTimestampToday(yesterdayTimestamp));
-		
-		
-		// test the holiday Utility for ch, print out all holidays in one year
-		Calendar date = DateHandler.strToDate("01.01.2017", "dd.MM.yyyy");
-		logger.info("ch holidays");
-		for (int i=0; i<365; i++) {
-			if (DateHandler.isHoliday("ch", date)) {
-				logger.info("holiday: " + DateHandler.dateToStr(date, "dd.MM.yyyy"));
-			}
-			
-			// increment the date by one day
-			date.add(Calendar.DATE, 1);
-		}
-		
-		// test the holiday Utility for de, print out all holidays in one year
-		date = DateHandler.strToDate("01.01.2017", "dd.MM.yyyy");
-		logger.info("de holidays");
-		for (int i=0; i<365; i++) {
-			if (DateHandler.isHoliday("de", date)) {
-				logger.info("holiday: " + DateHandler.dateToStr(date, "dd.MM.yyyy"));
-			}
-			
-			// increment the date by one day
-			date.add(Calendar.DATE, 1);
-		}
-		
-		
-		// test to parse a date with different patterns
-		SimpleDateFormat[] knownPatterns = {
-				new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'"), 
-				new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
-		};
-		
-		// set the time zone of the utc pattern
-		knownPatterns[0].setTimeZone(TimeZone.getTimeZone("GMT"));
-		
-		String date1 = "2018-01-18T15:45:00Z"; 		// the Z stands for the UTC time, therefore the time zone needs to be set
-		String date2 = "2018-01-18T15:45:00";
-		long timestamp1 = DateHandler.parseDate(date1, knownPatterns);
-		long timestamp2 = DateHandler.parseDate(date2, knownPatterns);
-		logger.info("timestamp1: " + timestamp1);
-		logger.info("timestamp2: " + timestamp2);
+//		System.out.println("\n DATE HANDLER TEST");
+//		
+//		// print date of today
+//		Calendar now = Calendar.getInstance();
+//		//now.setTime(new Date());
+//		logger.info("Today date: " + DateUtils.dateToStr(now, "dd.MM.yyyy"));
+//		
+//		// get a date from a String
+//		Calendar exampleDate = DateUtils.strToDate("17.3.1951", "dd.MM.yyyy");
+//		logger.info("example date: " + exampleDate.get(Calendar.YEAR) + "_" + (exampleDate.get(Calendar.MONTH)+1) + "_" + exampleDate.get(Calendar.DAY_OF_MONTH));
+//		
+//		// get the Easter Sunday
+//		Calendar easterSunday = DateUtils.easterDate(2017);
+//		logger.info("Easter Sunday in 2017: " + DateUtils.dateToStr(easterSunday, "dd.MM.yyyy"));
+//		
+//		
+//		// check if two dates represent the same day
+//		Calendar tomorrow = Calendar.getInstance();
+//		tomorrow.setTime(new Date());
+//		tomorrow.add(Calendar.DATE, 1);
+//		logger.info("are today and tomorrow the same dates: " + DateUtils.areDatesEqual(now, tomorrow));
+//		
+//		Calendar laterToday = Calendar.getInstance();
+//		laterToday.setTime(new Date());
+//		laterToday.add(Calendar.SECOND, 3);
+//		logger.info("are now and 3 seconds later the same dates: " + DateUtils.areDatesEqual(now, laterToday));
+//		
+//		
+//		// check if the timestamp is from today or not
+//		long nowTimestamp = System.currentTimeMillis();
+//		logger.info("is timestamp of now from today: " + DateUtils.isTimestampToday(nowTimestamp));
+//		
+//		long yesterdayTimestamp = nowTimestamp - 24*60*60*1000;
+//		logger.info("is timestamp of yesterday from today: " + DateUtils.isTimestampToday(yesterdayTimestamp));
+//		
+//		
+//		// test the holiday Utility for ch, print out all holidays in one year
+//		Calendar date = DateUtils.strToDate("01.01.2017", "dd.MM.yyyy");
+//		logger.info("ch holidays");
+//		for (int i=0; i<365; i++) {
+//			if (DateUtils.isHoliday("ch", date)) {
+//				logger.info("holiday: " + DateUtils.dateToStr(date, "dd.MM.yyyy"));
+//			}
+//			
+//			// increment the date by one day
+//			date.add(Calendar.DATE, 1);
+//		}
+//		
+//		// test the holiday Utility for de, print out all holidays in one year
+//		date = DateUtils.strToDate("01.01.2017", "dd.MM.yyyy");
+//		logger.info("de holidays");
+//		for (int i=0; i<365; i++) {
+//			if (DateUtils.isHoliday("de", date)) {
+//				logger.info("holiday: " + DateUtils.dateToStr(date, "dd.MM.yyyy"));
+//			}
+//			
+//			// increment the date by one day
+//			date.add(Calendar.DATE, 1);
+//		}
+//		
+//		
+//		// test to parse a date with different patterns
+//		SimpleDateFormat[] knownPatterns = {
+//				new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'"), 
+//				new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+//		};
+//		
+//		// set the time zone of the utc pattern
+//		knownPatterns[0].setTimeZone(TimeZone.getTimeZone("GMT"));
+//		
+//		String date1 = "2018-01-18T15:45:00Z"; 		// the Z stands for the UTC time, therefore the time zone needs to be set
+//		String date2 = "2018-01-18T15:45:00";
+//		long timestamp1 = DateUtils.parseDate(date1, knownPatterns);
+//		long timestamp2 = DateUtils.parseDate(date2, knownPatterns);
+//		logger.info("timestamp1: " + timestamp1);
+//		logger.info("timestamp2: " + timestamp2);
 		
 		
 

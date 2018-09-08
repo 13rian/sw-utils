@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils.dates;
+package ch.wenkst.sw_utils.date;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -12,8 +12,8 @@ import org.apache.logging.log4j.Logger;
 /**
  * holds some methods to handle dates and holidays
  */
-public class DateHandler {
-	final static Logger logger = LogManager.getLogger(DateHandler.class);    // initialize the logger	
+public class DateUtils {
+	final static Logger logger = LogManager.getLogger(DateUtils.class);    // initialize the logger	
 
 	// static list of holiday dates (is only initialized once when it it is used for the first time)
 	private static ArrayList<Calendar> chHolidayList = null;
