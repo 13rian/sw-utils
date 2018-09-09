@@ -76,10 +76,10 @@ public class CryptoUtilsTest {
 		String encryptedMsg = CryptoUtils.encrypt(message, secretKey);	 	// encrypt the message
 		
 		// decrypt the cipher text with the correct key
-		Assertions.assertEquals(message, CryptoUtils.decrypt(encryptedMsg, secretKey));
+		Assertions.assertEquals(message, CryptoUtils.decrypt(encryptedMsg, secretKey), "aes decryption");
 		
 		// decrypt the cipher text with the wrong key
-		Assertions.assertNotEquals(message, CryptoUtils.decrypt(encryptedMsg, wrongSecretKey));
+		Assertions.assertNotEquals(message, CryptoUtils.decrypt(encryptedMsg, wrongSecretKey), "wrong key aes decryption");
 		
 		
 		
@@ -88,10 +88,10 @@ public class CryptoUtilsTest {
 		byte[] encryptedBytes = CryptoUtils.encrypt(messageBytes, secretKey);
 		
 		// decrypt the bytes with the correct key
-		Assertions.assertArrayEquals(messageBytes, CryptoUtils.decrypt(encryptedBytes, secretKey));		
+		Assertions.assertArrayEquals(messageBytes, CryptoUtils.decrypt(encryptedBytes, secretKey), "aes decryption of byte array");		
 		
 		// decrypt the bytes with the wrong key
-		MatcherAssert.assertThat(messageBytes, CoreMatchers.not(CryptoUtils.decrypt(encryptedBytes, wrongSecretKey)));
+		MatcherAssert.assertThat("wrong key aes decryption of byte array", messageBytes, CoreMatchers.not(CryptoUtils.decrypt(encryptedBytes, wrongSecretKey)));
 	}
 	
 	
@@ -127,23 +127,23 @@ public class CryptoUtilsTest {
 		
 		
 		// decrypt with the correct key and cert
-		Assertions.assertArrayEquals(cltSigOkBytes, CryptoUtils.decrypt(receiverEncCert, receiverEncKey, encOkSigOk));
-		Assertions.assertArrayEquals(cltSigBadBytes, CryptoUtils.decrypt(receiverEncCert, receiverEncKey, encOkSigBad));
-		MatcherAssert.assertThat(cltSigOkBytes, CoreMatchers.not(CryptoUtils.decrypt(receiverEncCert, receiverEncKey, encBadSigOk)));
-		MatcherAssert.assertThat(cltSigBadBytes, CoreMatchers.not(CryptoUtils.decrypt(receiverEncCert, receiverEncKey, encBadSigBad)));
+		Assertions.assertArrayEquals(cltSigOkBytes, CryptoUtils.decrypt(receiverEncCert, receiverEncKey, encOkSigOk), "enc ok sig ok decryption");
+		Assertions.assertArrayEquals(cltSigBadBytes, CryptoUtils.decrypt(receiverEncCert, receiverEncKey, encOkSigBad), "enc ok sig bad decryption");
+		MatcherAssert.assertThat("enc bad sig ok decryption", cltSigOkBytes, CoreMatchers.not(CryptoUtils.decrypt(receiverEncCert, receiverEncKey, encBadSigOk)));
+		MatcherAssert.assertThat("enc bad sig bad decryption", cltSigBadBytes, CoreMatchers.not(CryptoUtils.decrypt(receiverEncCert, receiverEncKey, encBadSigBad)));
 		
 		
 		// decrypt with the wrong key
-		MatcherAssert.assertThat(encOkSigOk, CoreMatchers.not(CryptoUtils.decrypt(receiverEncCert, senderEncKey, encOkSigOk)));
+		MatcherAssert.assertThat("wrong key decryption", encOkSigOk, CoreMatchers.not(CryptoUtils.decrypt(receiverEncCert, senderEncKey, encOkSigOk)));
 		
 		
 		
 		// 											test the signature								 	     //
 		///////////////////////////////////////////////////////////////////////////////////////////////////////
-		Assertions.assertTrue(CryptoUtils.verifySig(senderSigCert, messageBytes, signature)); 			// sig ok, cert ok
-		Assertions.assertFalse(CryptoUtils.verifySig(receiverEncCert, messageBytes, signature)); 		// sig ok, cert bad
-		Assertions.assertFalse(CryptoUtils.verifySig(senderSigCert, messageBytes, signatureWrong)); 	// sig bad, cert ok
-		Assertions.assertFalse(CryptoUtils.verifySig(senderEncCert, messageBytes, signatureWrong)); 	// sig bad, cert bad
+		Assertions.assertTrue(CryptoUtils.verifySig(senderSigCert, messageBytes, signature), "sig ok cert ok");
+		Assertions.assertFalse(CryptoUtils.verifySig(receiverEncCert, messageBytes, signature), "sig ok cert bad"); 		
+		Assertions.assertFalse(CryptoUtils.verifySig(senderSigCert, messageBytes, signatureWrong), "sig bad cert ok"); 	
+		Assertions.assertFalse(CryptoUtils.verifySig(senderEncCert, messageBytes, signatureWrong), "sig bad cert bad"); 
 	}
 	
 	
@@ -162,12 +162,12 @@ public class CryptoUtilsTest {
 		String pwHash2 = CryptoUtils.hashPassword(password2);
 		
 		// test the correct hash
-		Assertions.assertTrue(CryptoUtils.validatePassword(password1, pwHash1));
-		Assertions.assertTrue(CryptoUtils.validatePassword(password2, pwHash2));
+		Assertions.assertTrue(CryptoUtils.validatePassword(password1, pwHash1), "correct password hash");
+		Assertions.assertTrue(CryptoUtils.validatePassword(password2, pwHash2), "correct password hash");
 		
 		// test the wrong hash
-		Assertions.assertFalse(CryptoUtils.validatePassword(password1, pwHash2));
-		Assertions.assertFalse(CryptoUtils.validatePassword(password2, pwHash1));
+		Assertions.assertFalse(CryptoUtils.validatePassword(password1, pwHash2), "wrong password hash");
+		Assertions.assertFalse(CryptoUtils.validatePassword(password2, pwHash1), "wrong password hash");
 	}
 	
 	

@@ -18,7 +18,7 @@ public class DateUtilsTest {
 		Calendar date = Calendar.getInstance();
 		date.setTimeInMillis(1126750500000L); 		
 		
-		Assertions.assertEquals("15.09.2005 - 04:15:00.000", DateUtils.dateToStr(date, "dd.MM.yyyy - HH:mm:ss.SSS"));
+		Assertions.assertEquals("15.09.2005 - 04:15:00.000", DateUtils.dateToStr(date, "dd.MM.yyyy - HH:mm:ss.SSS"), "date to string");
 	}
 	
 	
@@ -32,15 +32,15 @@ public class DateUtilsTest {
 		Calendar date = DateUtils.strToDate("17.3.1999 - 16:21:35.786", "dd.MM.yyyy - HH:mm:ss.SSS");
 		
 		// date
-		Assertions.assertEquals(1999, date.get(Calendar.YEAR));
-		Assertions.assertEquals(2, date.get(Calendar.MONTH));
-		Assertions.assertEquals(17, date.get(Calendar.DAY_OF_MONTH));
+		Assertions.assertEquals(1999, date.get(Calendar.YEAR), "year of parsed date");
+		Assertions.assertEquals(2, date.get(Calendar.MONTH), "month of parsed date");
+		Assertions.assertEquals(17, date.get(Calendar.DAY_OF_MONTH), "day of month of parsed date");
 		
 		// time
-		Assertions.assertEquals(16, date.get(Calendar.HOUR_OF_DAY));
-		Assertions.assertEquals(21, date.get(Calendar.MINUTE));
-		Assertions.assertEquals(35, date.get(Calendar.SECOND));
-		Assertions.assertEquals(786, date.get(Calendar.MILLISECOND));
+		Assertions.assertEquals(16, date.get(Calendar.HOUR_OF_DAY), "hour of parsed date");
+		Assertions.assertEquals(21, date.get(Calendar.MINUTE), "minute of parsed date");
+		Assertions.assertEquals(35, date.get(Calendar.SECOND), "second of parsed date");
+		Assertions.assertEquals(786, date.get(Calendar.MILLISECOND), "millisecond of parsed date");
 	}
 	
 	
@@ -52,21 +52,21 @@ public class DateUtilsTest {
 	public void easterSundayTest() {
 		// easter in 2017
 		Calendar easterSunday = DateUtils.easterDate(2017);
-		Assertions.assertEquals(2017, easterSunday.get(Calendar.YEAR));
-		Assertions.assertEquals(3, easterSunday.get(Calendar.MONTH));
-		Assertions.assertEquals(16, easterSunday.get(Calendar.DAY_OF_MONTH));
+		Assertions.assertEquals(2017, easterSunday.get(Calendar.YEAR), "year of easter in 2017");
+		Assertions.assertEquals(3, easterSunday.get(Calendar.MONTH), "month of easter in 2017");
+		Assertions.assertEquals(16, easterSunday.get(Calendar.DAY_OF_MONTH), "day of month of easter in 2017");
 		
 		// easter in 1997
 		easterSunday = DateUtils.easterDate(1997);
-		Assertions.assertEquals(1997, easterSunday.get(Calendar.YEAR));
-		Assertions.assertEquals(2, easterSunday.get(Calendar.MONTH));
-		Assertions.assertEquals(30, easterSunday.get(Calendar.DAY_OF_MONTH));
+		Assertions.assertEquals(1997, easterSunday.get(Calendar.YEAR), "year of easter in 1997");
+		Assertions.assertEquals(2, easterSunday.get(Calendar.MONTH), "month of easter in 1997");
+		Assertions.assertEquals(30, easterSunday.get(Calendar.DAY_OF_MONTH), "day of month of easter in 1997");
 		
 		// easter in 1975
 		easterSunday = DateUtils.easterDate(1975);
-		Assertions.assertEquals(1975, easterSunday.get(Calendar.YEAR));
-		Assertions.assertEquals(2, easterSunday.get(Calendar.MONTH));
-		Assertions.assertEquals(30, easterSunday.get(Calendar.DAY_OF_MONTH));
+		Assertions.assertEquals(1975, easterSunday.get(Calendar.YEAR), "year of easter in 1975");
+		Assertions.assertEquals(2, easterSunday.get(Calendar.MONTH), "month of easter in 1975");
+		Assertions.assertEquals(30, easterSunday.get(Calendar.DAY_OF_MONTH), "day of month of easter in 1975");
 	}
 	
 	
@@ -80,12 +80,12 @@ public class DateUtilsTest {
 		Calendar now = Calendar.getInstance();
 		Calendar tomorrow = Calendar.getInstance();
 		tomorrow.add(Calendar.DATE, 1);
-		Assertions.assertFalse(DateUtils.areDatesEqual(now, tomorrow));
+		Assertions.assertFalse(DateUtils.areDatesEqual(now, tomorrow), "compare same dates");
 		
 		// test two dates of today, one now and one 3 seconds earlier
 		Calendar earlierToday = Calendar.getInstance();
 		earlierToday.add(Calendar.SECOND, -3);
-		Assertions.assertTrue(DateUtils.areDatesEqual(now, earlierToday));
+		Assertions.assertTrue(DateUtils.areDatesEqual(now, earlierToday), "compare different dates");
 	}
 	
 	
@@ -97,11 +97,11 @@ public class DateUtilsTest {
 	public void dateFromTodayTest() {
 		// test the current timestamp
 		long now = System.currentTimeMillis();
-		Assertions.assertTrue(DateUtils.isTimestampToday(now));
+		Assertions.assertTrue(DateUtils.isTimestampToday(now), "now is timestamp of today");
 				
 		// test the same timestamp form yesterday
 		long yesterday = now - 24*60*60*1000;
-		Assertions.assertFalse(DateUtils.isTimestampToday(yesterday));
+		Assertions.assertFalse(DateUtils.isTimestampToday(yesterday), "timestamp of yesterday is not timestamp of today");
 	}
 	
 	
@@ -123,11 +123,11 @@ public class DateUtilsTest {
 		Calendar date = Calendar.getInstance();
 		date.setTimeInMillis(timestamp);
 		
-		Assertions.assertEquals(2000, date.get(Calendar.YEAR));
-		Assertions.assertEquals(4, date.get(Calendar.MONTH));
-		Assertions.assertEquals(13, date.get(Calendar.DAY_OF_MONTH));
-		Assertions.assertEquals(17, date.get(Calendar.HOUR_OF_DAY));
-		Assertions.assertEquals(37, date.get(Calendar.MINUTE));
+		Assertions.assertEquals(2000, date.get(Calendar.YEAR), "year of multiple formats parsed date");
+		Assertions.assertEquals(4, date.get(Calendar.MONTH), "month of multiple formats parsed date");
+		Assertions.assertEquals(13, date.get(Calendar.DAY_OF_MONTH), "day of month of multiple formats parsed date");
+		Assertions.assertEquals(17, date.get(Calendar.HOUR_OF_DAY), "hour of multiple formats parsed date");
+		Assertions.assertEquals(37, date.get(Calendar.MINUTE), "minute of multiple formats parsed date");
 		
 		
 		// test pattern tow
@@ -135,12 +135,12 @@ public class DateUtilsTest {
 		timestamp = DateUtils.parseDate(dateStr, knownPatterns);
 		date.setTimeInMillis(timestamp);
 		
-		Assertions.assertEquals(1999, date.get(Calendar.YEAR));
-		Assertions.assertEquals(06, date.get(Calendar.MONTH));
-		Assertions.assertEquals(30, date.get(Calendar.DAY_OF_MONTH));
-		Assertions.assertEquals(18, date.get(Calendar.HOUR_OF_DAY));
-		Assertions.assertEquals(22, date.get(Calendar.MINUTE));
-		Assertions.assertEquals(59, date.get(Calendar.SECOND));
+		Assertions.assertEquals(1999, date.get(Calendar.YEAR), "year of multiple formats parsed date");
+		Assertions.assertEquals(06, date.get(Calendar.MONTH), "month of multiple formats parsed date");
+		Assertions.assertEquals(30, date.get(Calendar.DAY_OF_MONTH), "day of month of multiple formats parsed date");
+		Assertions.assertEquals(18, date.get(Calendar.HOUR_OF_DAY), "hour of multiple formats parsed date");
+		Assertions.assertEquals(22, date.get(Calendar.MINUTE), "minute of multiple formats parsed date");
+		Assertions.assertEquals(59, date.get(Calendar.SECOND), "second of multiple formats parsed date");
 	}
 	
 	
@@ -151,22 +151,22 @@ public class DateUtilsTest {
 	@DisplayName("holiday in switzerland")
 	public void holidayInSwitzerlandTest() {
 		// test all holidays 
-		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("01.01.2017", "dd.MM.yyyy")));
-		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("02.01.2017", "dd.MM.yyyy")));
-		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("14.04.2017", "dd.MM.yyyy")));
-		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("17.04.2017", "dd.MM.yyyy")));
-		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("01.05.2017", "dd.MM.yyyy")));
-		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("25.05.2017", "dd.MM.yyyy")));
-		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("05.06.2017", "dd.MM.yyyy")));
-		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("01.08.2017", "dd.MM.yyyy")));
-		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("25.12.2017", "dd.MM.yyyy")));
-		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("26.12.2017", "dd.MM.yyyy")));
+		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("01.01.2017", "dd.MM.yyyy")), "01.01.2017 is ch holiday");
+		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("02.01.2017", "dd.MM.yyyy")), "02.01.2017 is ch holiday");
+		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("14.04.2017", "dd.MM.yyyy")), "14.04.2017 is ch holiday");
+		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("17.04.2017", "dd.MM.yyyy")), "17.04.2017 is ch holiday");
+		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("01.05.2017", "dd.MM.yyyy")), "01.05.2017 is ch holiday");
+		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("25.05.2017", "dd.MM.yyyy")), "25.05.2017 is ch holiday");
+		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("05.06.2017", "dd.MM.yyyy")), "06.06.2017 is ch holiday");
+		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("01.08.2017", "dd.MM.yyyy")), "01.08.2017 is ch holiday");
+		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("25.12.2017", "dd.MM.yyyy")), "25.12.2017 is ch holiday");
+		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("26.12.2017", "dd.MM.yyyy")), "26.12.2017 is ch holiday");
 		
 		// test some non-holidays
-		Assertions.assertFalse(DateUtils.isHoliday("ch", DateUtils.strToDate("03.03.2017", "dd.MM.yyyy")));
-		Assertions.assertFalse(DateUtils.isHoliday("ch", DateUtils.strToDate("15.08.2017", "dd.MM.yyyy")));
-		Assertions.assertFalse(DateUtils.isHoliday("ch", DateUtils.strToDate("01.11.2017", "dd.MM.yyyy")));
-		Assertions.assertFalse(DateUtils.isHoliday("ch", DateUtils.strToDate("24.12.2017", "dd.MM.yyyy")));
+		Assertions.assertFalse(DateUtils.isHoliday("ch", DateUtils.strToDate("03.03.2017", "dd.MM.yyyy")), "03.03.2017 is not ch holiday");
+		Assertions.assertFalse(DateUtils.isHoliday("ch", DateUtils.strToDate("15.08.2017", "dd.MM.yyyy")), "15.08.2017 is not ch holiday");
+		Assertions.assertFalse(DateUtils.isHoliday("ch", DateUtils.strToDate("01.11.2017", "dd.MM.yyyy")), "03.10.2017 is not ch holiday");
+		Assertions.assertFalse(DateUtils.isHoliday("ch", DateUtils.strToDate("24.12.2017", "dd.MM.yyyy")), "24.12.2017 is not ch holiday");
 	}
 	
 	
@@ -177,22 +177,22 @@ public class DateUtilsTest {
 	@DisplayName("holiday in germany")
 	public void holidayInGermanyTest() {
 		// test all holidays 	
-		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("01.01.2017", "dd.MM.yyyy")));
-		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("14.04.2017", "dd.MM.yyyy")));
-		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("17.04.2017", "dd.MM.yyyy")));
-		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("01.05.2017", "dd.MM.yyyy")));
-		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("05.06.2017", "dd.MM.yyyy")));
-		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("25.05.2017", "dd.MM.yyyy")));
-		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("03.10.2017", "dd.MM.yyyy")));
-		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("24.12.2017", "dd.MM.yyyy")));
-		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("25.12.2017", "dd.MM.yyyy")));
-		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("26.12.2017", "dd.MM.yyyy")));
-		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("31.12.2017", "dd.MM.yyyy")));
+		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("01.01.2017", "dd.MM.yyyy")), "01.01.2017 is de holiday");
+		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("14.04.2017", "dd.MM.yyyy")), "14.04.2017 is de holiday");
+		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("17.04.2017", "dd.MM.yyyy")), "17.04.2017 is de holiday");
+		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("01.05.2017", "dd.MM.yyyy")), "01.05.2017 is de holiday");
+		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("05.06.2017", "dd.MM.yyyy")), "05.06.2017 is de holiday");
+		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("25.05.2017", "dd.MM.yyyy")), "25.05.2017 is de holiday");
+		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("03.10.2017", "dd.MM.yyyy")), "03.10.2017 is de holiday");
+		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("24.12.2017", "dd.MM.yyyy")), "24.12.2017 is de holiday");
+		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("25.12.2017", "dd.MM.yyyy")), "25.12.2017 is de holiday");
+		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("26.12.2017", "dd.MM.yyyy")), "26.12.2017 is de holiday");
+		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("31.12.2017", "dd.MM.yyyy")), "31.12.2017 is de holiday");
 		
 		// test some non-holidays
-		Assertions.assertFalse(DateUtils.isHoliday("de", DateUtils.strToDate("03.03.2017", "dd.MM.yyyy")));
-		Assertions.assertFalse(DateUtils.isHoliday("de", DateUtils.strToDate("01.08.2017", "dd.MM.yyyy")));
-		Assertions.assertFalse(DateUtils.isHoliday("de", DateUtils.strToDate("01.11.2017", "dd.MM.yyyy")));
-		Assertions.assertFalse(DateUtils.isHoliday("de", DateUtils.strToDate("06.12.2017", "dd.MM.yyyy")));
+		Assertions.assertFalse(DateUtils.isHoliday("de", DateUtils.strToDate("03.03.2017", "dd.MM.yyyy")), "03.03.2017 is not de holiday");
+		Assertions.assertFalse(DateUtils.isHoliday("de", DateUtils.strToDate("01.08.2017", "dd.MM.yyyy")), "01.08.2017 is not de holiday");
+		Assertions.assertFalse(DateUtils.isHoliday("de", DateUtils.strToDate("01.11.2017", "dd.MM.yyyy")), "01.11.2017 is not de holiday");
+		Assertions.assertFalse(DateUtils.isHoliday("de", DateUtils.strToDate("06.12.2017", "dd.MM.yyyy")), "06.12.2017 is not de holiday");
 	}
 }

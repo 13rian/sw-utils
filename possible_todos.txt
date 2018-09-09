@@ -1,0 +1,3 @@
+- use slf4j instead of the log4j dependency
+- read annotation
+- randomId based on big integers

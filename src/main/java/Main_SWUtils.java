@@ -41,7 +41,7 @@ import ch.wenkst.sw_utils.http.builder.HttpRequestBuilder;
 import ch.wenkst.sw_utils.http.builder.HttpResponseBuilder;
 import ch.wenkst.sw_utils.http.parser.HttpRequestParser;
 import ch.wenkst.sw_utils.http.parser.HttpResponseParser;
-import ch.wenkst.sw_utils.math.MathOperations;
+import ch.wenkst.sw_utils.math.MathUtils;
 import ch.wenkst.sw_utils.miscellaneous.NaturaSortComparator;
 import ch.wenkst.sw_utils.scheduler.Scheduler;
 import ch.wenkst.sw_utils.tests.db.Car;
@@ -565,14 +565,14 @@ public class Main_SWUtils {
 		///////////////////////////////////////////////////////////////////////////////////////////////
 		// 									test MathOperations 									 //
 		///////////////////////////////////////////////////////////////////////////////////////////////
-		System.out.println("\n MATH TEST");
-		double numberD = 6.78d;
-		double fPartD = MathOperations.getDecimalPart(numberD);
-		logger.info("decimal part of double " + numberD + ": " + fPartD);
-
-		float numberF = 3.085f;
-		float fPartF = MathOperations.getDecimalPart(numberF);
-		logger.info("decimal part of float " + numberF + ": " + fPartF);
+//		System.out.println("\n MATH TEST");
+//		double numberD = 6.78d;
+//		double fPartD = MathUtils.getDecimalPlaces(numberD);
+//		logger.info("decimal part of double " + numberD + ": " + fPartD);
+//
+//		float numberF = 3.085f;
+//		float fPartF = MathUtils.getDecimalPlaces(numberF);
+//		logger.info("decimal part of float " + numberF + ": " + fPartF);
 
 
 		///////////////////////////////////////////////////////////////////////////////////////////////
