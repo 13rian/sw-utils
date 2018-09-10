@@ -37,7 +37,7 @@ public class CryptoUtilsTest {
 	 * register the bouncy castle provider for the crypto operations
 	 */
 	@BeforeAll
-	public static void initializeMockObjects() {
+	public static void loadCryptoMaterial() {
 		CryptoUtils.registerBC();
 		
 		// load the keys and certificates
@@ -172,9 +172,11 @@ public class CryptoUtilsTest {
 	
 	
 	
-	
+	/**
+	 * unregisters the bouncy castle security providers
+	 */
 	@AfterAll
-	public static void freeExternalResources() {
+	public static void unregisterProviders() {
 		CryptoUtils.unregisterBC();
 	}
 }

@@ -657,6 +657,42 @@ public class XMLDoc {
 			return defaultVal;
 		}
 	}
+	
+	
+	
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// 											utility methods 												   //
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/**
+	 * removes the garbage at the end of the xml string
+	 * @param xmlString: 	the xml string from which the garbage should be removed
+	 * @return: 			xml string without garbage
+	 */
+	public static String removeTrailingGarbage(String xmlString) {
+		// find the position of the first tag
+		int index = xmlString.indexOf("?>") + 1;
+		while (xmlString.charAt(index) != '<') {
+			index++;
+		}
+		index++; 	// add one to the index for the start tag
+
+		// setup the first tag name
+		String firstTagName = "";
+		char xmlChar = xmlString.charAt(index);
+		while (xmlChar != ' ' && xmlChar != '>') {
+			firstTagName = firstTagName + xmlString.charAt(index);
+			index++;
+			xmlChar = xmlString.charAt(index);
+		}
+
+		// find the index of the last tag
+		int xmlEndIndex = xmlString.lastIndexOf(firstTagName) + firstTagName.length() + 1;
+
+		// remove the garbage at the end
+		String cleanedXML = xmlString.substring(0, xmlEndIndex);
+		return cleanedXML;
+
+	}
 
 }
 

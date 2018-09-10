@@ -249,20 +249,20 @@ public class Main_SWUtils {
 		/////////////////////////////////////////////////////////////////////////////////////////////////
 		// 										test natural sort									   //
 		/////////////////////////////////////////////////////////////////////////////////////////////////
-		System.out.println("\n NATURAL SORT TEST"); 
-		
-		// define the list to sort
-		List<String> testWords = Arrays.asList("Room3", "room3", "Room10", "room10", "room11", "Room11", "room4.8", "Room15.7", "doom8", "doom11", "doom1", "roomNumber", "roomnumber");
-		
-		// ignore the capital letters
-		Collections.sort(testWords, new NaturaSortComparator(true));
-		logger.info("capital letters ignored");
-		logger.info(String.join(", ", testWords)); 
-		
-		// do not ignore capital letters
-		Collections.sort(testWords, new NaturaSortComparator(false));
-		logger.info("capital letters not ignored");
-		logger.info(String.join(", ", testWords)); 
+//		System.out.println("\n NATURAL SORT TEST"); 
+//		
+//		// define the list to sort
+//		List<String> testWords = Arrays.asList("Room3", "room3", "Room10", "room10", "room11", "Room11", "room4.8", "Room15.7", "doom8", "doom11", "doom1", "roomNumber", "roomnumber");
+//		
+//		// ignore the capital letters
+//		Collections.sort(testWords, new NaturaSortComparator(true));
+//		logger.info("capital letters ignored");
+//		logger.info(String.join(", ", testWords)); 
+//		
+//		// do not ignore capital letters
+//		Collections.sort(testWords, new NaturaSortComparator(false));
+//		logger.info("capital letters not ignored");
+//		logger.info(String.join(", ", testWords)); 
 		
 		
 		
@@ -409,6 +409,9 @@ public class Main_SWUtils {
 		// write to a String
 		String xmlString = xmlDoc.writeToString(4);
 		logger.info(xmlString);
+		
+		// test utility method
+		XMLDoc.removeTrailingGarbage("test xml with garbage");
 		
 		
 		
