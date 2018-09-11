@@ -25,7 +25,7 @@ public class MapUtils {
 	 * @param defaultVal	the default value if an error occurred or the key is not in the map
 	 * @return 				extracted value or the default value if an error occurred
 	 */
-	public static <T> int intFromMap(Map<String, T> map, String key, int defaultVal) {
+	public static <T> Integer intFromMap(Map<String, T> map, String key, Integer defaultVal) {
 		if (map.containsKey(key)) {
 			Object obj = map.get(key);
 			if (obj instanceof Double) return (int) Math.round((double) obj);
@@ -69,7 +69,7 @@ public class MapUtils {
 	 * @param defaultVal	the default value if an error occurred or the key is not in the map
 	 * @return 				extracted value or the default value if an error occurred
 	 */
-	public static <T> long longFromMap(Map<String, T> map, String key, long defaultVal) {
+	public static <T> Long longFromMap(Map<String, T> map, String key, Long defaultVal) {
 		if (map.containsKey(key)) {
 			Object obj = map.get(key);
 			if (obj instanceof Double) return Math.round((double) obj);
@@ -114,7 +114,7 @@ public class MapUtils {
 	 * @param defaultVal	the default value if an error occurred or the key is not in the map
 	 * @return 				extracted value or the default value if an error occurred
 	 */
-	public static <T> double doubleFromMap(Map<String, T> map, String key, double defaultVal) {
+	public static <T> Double doubleFromMap(Map<String, T> map, String key, Double defaultVal) {
 		if (map.containsKey(key)) {
 			Object obj = map.get(key);
 			if (obj instanceof Double) return (double) obj;
@@ -159,7 +159,7 @@ public class MapUtils {
 	 * @param defaultVal	the default value if an error occurred or the key is not in the map
 	 * @return 				extracted value or the default value if an error occurred
 	 */
-	public static <T> boolean booleanFromMap(Map<String, T> map, String key, boolean defaultVal) {
+	public static <T> Boolean booleanFromMap(Map<String, T> map, String key, Boolean defaultVal) {
 		if (map.containsKey(key)) {
 			Object obj = map.get(key);
 			if (obj instanceof Boolean) {

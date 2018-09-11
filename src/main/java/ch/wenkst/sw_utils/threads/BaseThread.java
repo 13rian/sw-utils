@@ -3,7 +3,7 @@ package ch.wenkst.sw_utils.threads;
 import ch.wenkst.sw_utils.Utils;
 
 public abstract class BaseThread extends Thread {
-	private boolean terminate = false;
+	private boolean running = true;
 	protected int pollInterval = 0;
 
 	/**
@@ -27,7 +27,7 @@ public abstract class BaseThread extends Thread {
 	public void run() {
 		startWork();
 		
-		while (!terminate) {			
+		while (running) {			
 			// execute the task
 			doWork();	
 
@@ -62,6 +62,11 @@ public abstract class BaseThread extends Thread {
 	 * stops the worker thread if it is not hanging in the doWork method
 	 */
 	protected void stopWorker() {
-		terminate = true;
+		running = false;
+	}
+
+
+	public boolean isRunning() {
+		return running;
 	}
 }
