@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Employees>
+     <Employee ID="1">
+          <Name>Freddy</Name>
+          <Age>30</Age>
+          <Weight>65.4</Weight>
+          <Salary>45000</Salary>
+     </Employee>
+     <Employee ID="2">
+          <Firstname>Eddy</Firstname>
+          <Age>22</Age>
+          <Weight>84.3</Weight>
+          <Salary>41000</Salary>
+     </Employee>
+     <Employee ID="3">
+          <Name>Julia</Name>
+          <Age>24</Age>
+          <Weight>75.0</Weight>
+          <Salary>42000</Salary>
+     </Employee>
+     <Employee ID="4">
+          <Name>Sarah</Name>
+          <Age>45</Age>
+          <Weight>56.7</Weight>
+          <Salary>55000</Salary>
+     </Employee>
+</Employees>

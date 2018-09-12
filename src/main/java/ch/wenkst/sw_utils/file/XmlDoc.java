@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils.files;
+package ch.wenkst.sw_utils.file;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,8 +30,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 
-public class XMLDoc {
-	private static final Logger logger = LogManager.getLogger(XMLDoc.class);    // initialize the logger
+public class XmlDoc {
+	private static final Logger logger = LogManager.getLogger(XmlDoc.class);    // initialize the logger
 
 	private Document document = null;   	// hold the xml document
 
@@ -42,7 +42,7 @@ public class XMLDoc {
 	/**
 	 * handles an xml document
 	 */
-	public XMLDoc() {
+	public XmlDoc() {
 		 
 	}
 
@@ -57,7 +57,7 @@ public class XMLDoc {
 		try {
 			icBuilder = icFactory.newDocumentBuilder();
 			document = icBuilder.newDocument();          // create a new document
-			document.setXmlStandalone(true); 			// get rid of the standalone attribute in the declaration of the document			 		
+			// document.setXmlStandalone(true); 			// get rid of the standalone attribute in the declaration of the document			 		
 
 		} catch (Exception e) {
 			logger.error("failed creating root element: " + e.getMessage());
@@ -574,7 +574,7 @@ public class XMLDoc {
 	 * @param element		the element of which the content is returned
 	 * @return  			the string value of the passed xml element
 	 */
-	public String getValueFromElement(Element element) {
+	private String getValueFromElement(Element element) {
 		return element.getChildNodes().item(0).getNodeValue();
 	}
 
@@ -586,7 +586,7 @@ public class XMLDoc {
 	 * @param defaultVal 	the default value if the value cannot be read
 	 * @return 				the integer value of the passed xml element
 	 */
-	public int readInteger(Element element, String tag, int defaultVal) {
+	public Integer readInteger(Element element, String tag, Integer defaultVal) {
 		try {
 			Element childEl = getChildElementByName(element, tag);
 			String value = getValueFromElement(childEl);
@@ -606,7 +606,7 @@ public class XMLDoc {
 	 * @param defaultVal 	the default value if the value cannot be read
 	 * @return 				the long value of the passed xml element
 	 */
-	public long readLong(Element element, String tag, long defaultVal) {
+	public Long readLong(Element element, String tag, Long defaultVal) {
 		try {
 			Element childEl = getChildElementByName(element, tag);
 			String value = getValueFromElement(childEl);
@@ -620,17 +620,17 @@ public class XMLDoc {
 
 
 	/**
-	 * reads the float form an element
+	 * reads the double form an element
 	 * @param element 		the parent element
 	 * @param tag 			the name of the element to read the integer form
 	 * @param defaultVal 	the default value if the value cannot be read
 	 * @return 				the float value of the passed xml element
 	 */
-	public float readFloat(Element element, String tag, float defaultVal) {
+	public Double readDouble(Element element, String tag, Double defaultVal) {
 		try {
 			Element childEl = getChildElementByName(element, tag);
 			String value = getValueFromElement(childEl);
-			return Float.parseFloat(value);
+			return Double.parseDouble(value);
 
 		} catch (Exception e) {
 			logger.error("failed to read the string form tag " + tag, e);
@@ -655,6 +655,22 @@ public class XMLDoc {
 		} catch (Exception e) {
 			logger.error("failed to read the string form tag " + tag, e);
 			return defaultVal;
+		}
+	}
+	
+	/**
+	 * reads the attribute form the passed element
+	 * @param element 		the xml element
+	 * @param name 			the name of the attribute to read
+	 * @param defaultVal 	the default value if the attribute is not set
+	 * @return 				the value of the attribute
+	 */
+	public String readAttribute(Element element, String name, String defaultVal) {
+		String value = element.getAttribute(name);
+		if (value.isEmpty()) {
+			return defaultVal;
+		} else {
+			return value;
 		}
 	}
 	

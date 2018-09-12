@@ -33,9 +33,9 @@ import ch.wenkst.sw_utils.db.DBHandler;
 import ch.wenkst.sw_utils.db.EntityBase;
 import ch.wenkst.sw_utils.event.EventBoard;
 import ch.wenkst.sw_utils.event.managers.AsyncEventManager;
-import ch.wenkst.sw_utils.files.FileHandler;
-import ch.wenkst.sw_utils.files.JsonDoc;
-import ch.wenkst.sw_utils.files.XMLDoc;
+import ch.wenkst.sw_utils.file.FileHandler;
+import ch.wenkst.sw_utils.file.JsonDoc;
+import ch.wenkst.sw_utils.file.XmlDoc;
 import ch.wenkst.sw_utils.future.TimeoutFuture;
 import ch.wenkst.sw_utils.http.builder.HttpRequestBuilder;
 import ch.wenkst.sw_utils.http.builder.HttpResponseBuilder;
@@ -353,68 +353,68 @@ public class Main_SWUtils {
 		/////////////////////////////////////////////////////////////////////////////////////////////////
 		// 									test the xml read										   //
 		/////////////////////////////////////////////////////////////////////////////////////////////////
-		System.out.println("\n XML READ TEST");
-
-		XMLDoc xmlDoc = new XMLDoc();
-		xmlDoc.openXMLFromFile("resource/xmlReadTest.xml");
-		Element rootElement = xmlDoc.getRootElement();   // get the root element
-		Element employee = xmlDoc.getChildElement(rootElement, 2);
-		Element firstNameEl = xmlDoc.getChildElementByName(employee, "Firstname", 0);
-		logger.info(xmlDoc.getValueFromElement(firstNameEl));
-
-
-		/////////////////////////////////////////////////////////////////////////////////////////////////
-		// 									test the xml write										   //
-		/////////////////////////////////////////////////////////////////////////////////////////////////
-		System.out.println("\n XML WRITE TEST");
-
-		// create a new document and drop the old one
-		xmlDoc.createNewDocument();
-
-		// create the root element
-		Element xmlRoot = xmlDoc.createRootElement("XMLTest", "http://www.celsi.ch");
-
-		// create players
-		Element players = xmlDoc.createElement("Players");        // create a player element
-		xmlDoc.appendChildToParent(xmlRoot, players);         // append it to the root element
-
-		// create player without attribute
-		Element player1 = xmlDoc.createElement("Player");				        // create a player element
-		xmlDoc.appendChildToParent(players, player1);                    	 	// append it to the root element
-
-		Element name = xmlDoc.createStrElement("name", "Paul Morphy"); 		// create text element
-		Element age = xmlDoc.createStrElement("age", "27"); 		  		// create text element
-
-		// append the text elements
-		xmlDoc.appendChildToParent(player1, name);
-		xmlDoc.appendChildToParent(player1, age);
-
-
-		// create player with attribute
-		Element player2 = xmlDoc.createElement("Player");            
-		xmlDoc.addAttribute(player2, "id", "5"); 								// add an attribute
-		xmlDoc.appendChildToParent(players, player2);                    		// append it to the root element
-
-		Element name2 = xmlDoc.createStrElement("name", "Bobby Fischer"); 	// create text element
-		Element age2 = xmlDoc.createStrElement("age", "31"); 		    	// create text element
-
-		// append the text elements
-		xmlDoc.appendChildToParent(player2, name2);
-		xmlDoc.appendChildToParent(player2, age2);
-
-		// write to file
-		int indentNumber = 4; 	// specify the indent number
-		xmlDoc.writeToFile("resource/xmlWriteTest.xml", indentNumber);
-
-		// write to a String
-		String xmlString = xmlDoc.writeToString(4);
-		logger.info(xmlString);
-		
-		// test utility method
-		XMLDoc.removeTrailingGarbage("test xml with garbage");
-		
-		
-		
+//		System.out.println("\n XML READ TEST");
+//
+//		XmlDoc xmlDoc = new XmlDoc();
+//		xmlDoc.openXMLFromFile("resource/xmlReadTest.xml");
+//		Element rootElement = xmlDoc.getRootElement();   // get the root element
+//		Element employee = xmlDoc.getChildElement(rootElement, 2);
+//		Element firstNameEl = xmlDoc.getChildElementByName(employee, "Firstname", 0);
+//		logger.info(xmlDoc.getValueFromElement(firstNameEl));
+//
+//
+//		/////////////////////////////////////////////////////////////////////////////////////////////////
+//		// 									test the xml write										   //
+//		/////////////////////////////////////////////////////////////////////////////////////////////////
+//		System.out.println("\n XML WRITE TEST");
+//
+//		// create a new document and drop the old one
+//		xmlDoc.createNewDocument();
+//
+//		// create the root element
+//		Element xmlRoot = xmlDoc.createRootElement("XMLTest", "http://www.celsi.ch");
+//
+//		// create players
+//		Element players = xmlDoc.createElement("Players");        // create a player element
+//		xmlDoc.appendChildToParent(xmlRoot, players);         // append it to the root element
+//
+//		// create player without attribute
+//		Element player1 = xmlDoc.createElement("Player");				        // create a player element
+//		xmlDoc.appendChildToParent(players, player1);                    	 	// append it to the root element
+//
+//		Element name = xmlDoc.createStrElement("name", "Paul Morphy"); 		// create text element
+//		Element age = xmlDoc.createStrElement("age", "27"); 		  		// create text element
+//
+//		// append the text elements
+//		xmlDoc.appendChildToParent(player1, name);
+//		xmlDoc.appendChildToParent(player1, age);
+//
+//
+//		// create player with attribute
+//		Element player2 = xmlDoc.createElement("Player");            
+//		xmlDoc.addAttribute(player2, "id", "5"); 								// add an attribute
+//		xmlDoc.appendChildToParent(players, player2);                    		// append it to the root element
+//
+//		Element name2 = xmlDoc.createStrElement("name", "Bobby Fischer"); 	// create text element
+//		Element age2 = xmlDoc.createStrElement("age", "31"); 		    	// create text element
+//
+//		// append the text elements
+//		xmlDoc.appendChildToParent(player2, name2);
+//		xmlDoc.appendChildToParent(player2, age2);
+//
+//		// write to file
+//		int indentNumber = 4; 	// specify the indent number
+//		xmlDoc.writeToFile("resource/xmlWriteTest.xml", indentNumber);
+//
+//		// write to a String
+//		String xmlString = xmlDoc.writeToString(4);
+//		logger.info(xmlString);
+//		
+//		// test utility method
+//		XmlDoc.removeTrailingGarbage("test xml with garbage");
+//		
+//		
+//		
 		
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// 											json read 													//

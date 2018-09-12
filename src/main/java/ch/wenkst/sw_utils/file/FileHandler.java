@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils.files;
+package ch.wenkst.sw_utils.file;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;

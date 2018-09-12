@@ -60,7 +60,7 @@ import org.bouncycastle.operator.DefaultAlgorithmNameFinder;
 import org.bouncycastle.operator.OutputEncryptor;
 
 import ch.wenkst.sw_utils.conversion.Conversion;
-import ch.wenkst.sw_utils.files.FileHandler;
+import ch.wenkst.sw_utils.file.FileHandler;
 
 public class CryptoUtils {
 	private static final Logger logger = LogManager.getLogger(CryptoUtils.class);    // initialize the logger
