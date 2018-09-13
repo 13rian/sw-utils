@@ -1,6 +1,7 @@
 package ch.wenkst.sw_utils.file;
 
 import java.io.File;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -21,7 +22,7 @@ public class XmlDocTest {
 		String xmlReadFile = System.getProperty("user.dir") + File.separator +
 				"resource" + File.separator + 
 				"xml" + File.separator +
-				"xmlReadTest.xml";
+				"xmlRead.xml";
 		
 		xmlReadDoc = new XmlDoc();
 		xmlReadDoc.openXMLFromFile(xmlReadFile);
@@ -30,16 +31,14 @@ public class XmlDocTest {
 		String xmlWriteFile = System.getProperty("user.dir") + File.separator +
 				"resource" + File.separator + 
 				"xml" + File.separator +
-				"xmlWriteTest.xml";
+				"xmlWrite.xml";
 		
-		XmlDoc xmlWriteDoc = new XmlDoc();
-		xmlWriteDoc.openXMLFromFile(xmlWriteFile);
-		xmlWriteStr = xmlWriteDoc.writeToString(4);
-		System.out.println("");
+		xmlWriteStr = FileHandler.readStrFromFile(xmlWriteFile);
 	}
 	
+	
 	/**
-	 * parse an xml
+	 * parse xml
 	 */
 	@Test
 	@DisplayName("xml read")
@@ -75,7 +74,7 @@ public class XmlDocTest {
 	
 	
 	/**
-	 * write an xml
+	 * write xml
 	 */
 	@Test
 	@DisplayName("xml write")
@@ -121,7 +120,7 @@ public class XmlDocTest {
 
 
 		// write to a String and check if it matches the expectation
-		String xmlString = xmlWriteDoc.writeToString(4);
-		Assertions.assertEquals(xmlWriteStr, xmlString);
+		String xmlString = xmlWriteDoc.writeToString(0);
+		Assertions.assertEquals(xmlWriteStr, xmlString, "write xml string");
 	}
 }

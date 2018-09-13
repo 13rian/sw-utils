@@ -279,7 +279,6 @@ public class HttpParser {
 	}
 
 
-
 	public byte[] getBodyBytes() {
 		byte[] result = Conversion.arrayListToByteArray(bodyBytes);
 		return result;
