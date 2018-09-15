@@ -1,3 +1,7 @@
 - use slf4j instead of the log4j dependency
 - read annotation
 - randomId based on big integers
+- functional interfaces / that catch exceptions that are thrown
+- load hex-certs or certs form byte array
+
+- assertAll if multiple asserts are called in order to execute all tests not just until one Assertion fails

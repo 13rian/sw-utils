@@ -45,6 +45,20 @@ public class DateUtilsTest {
 	
 	
 	/**
+	 * convert a unix timestamp to a human readable string
+	 */
+	@Test
+	@DisplayName("unix to readable string")
+	public void unixToStrTest() {
+		String dateStr = "21.05.1998 07:22:53";
+		Assertions.assertEquals(dateStr, DateUtils.unixToDateStr(895728173000l), "unix to date string");
+	}
+	
+	
+	
+	
+	
+	/**
 	 * Easter Sunday test
 	 */
 	@Test

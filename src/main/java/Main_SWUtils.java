@@ -2,10 +2,8 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.mongodb.morphia.query.Query;
@@ -18,7 +16,6 @@ import ch.wenkst.sw_utils.db.EntityBase;
 import ch.wenkst.sw_utils.event.EventBoard;
 import ch.wenkst.sw_utils.event.managers.AsyncEventManager;
 import ch.wenkst.sw_utils.file.FileHandler;
-import ch.wenkst.sw_utils.future.TimeoutFuture;
 import ch.wenkst.sw_utils.http.builder.HttpRequestBuilder;
 import ch.wenkst.sw_utils.http.builder.HttpResponseBuilder;
 import ch.wenkst.sw_utils.http.parser.HttpRequestParser;
@@ -40,7 +37,7 @@ public class Main_SWUtils {
 	
 	final static Logger logger = LogManager.getLogger(Main_SWUtils.class);    // initialize the logger
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked" })
 	public static void main(String[] args) {
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// make sure to use the right file in lib/security (as described in the folder file_for_ecyption) 		   	   //
@@ -48,6 +45,8 @@ public class Main_SWUtils {
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		
 	
+		Number test = 0.000000000001;
+		System.out.println(test.doubleValue() == 0);
 		
 		
 		/////////////////////////////////////////////////////////////////////////////////////////////////
@@ -152,58 +151,6 @@ public class Main_SWUtils {
 		// read the nth line number of a file
 		logger.info("23th line of the file: " + FileHandler.readNthLine(filePath4, 23));
 
-
-		
-		///////////////////////////////////////////////////////////////////////////////////////////////
-		// 										Utils								 		 		 //
-		///////////////////////////////////////////////////////////////////////////////////////////////
-		System.out.println("\n UTILS");
-		logger.info("current working dir: " + Utils.getWorkDir());
-		
-		try {
-			int[] arr = {1,2};
-			int number = arr[3]; 			// this will throw the exception as the index is out of bounds
-			System.out.println(number);
-
-		} catch (Exception e) {
-			String stackTrace = Utils.exceptionToString(e);
-			logger.info("exception: \n" + stackTrace);
-		}
-		
-		
-		// test the allOf future method
-		CompletableFuture<String> future1 = CompletableFuture.supplyAsync(() -> {
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-			}
-			System.out.println("future1 finished");
-			return "result_1";
-		});
-		
-		
-		CompletableFuture<String> future2 = CompletableFuture.supplyAsync(() -> {
-			try {
-				Thread.sleep(1500);
-			} catch (InterruptedException e) {
-			}
-			System.out.println("future2 finished");
-			return "result_2";
-		});
-
-		CompletableFuture[] futures = {future1, future2};
-
-		logger.debug("start allOf");
-		CompletableFuture<List<Object>> futureList = Utils.allOfCombletableFuture(futures);
-		logger.debug("end allOf");
-		
-		try {
-			List<Object> resultList = futureList.get(2000, TimeUnit.MILLISECONDS);
-			logger.info("result1: " + resultList.get(0) + ", result2: " + resultList.get(1));
-			
-		} catch (Exception e) {
-			logger.error("exception waiting for the combined future: ", e);
-		}
 		
 		
 		
@@ -353,15 +300,10 @@ public class Main_SWUtils {
 		
 		
 		/////////////////////////////////////////////////////////////////////////////////////////////////
-		// 						test scheduler and timeoutFuture									   //
+		// 						test scheduler									   //
 		/////////////////////////////////////////////////////////////////////////////////////////////////
 		System.out.println("\n SCHEDULER TEST");
 		
-		// timeout future using the inbuilt timeout
-		TimeoutFuture<Boolean> future = new TimeoutFuture<>(500);
-		logger.info("start to wait for futur timeout");
-		Boolean result = future.get();
-		logger.info("future timeout reached, result: " + result);
 		
 		
 		// start the thread pool
@@ -380,36 +322,6 @@ public class Main_SWUtils {
 		logger.info("schedule tasks");
 		scheduler.addToTasks(printTask1);
 		scheduler.addToTasks(printTask2);
-		
-		
-		// test the timeout future
-		System.out.println("\n TIMEOUT_FUTURE TEST");
-		
-		// create a completable future that will be completed with a timeout
-		TimeoutFuture<Integer> timeoutFuture1 = new TimeoutFuture<Integer>(2000);
-		TimeoutFuture<Integer> timeoutFuture2 = new TimeoutFuture<Integer>(1000);
-		
-		// complete future1, can be done by another thread
-		Utils.sleep(500);
-		timeoutFuture1.complete(5);
-		
-		try {
-			// get value of future1 (already completed before)
-			Integer result1 = (Integer)timeoutFuture1.get();
-			logger.info("future1 result: " + result1);
-			
-			
-			// get value of future2 (blocks until timeout reached)
-			Integer result2 = timeoutFuture2.get();
-			if (result2 == null) {
-				logger.info("future2 timed out");
-			} else {
-				logger.info("reult2: " + result);
-			}
-			
-		} catch (Exception e) {
-			logger.error("error calling future.get():", e);
-		} 
 		
 		
 		// stop the scheduler

@@ -3,11 +3,8 @@ package ch.wenkst.sw_utils;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -85,28 +82,6 @@ public class Utils {
 	                    .map(f -> (Object) f.join())
 	                    .collect(Collectors.toList())
 	            );
-	}
-	
-	
-	/**
-	 * converts the passed unix timestamp to a human readable string
-	 * @param timestamp		timestamp in ms
-	 * @return 				date as string with the format dd.MM.yyyy HH:mm:ss
-	 */
-	public static String unixToDateStr(long timestamp) {
-		String result = timestamp+"";
-		
-		try {
-			Date date = new Date(timestamp); 
-			SimpleDateFormat jdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-			jdf.setTimeZone(TimeZone.getDefault()); 		// get the time zone of the computer
-			result = jdf.format(date);
-
-		} catch (Exception e) {
-			logger.error("failed to parse the unix timestamp: ", e);
-		}
-		
-		return result;
 	}
 	
 }

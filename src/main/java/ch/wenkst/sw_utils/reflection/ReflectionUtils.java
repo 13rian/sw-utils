@@ -9,12 +9,12 @@ public class ReflectionUtils {
 	
 	/**
 	 *  allows to read out a property of an object if only the property name as String is known
-	 *  the value of the field is returned. It needs to be casted to the type of the field value since it is of type Object
+	 *  the value of the field is returned.
 	 *  @param object 		the object that contains the field of interest
 	 *  @param fieldName 	the name of the field that should be read out
-	 *  @return 			field value of type Object, or an empty string if an error occurs
+	 *  @return 			the value of the passed filed name or null if an error occurred
 	 */
-	public static Object getObjPropertyFromFieldName(Object object, String fieldName) {
+	public static Object getObjProperty(Object object, String fieldName) {
 		try {
 			Class<?> objectClass = object.getClass();     			// get the class of the object
 			Field field = objectClass.getDeclaredField(fieldName);	// get the field of the object
@@ -25,12 +25,11 @@ public class ReflectionUtils {
 		
 		} catch (Exception e) {
 			logger.error("Can not get object property " + fieldName + ": ", e);
-			return "";
+			return null;
 		}
-
-		
 	}
 
+	
 	/**
 	 *  allows to set a property of an object if only the property name as String is known
 	 * 	@param object 		the object that contains the field of interest
@@ -52,7 +51,5 @@ public class ReflectionUtils {
 			return false;
 		}
 	}
-	
-	
 
 }

@@ -1,16 +1,12 @@
 package ch.wenkst.sw_utils.future;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 
 public class TimeoutFuture<T> {
-	private static Logger logger = LogManager.getLogger(TimeoutFuture.class); 		// initialize the logger
-	
 	private CompletableFuture<T> future = null;
 	private long timeout = 0;
 
@@ -27,21 +23,19 @@ public class TimeoutFuture<T> {
 	
 	/**
 	 * calls the get of the future and returns null if the timeout is reached or another error occurred.
-	 * if an error occurred it is printed
+	 * if another error occurrs it will still be thrown
 	 * @return 		the result of the future
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
 	 */
-	public T get() {
+	public T get() throws InterruptedException, ExecutionException {
 		T result = null;
 		try {
 			result = future.get(timeout, TimeUnit.MILLISECONDS);
 		
 		} catch (TimeoutException ex1) {
-			// catch the timeout exception and do nothing
-		
-		} catch (Exception ex2) {
-			// log an unexpected error that is not a timeout error
-			logger.error("error calling the get of the timeout future: ", ex2);
-		}
+			// only catch the timeout exception, the other exceptions will still be thrown
+		} 
 		
 		return result;
 	}

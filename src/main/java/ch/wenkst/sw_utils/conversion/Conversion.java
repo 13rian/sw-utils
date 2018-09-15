@@ -247,13 +247,14 @@ public class Conversion {
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 											Booleans 													   //
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	/**
-	 * converts the passed integer to a boolean
-	 * @param i 	integer to convert
-	 * @return 		boolean representation of the integer
+	 * converts the passed number to a boolean
+	 * @param num 	num to convert to an integer
+	 * @return 		boolean representation of the number
 	 */
-	public static boolean intToBoolean(int i) {
-		if (i == 0) {
+	public static boolean numToBoolean(Number num) {
+		if (num.doubleValue() == 0) {
 			return false;
 		} else {
 			return true;

@@ -103,10 +103,10 @@ public class ConversionTest {
 		Assertions.assertEquals(0, Conversion.booleanToInt(false), "false to int");
 		
 		// int to boolean
-		Assertions.assertEquals(true, Conversion.intToBoolean(1), "1 to boolean");
-		Assertions.assertEquals(true, Conversion.intToBoolean(500), "500 to boolean");
-		Assertions.assertEquals(true, Conversion.intToBoolean(-13), "-13 to boolean");
-		Assertions.assertEquals(false, Conversion.intToBoolean(0), "0 to boolean");
+		Assertions.assertEquals(true, Conversion.numToBoolean(1), "1 to boolean");
+		Assertions.assertEquals(true, Conversion.numToBoolean(500), "500 to boolean");
+		Assertions.assertEquals(true, Conversion.numToBoolean(-13), "-13 to boolean");
+		Assertions.assertEquals(false, Conversion.numToBoolean(0), "0 to boolean");
 	}
 	
 	

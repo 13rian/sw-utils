@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -72,6 +73,28 @@ public class DateUtils {
 			logger.error("error converting the date to a String: ", e);
 			return null;
 		}
+	}
+	
+	
+	/**
+	 * converts the passed unix timestamp to a human readable string
+	 * @param timestamp		timestamp in ms
+	 * @return 				date as string with the format dd.MM.yyyy HH:mm:ss
+	 */
+	public static String unixToDateStr(long timestamp) {
+		String result = timestamp+"";
+		
+		try {
+			Date date = new Date(timestamp); 
+			SimpleDateFormat jdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+			jdf.setTimeZone(TimeZone.getDefault()); 		// get the time zone of the computer
+			result = jdf.format(date);
+
+		} catch (Exception e) {
+			logger.error("failed to parse the unix timestamp: ", e);
+		}
+		
+		return result;
 	}
 
 
