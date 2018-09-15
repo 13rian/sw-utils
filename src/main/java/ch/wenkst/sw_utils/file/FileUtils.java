@@ -1,10 +1,8 @@
 package ch.wenkst.sw_utils.file;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
@@ -25,8 +23,8 @@ import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class FileHandler {
-	final static Logger logger = LogManager.getLogger(FileHandler.class);    // initialize the logger
+public class FileUtils {
+	final static Logger logger = LogManager.getLogger(FileUtils.class);    // initialize the logger
 	
 	// define the constants to recursively copy a directory
 	public static final int COMPLETE_REPLACE = 0; 	// the directory is completely replaced
@@ -238,10 +236,10 @@ public class FileHandler {
 	 * recursively copies a directory 
 	 * @param srcDir 		the path of the source directory to copy
 	 * @param destDir 		the path of the destination directory
-	 * @param option		FileHandler.REPLACE: 			if the directory already exists it will be deleted first
-	 * 						FileHAndler.NO_REPLACE			if the directory already exists nothing happens
-	 *  					FileHandler.MERGE_REPLACE: 		if the directory already exists existing files will be overwritten
-	 *  					FileHandler.MERGE_NO_REPLACE: 	if the directory already exists existing files will not be overwritten
+	 * @param option		FileUtils.COMPLETE_REPLACE: 	if the directory already exists it will be deleted first
+	 * 						FileUtils.NO_REPLACE:			if the directory already exists nothing happens
+	 *  					FileUtils.MERGE_REPLACE: 		if the directory already exists existing files will be overwritten
+	 *  					FileUtils.MERGE_NO_REPLACE: 	if the directory already exists existing files will not be overwritten
 	 * @return 				true if the directory was copied successfully, false if an error occurred	
 	 */
 	public static boolean copyDir(String srcDir, String destDir, int option) {
@@ -295,8 +293,32 @@ public class FileHandler {
 			Files.walkFileTree(rootPath, new DeleteFileVisitor());
 			return true;
 			
-		} catch(Exception e){
+		} catch(Exception e) {
 			logger.error("error deleting the directory " + dir, e);
+			return false;
+		}
+	}
+	
+	
+	/**
+	 * deletes the content of the passed directory
+	 * @param dir 	the path of the directory of which the content should e deleted
+	 * @return 		true if the directory was emptied, false if an error occurred
+	 */
+	public static boolean deleteDirContent(String dir) {
+		try {
+			// delete the directory
+			boolean dirDeleted = deleteDir(dir);
+			if (!dirDeleted) {
+				return false;
+			}
+			
+			// recreate the directory
+			new File(dir).mkdirs();
+			return true;
+
+		} catch(Exception e) {
+			logger.error("error emptying the directory " + dir, e);
 			return false;
 		}
 	}
@@ -304,25 +326,12 @@ public class FileHandler {
 
 
 	/**
-	 * returns all files in the passed directory and all its subdirectories
-	 * @param dirName	name of the directory of which all files are returned as an array 	
-	 * @return 			array of files
-	 */
-	public static File[] getFilesFromDir(String dirName) {
-		File file = new File(dirName);
-		File files[] = file.listFiles();
-
-		return files;
-	}
-
-
-
-	/**
 	 * reads the last lines of the passed file. The methods does not load the whole file into the memory
-	 * by using RandomAccessFile. 
+	 * by using RandomAccessFile. As RandomAccessFile is used the eecution time of the method will be
+	 * independent of the file size.
 	 * @param filePath 		the path of the file from which the lines should be extracted
 	 * @param lineCount 	the number of lines to extract, newlines are not ignored
-	 * @return 				array list that contains the last lines of the passed file
+	 * @return 				array list that contains the last lines of the passed file or null if an error occurred
 	 */
 	public static ArrayList<String> readLastLines(String filePath, int lineCount) {
 		try {
@@ -348,13 +357,21 @@ public class FileHandler {
 					lines.add(0, line);
 					baOutputStream.reset(); 	// reset the buffer
 
-					// do not write carriage returns to the byte array output stream
+				// do not write carriage returns to the byte array output stream
 				} else if (b != 13) {
 					baOutputStream.write(b);
 				}
 
 				// decrease the pointer by one in order to set it to the next last byte
 				bytePointer--;
+			}
+			
+			
+			// get the first line of the file that has no new line character in front of it
+			if (lines.size() < lineCount) {
+				// extract the line and add it to the array list of lines
+				String line = getLine(baOutputStream);
+				lines.add(0, line);
 			}
 
 			// close the used buffers
@@ -365,7 +382,7 @@ public class FileHandler {
 
 		} catch (Exception e) {
 			logger.error("error reading the last lines of the passed file: ", e);
-			return new ArrayList<>();
+			return null;
 		}
 	}
 
@@ -395,19 +412,7 @@ public class FileHandler {
 	 * @return 			the first line of the file or null if the file is empty or an error occurred 
 	 */
 	public static String readFirstLine(String filePath) {
-		String result = null;
-
-		try {
-			File file = new File(filePath);
-			BufferedReader reader = new BufferedReader(new FileReader(file));
-			result = reader.readLine();
-			reader.close();
-			
-		} catch (Exception e) {
-			logger.error("first line of the file " + filePath + " could not be read: ", e);
-		}
-		
-		return result;
+		return readNthLine(filePath, 1);
 	}
 	
 	
@@ -421,10 +426,6 @@ public class FileHandler {
 		String result = null;
 		
 		try {
-			// for small files
-			// String line32 = Files.readAllLines(Paths.get("file.txt")).get((int)lineNumber);
-
-			// for large files
 			Stream<String> lines = Files.lines(Paths.get(filePath)); 
 			result = lines.skip(lineNumber-1).findFirst().get();
 			lines.close();

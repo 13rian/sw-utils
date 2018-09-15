@@ -18,22 +18,21 @@ public class XmlDocTest {
 	 */
 	@BeforeAll
 	public static void initializeExternalResources() {
-		// load the xml file to read from the resources
-		String xmlReadFile = System.getProperty("user.dir") + File.separator +
+		// define the directory for the xml files
+		String xmlDir = System.getProperty("user.dir") + File.separator +
 				"resource" + File.separator + 
-				"xml" + File.separator +
-				"xmlRead.xml";
+				"xml" + File.separator;
+		
+		// load the xml file to read from the resources
+		String xmlReadFile = xmlDir + "xmlRead.xml";
 		
 		xmlReadDoc = new XmlDoc();
 		xmlReadDoc.openXMLFromFile(xmlReadFile);
 		
 		// define the correct xml to write
-		String xmlWriteFile = System.getProperty("user.dir") + File.separator +
-				"resource" + File.separator + 
-				"xml" + File.separator +
-				"xmlWrite.xml";
+		String xmlWriteFile = xmlDir + "xmlWrite.xml";
 		
-		xmlWriteStr = FileHandler.readStrFromFile(xmlWriteFile);
+		xmlWriteStr = FileUtils.readStrFromFile(xmlWriteFile);
 	}
 	
 	

@@ -21,31 +21,27 @@ public class JsonDocTest {
 	 */
 	@BeforeAll
 	public static void initializeExternalResources() {
-		// load the xml file to read from the resources
-		String jsonReadFile = System.getProperty("user.dir") + File.separator +
+		// define the directory for the json files
+		String jsonDir = System.getProperty("user.dir") + File.separator +
 				"resource" + File.separator + 
-				"json" + File.separator +
-				"jsonRead.json";
+				"json" + File.separator;
+		
+		// load the xml file to read from the resources
+		String jsonReadFile = jsonDir + "jsonRead.json";
 		
 		jsonReadDoc = new JsonDoc();
 		jsonReadDoc.openJsonFromFile(jsonReadFile);
 		
 		// define the correct json that needs to be created from an object
-		String jsonObjWriteFile = System.getProperty("user.dir") + File.separator +
-				"resource" + File.separator + 
-				"json" + File.separator +
-				"jsonObjWrite.json";
+		String jsonObjWriteFile = jsonDir + "jsonObjWrite.json";
 		
-		jsonObjWriteStr = FileHandler.readStrFromFile(jsonObjWriteFile);
+		jsonObjWriteStr = FileUtils.readStrFromFile(jsonObjWriteFile);
 		
 		
 		// define the correct json that needs to be created by the jsonDoc
-		String jsonWriteFile = System.getProperty("user.dir") + File.separator +
-				"resource" + File.separator + 
-				"json" + File.separator +
-				"jsonWrite.json";
+		String jsonWriteFile = jsonDir + "jsonWrite.json";
 		
-		jsonWriteStr = FileHandler.readStrFromFile(jsonWriteFile);
+		jsonWriteStr = FileUtils.readStrFromFile(jsonWriteFile);
 	}
 	
 	

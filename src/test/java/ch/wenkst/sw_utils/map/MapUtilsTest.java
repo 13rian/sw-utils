@@ -48,7 +48,7 @@ public class MapUtilsTest {
 		
 		
 		// read a value that cannot be casted to an int
-		Assertions.assertEquals(new Integer(555), MapUtils.intFromMap(numTestMap, "mapVal", 555), "read map as int val");
+		Assertions.assertEquals(Integer.valueOf(555), MapUtils.intFromMap(numTestMap, "mapVal", 555), "read map as int val");
 	}
 	
 	
@@ -71,7 +71,7 @@ public class MapUtilsTest {
 		
 		
 		// read a value that cannot be casted to an int
-		Assertions.assertEquals(new Long(555), MapUtils.longFromMap(numTestMap, "mapVal", 555l), "read map as long val");
+		Assertions.assertEquals(Long.valueOf(555), MapUtils.longFromMap(numTestMap, "mapVal", 555l), "read map as long val");
 	}
 	
 	
@@ -96,7 +96,7 @@ public class MapUtilsTest {
 		
 		
 		// read a value that cannot be casted to an int
-		Assertions.assertEquals(new Double(555), MapUtils.doubleFromMap(numTestMap, "mapVal", 555d), "read map as double val");
+		Assertions.assertEquals(Double.valueOf(555), MapUtils.doubleFromMap(numTestMap, "mapVal", 555d), "read map as double val");
 	}
 	
 	
@@ -122,13 +122,13 @@ public class MapUtilsTest {
 		
 		
 		// read values that are present in the map
-		Assertions.assertEquals(new Boolean(true), MapUtils.booleanFromMap(testMap, "intVal1", null), "read positive int as boolean val");
-		Assertions.assertEquals(new Boolean(false), MapUtils.booleanFromMap(testMap, "intVal2", null), "read negative int as boolean val");
-		Assertions.assertEquals(new Boolean(true), MapUtils.booleanFromMap(testMap, "doubleVal1", null), "read positive double as boolean val");
-		Assertions.assertEquals(new Boolean(true), MapUtils.booleanFromMap(testMap, "doubleVal2", null), "read negative double as boolean val");
-		Assertions.assertEquals(new Boolean(false), MapUtils.booleanFromMap(testMap, "strVal1", null), "read true string as boolean val");
-		Assertions.assertEquals(new Boolean(false), MapUtils.booleanFromMap(testMap, "strVal2", null), "read True string as boolean val");
-		Assertions.assertEquals(new Boolean(true), MapUtils.booleanFromMap(testMap, "booleanVal", null), "read boolean as boolean val");
+		Assertions.assertEquals(Boolean.valueOf(true), MapUtils.booleanFromMap(testMap, "intVal1", null), "read positive int as boolean val");
+		Assertions.assertEquals(Boolean.valueOf(false), MapUtils.booleanFromMap(testMap, "intVal2", null), "read negative int as boolean val");
+		Assertions.assertEquals(Boolean.valueOf(true), MapUtils.booleanFromMap(testMap, "doubleVal1", null), "read positive double as boolean val");
+		Assertions.assertEquals(Boolean.valueOf(true), MapUtils.booleanFromMap(testMap, "doubleVal2", null), "read negative double as boolean val");
+		Assertions.assertEquals(Boolean.valueOf(false), MapUtils.booleanFromMap(testMap, "strVal1", null), "read true string as boolean val");
+		Assertions.assertEquals(Boolean.valueOf(false), MapUtils.booleanFromMap(testMap, "strVal2", null), "read True string as boolean val");
+		Assertions.assertEquals(Boolean.valueOf(true), MapUtils.booleanFromMap(testMap, "booleanVal", null), "read boolean as boolean val");
 		
 		
 		// read a value that is not present in the map

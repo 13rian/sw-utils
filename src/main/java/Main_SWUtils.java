@@ -1,3 +1,4 @@
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -15,7 +16,7 @@ import ch.wenkst.sw_utils.db.DBHandler;
 import ch.wenkst.sw_utils.db.EntityBase;
 import ch.wenkst.sw_utils.event.EventBoard;
 import ch.wenkst.sw_utils.event.managers.AsyncEventManager;
-import ch.wenkst.sw_utils.file.FileHandler;
+import ch.wenkst.sw_utils.file.FileUtils;
 import ch.wenkst.sw_utils.http.builder.HttpRequestBuilder;
 import ch.wenkst.sw_utils.http.builder.HttpResponseBuilder;
 import ch.wenkst.sw_utils.http.parser.HttpRequestParser;
@@ -44,9 +45,21 @@ public class Main_SWUtils {
 		// Java 9: Security.setProperty("crypto.policy", "unlimited"); for the same effect 						   	   //
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		
-	
-		Number test = 0.000000000001;
-		System.out.println(test.doubleValue() == 0);
+		new TestLog().log();
+		
+//		String s = "HTTP/1.1 200 OK\r\n" +
+//		        "Content-Length: 100\r\n" +
+//		        "Content-Type: text/plain\r\n" +
+//		        "Server: some-server\r\n" +
+//		        "\r\n";
+//		SessionInputBufferImpl sessionInputBuffer = new SessionInputBufferImpl(new HttpTransportMetricsImpl(), 2048);
+//		sessionInputBuffer.bind(new ByteArrayInputStream(s.getBytes(Consts.ASCII)));
+//		DefaultHttpResponseParser responseParser = new DefaultHttpResponseParser(sessionInputBuffer);
+//		HttpResponse response = responseParser.parse();
+//		System.out.println(response);
+		
+		
+		
 		
 		
 		/////////////////////////////////////////////////////////////////////////////////////////////////
@@ -56,8 +69,8 @@ public class Main_SWUtils {
 		
 		// certificate handling method
 		String certDir = Utils.getWorkDir() + File.separator + "resource" + File.separator + "certs";
-		String keyPath = FileHandler.findFileByPattern(certDir, "TLS", "pem");
-		String certPath = FileHandler.findFileByPattern(certDir, "TLS", "cer");
+		String keyPath = FileUtils.findFileByPattern(certDir, "TLS", "pem");
+		String certPath = FileUtils.findFileByPattern(certDir, "TLS", "cer");
 		
 		// load the key in der (tested, it is working)
 		String keyDER = CryptoUtils.loadDERPrivateKey(keyPath);
@@ -81,75 +94,9 @@ public class Main_SWUtils {
 		// 										FileHandler									 		 //
 		///////////////////////////////////////////////////////////////////////////////////////////////
 		System.out.println("\n FILE HANDLER TEST");
-
-		// read the last few lines of a file
-		String filePath = Utils.getWorkDir() + File.separator + "resource" + File.separator + "xmlWriteTest.xml";
-		// path, number of lines, nCharacters to read in each iteration (should be at least as big as the largest expected line)
-		ArrayList<String> lines = FileHandler.readLastLines(filePath, 5);
-		logger.info("extracted lines: \n" + lines); 
 		
-
-		// get the content of a file as String
-		String filePath2 = Utils.getWorkDir() + File.separator + "resource" + File.separator + "testFile.txt";
-		logger.info("read from file: \n" + FileHandler.readStrFromFile(filePath2));
-
-		// write a String to a file
-		String filePath3 = Utils.getWorkDir() + File.separator + "resource" + File.separator + "testFile" + File.separator + "newFile.txt";
-		logger.info("new file written?: " + FileHandler.writeStrToFile(filePath3, "test content written by Java8"));
-
-		// copy a file
-		String fileToCopy = Utils.getWorkDir() + File.separator + "resource" + File.separator + "testFile.txt";
-		String dest = Utils.getWorkDir() + File.separator + "resource" + File.separator + "copyDir" + File.separator + "testFile.txt";
-		logger.info("file copied?: " + FileHandler.copyFile(fileToCopy, dest, true));
-
-		// move a file
-		// create a test file to rename and to move
-		String fileToCopy2 = Utils.getWorkDir() + File.separator + "resource" + File.separator + "testFile.txt";
-		String dest2 = Utils.getWorkDir() + File.separator + "resource" + File.separator + "testFileRename.txt";
-		logger.info("created testFile2.txt to remove?: " + FileHandler.moveFile(fileToCopy2, dest2, true));
-		
-		// rename the file
-		String fileToRename = Utils.getWorkDir() + File.separator + "resource" + File.separator + "testFileRename.txt";
-		String renameFile = Utils.getWorkDir() + File.separator + "resource" + File.separator + "testFileMove.txt";
-		logger.info("file renamed?: " + FileHandler.moveFile(fileToRename, renameFile, true));
-		
-		// copy the file again in order to use it the next time
-		FileHandler.copyFile(renameFile, fileToCopy, true);
-		
-		// move the file
-		String fileToMove = Utils.getWorkDir() + File.separator + "resource" + File.separator + "testFileMove.txt";
-		String moveDest = Utils.getWorkDir() + File.separator + "resource" + File.separator + "moveDir" + File.separator + "testFileMove.txt";
-		logger.info("file moved?: " + FileHandler.moveFile(fileToMove, moveDest, true));
-		
-		// delete a file that does not exist
-		logger.info("file deleted?: " + FileHandler.deleteFile("testi"));
-		
-		// delete a file that does exist
-		logger.info("file deleted?: " + FileHandler.deleteFile(dest));
-		logger.info("file deleted?: " + FileHandler.deleteFile(moveDest));
-		
-		
-		// recursively copy a directory
-		String dirToCopy = Utils.getWorkDir() + File.separator + "resource" + File.separator + "dirToCopy";
-		String copiedDir = Utils.getWorkDir() + File.separator + "resource" + File.separator + "copiedDir";
-		logger.info("directory recursively copied: " + FileHandler.copyDir(dirToCopy, copiedDir, FileHandler.MERGE_NO_REPLACE));
-		
-		
-		// recursively delete a directory
-		logger.info("directory recursively deleted: " + FileHandler.deleteDir(copiedDir));
-		
-		
-
-		// get all files from a directory
-		String dir = Utils.getWorkDir() + File.separator + "resource" + File.separator;
-		logger.info("Number of files in " + dir + ": " + FileHandler.getFilesFromDir(dir).length);
-		
-		// read the last line of a file
-		String filePath4 = Utils.getWorkDir() + File.separator + "resource" + File.separator + "xmlReadTest.xml";
-		logger.info("first line of the file: " + FileHandler.readFirstLine(filePath4));
-		
-		// read the nth line number of a file
-		logger.info("23th line of the file: " + FileHandler.readNthLine(filePath4, 23));
+		// TODO
+		// FIND FILE AND FIND FILES BY PATTERS
 
 		
 		

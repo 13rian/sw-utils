@@ -3,5 +3,8 @@
 - randomId based on big integers
 - functional interfaces / that catch exceptions that are thrown
 - load hex-certs or certs form byte array
+- write tests for other dir copy modes as well
+- find the code with find file by pattern
+- modularize the whole thing
 
 - assertAll if multiple asserts are called in order to execute all tests not just until one Assertion fails

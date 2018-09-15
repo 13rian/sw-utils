@@ -60,7 +60,7 @@ import org.bouncycastle.operator.DefaultAlgorithmNameFinder;
 import org.bouncycastle.operator.OutputEncryptor;
 
 import ch.wenkst.sw_utils.conversion.Conversion;
-import ch.wenkst.sw_utils.file.FileHandler;
+import ch.wenkst.sw_utils.file.FileUtils;
 
 public class CryptoUtils {
 	private static final Logger logger = LogManager.getLogger(CryptoUtils.class);    // initialize the logger
@@ -396,7 +396,7 @@ public class CryptoUtils {
 
 		// extract the certificate
 		try {
-			byte[] certBytes = FileHandler.readByteArrFromFile(certPath);
+			byte[] certBytes = FileUtils.readByteArrFromFile(certPath);
 			result = Conversion.byteArrayToHexStr(certBytes);
 
 		} catch (Exception e) {

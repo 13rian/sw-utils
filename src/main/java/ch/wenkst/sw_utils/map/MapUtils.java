@@ -292,7 +292,7 @@ public class MapUtils {
 	@SuppressWarnings("unchecked")
 	public static <T> Map<String, Object> filterMap(Map<String, T> map, String... keys) {
 		try {
-			Map<String, Object> result = map.getClass().newInstance();
+			Map<String, Object> result = map.getClass().getDeclaredConstructor().newInstance();
 			for (String key : keys) {
 				if (map.containsKey(key)) {
 					result.put(key, map.get(key));
