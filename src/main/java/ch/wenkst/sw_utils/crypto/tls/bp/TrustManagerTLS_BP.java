@@ -13,14 +13,15 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Trust store that handles elliptic curve certificates (brainpool included)
  */
 public class TrustManagerTLS_BP implements X509TrustManager {
-	private static Logger logger = LogManager.getLogger(TrustManagerTLS_BP.class);
+	private static final Logger logger = LoggerFactory.getLogger(TrustManagerTLS_BP.class);
+	
 	private KeyStore trustStore; 
 	private X509TrustManager trustManager;
 	private TrustManagerFactory trustManagerFactory;

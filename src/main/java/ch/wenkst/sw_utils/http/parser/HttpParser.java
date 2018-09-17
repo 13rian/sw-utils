@@ -3,13 +3,13 @@ package ch.wenkst.sw_utils.http.parser;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ch.wenkst.sw_utils.conversion.Conversion;
 
 public class HttpParser {
-	private static Logger logger = LogManager.getLogger(HttpParser.class);
+	private static final Logger logger = LoggerFactory.getLogger(HttpParser.class);
 
 	// possible states of the http parser 
 	public enum State {NONE, FIRST_LINE_RECEIVED, HEADER_RECEIVED, CHUNK_LENGTH_RECEIVED, BODY_RECEIVED};

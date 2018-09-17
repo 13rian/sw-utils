@@ -1,12 +1,12 @@
 package ch.wenkst.sw_utils.tests.scheduler;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ch.wenkst.sw_utils.scheduler.ScheduledTask;
 
 public class PrintTask extends ScheduledTask {
-	final static Logger logger = LogManager.getLogger(PrintTask.class);    // initialize the logger
+	private static final Logger logger = LoggerFactory.getLogger(ScheduledTask.class);
 	
 	private String name = "";			// to identify the task
 	

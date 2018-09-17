@@ -2,8 +2,8 @@ package ch.wenkst.sw_utils.map;
 
 import java.util.Map;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ch.wenkst.sw_utils.conversion.Conversion;
 
@@ -11,7 +11,7 @@ import ch.wenkst.sw_utils.conversion.Conversion;
  * contains utility methods to handle maps
  */
 public class MapUtils {
-	final static Logger logger = LogManager.getLogger(MapUtils.class);    // initialize the logger
+	private static final Logger logger = LoggerFactory.getLogger(MapUtils.class);
 
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -31,8 +31,6 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
@@ -58,12 +56,14 @@ import org.bouncycastle.jce.spec.ECPrivateKeySpec;
 import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 import org.bouncycastle.operator.DefaultAlgorithmNameFinder;
 import org.bouncycastle.operator.OutputEncryptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ch.wenkst.sw_utils.conversion.Conversion;
 import ch.wenkst.sw_utils.file.FileUtils;
 
 public class CryptoUtils {
-	private static final Logger logger = LogManager.getLogger(CryptoUtils.class);    // initialize the logger
+	private static final Logger logger = LoggerFactory.getLogger(CryptoUtils.class);
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 								methods to register bouncy castle providers 								 //

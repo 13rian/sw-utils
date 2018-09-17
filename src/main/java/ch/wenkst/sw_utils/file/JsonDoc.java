@@ -7,8 +7,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -17,7 +19,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 public class JsonDoc {
-	private static final Logger logger = LogManager.getLogger(JsonDoc.class);    // initialize the logger
+	private static final Logger logger = LoggerFactory.getLogger(JsonDoc.class);
 
 	private JsonParser parser = null;   	// the json parser
 	private JsonElement rootEl = null; 		// the root element of the json file

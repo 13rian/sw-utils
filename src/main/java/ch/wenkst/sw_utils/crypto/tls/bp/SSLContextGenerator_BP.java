@@ -12,8 +12,8 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ch.wenkst.sw_utils.crypto.tls.TrustManagerTrustAny;
 
@@ -23,7 +23,7 @@ import ch.wenkst.sw_utils.crypto.tls.TrustManagerTrustAny;
  * Note: The JCE unlimited strength file needs to be installed
  */
 public class SSLContextGenerator_BP {
-	private static final Logger logger = LogManager.getLogger(SSLContextGenerator_BP.class);    // initialize the logger
+	private static final Logger logger = LoggerFactory.getLogger(SSLContextGenerator_BP.class);
 
 
 	/**

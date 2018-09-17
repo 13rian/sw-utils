@@ -20,11 +20,11 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.stream.Stream;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FileUtils {
-	final static Logger logger = LogManager.getLogger(FileUtils.class);    // initialize the logger
+	private static final Logger logger = LoggerFactory.getLogger(FileUtils.class);
 	
 	// define the constants to recursively copy a directory
 	public static final int COMPLETE_REPLACE = 0; 	// the directory is completely replaced
@@ -99,7 +99,7 @@ public class FileUtils {
 	 * @param searchDir 	the directory in which the file is searched
 	 * @param pattern 		some fraction of the file name, can be null
 	 * @param end 			the ending of the file
-	 * @return	 			an absolute file path
+	 * @return	 			an absolute file path or null if no file was found mathing the pattern
 	 */
 	public static String findFileByPattern(String searchDir, String pattern, String end) {
 		File dir = new File(searchDir);
@@ -107,18 +107,41 @@ public class FileUtils {
 			return null;
 		}
 
-		File[] files = dir.listFiles();			// get all files in the directory
-		for (File file : files) {
-			if (file.isFile()) {
-				String filename = file.getName();
-				boolean isMatchingEnd = filename.endsWith(end);
-				boolean isPatternFound = (pattern == null) || (filename.contains(pattern));
-				if (isMatchingEnd && isPatternFound) {
-					return file.getAbsolutePath();
-				}
-			}
+		File[] files = dir.listFiles((directory, fileName) -> {
+		    return fileName.endsWith(end) && (pattern == null || fileName.contains(pattern));
+		});
+		
+		if (files.length == 0) {
+			return null;
+		} else {
+			return files[0].getAbsolutePath();
 		}
-		return null;
+	}
+	
+	
+	/**
+	 * returns an array of all absolute file paths of files in the searchDir that contain pattern and end with end
+	 * @param searchDir 	the directory in which the file is searched
+	 * @param pattern 		some fraction of the file name, can be null
+	 * @param end 			the ending of the file
+	 * @return	 			an array of absolute file paths, an empty array if no files matching the pattern were found
+	 */
+	public static String[] findFilesByPattern(String searchDir, String pattern, String end) {
+		File dir = new File(searchDir);
+		if (!dir.exists()) { 
+			return new String[0];
+		}
+
+		File[] files = dir.listFiles((directory, fileName) -> {
+		    return fileName.endsWith(end) && (pattern == null || fileName.contains(pattern));
+		});
+		
+		String[] result = new String[files.length];
+		for (int i=0; i<files.length; i++) {
+			result[i] = files[i].getAbsolutePath();
+		}
+		
+		return result;
 	}
 
 

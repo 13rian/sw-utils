@@ -12,8 +12,8 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ch.wenkst.sw_utils.crypto.tls.TrustManagerTrustAny;
 
@@ -22,7 +22,7 @@ import ch.wenkst.sw_utils.crypto.tls.TrustManagerTrustAny;
  * generates the SSL context for elliptic curves (not brainpool curves)
  */
 public class SSLContextGenerator {
-	private static final Logger logger = LogManager.getLogger(SSLContextGenerator.class);    // initialize the logger
+	private static final Logger logger = LoggerFactory.getLogger(SSLContextGenerator.class);
 
 
 	

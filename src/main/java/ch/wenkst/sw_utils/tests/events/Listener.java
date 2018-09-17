@@ -1,11 +1,11 @@
 package ch.wenkst.sw_utils.tests.events;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ch.wenkst.sw_utils.event.IListener;
 
 public class Listener implements IListener {
-	final static Logger logger = LogManager.getLogger(Listener.class);    // initialize the logger
+	private static final Logger logger = LoggerFactory.getLogger(Listener.class);
 	
 	private String name = "";      	// name of the listener
 	int processTime = 10; 			// duration in ms how long the handleEvent method should need

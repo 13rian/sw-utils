@@ -3,8 +3,8 @@ package ch.wenkst.sw_utils.event;
 import java.util.HashMap;
 import java.util.concurrent.Executor;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ch.wenkst.sw_utils.event.managers.AsyncEventManager;
 import ch.wenkst.sw_utils.event.managers.IEventManager;
@@ -16,7 +16,7 @@ import ch.wenkst.sw_utils.event.managers.SyncSameEventEventManager;
  * represents a singleton instance that handles all eventsListeners and fires all events
  */
 public class EventBoard {
-	final static Logger logger = LogManager.getLogger(EventBoard.class);    // initialize the logger
+	private static final Logger logger = LoggerFactory.getLogger(EventBoard.class);
 	
 	// define the constants for the different modes how the listeners are informed after an event is fired
 	public static final int MODE_SYNC = 0; 				// synchronous in the order the listeners were registered

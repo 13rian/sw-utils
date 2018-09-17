@@ -8,15 +8,11 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 /**
  * holds a collection of frequently used methods
  */
 public class Utils {
-	final static Logger logger = LogManager.getLogger(Utils.class);    // initialize the logger
-	
+		
 	/**
 	 * put the caller to sleep for the passed amount of time in ms
 	 * @param sleepTime 	sleep time in ms

@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.bson.Document;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
@@ -14,6 +12,9 @@ import org.mongodb.morphia.query.CriteriaContainerImpl;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
@@ -25,7 +26,7 @@ import com.mongodb.ServerAddress;
  * query.asList(new FindOptions().limit(1));   	// add additional options to the query
  */
 public class DBHandler {
-	final static Logger logger = LogManager.getLogger(DBHandler.class);    // initialize the logger
+	private static final Logger logger = LoggerFactory.getLogger(DBHandler.class);
 
 	// maps the dbName to the morphia's datastore (key: dbName, value: datastore) 
 	private static HashMap<String,Datastore> dataStoreMap = new HashMap<>(); 

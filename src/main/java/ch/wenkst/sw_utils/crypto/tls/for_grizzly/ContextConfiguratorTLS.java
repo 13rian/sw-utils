@@ -10,14 +10,14 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ch.wenkst.sw_utils.crypto.tls.TrustManagerTrustAny;
 
 public class ContextConfiguratorTLS extends SSLContextConfigurator {
-	private static final Logger logger = LogManager.getLogger(ContextConfiguratorTLS.class);    // initialize the logger
+	private static final Logger logger = LoggerFactory.getLogger(ContextConfiguratorTLS.class);
 
 	private String keyStorePassword =""; 			// the keyStore password (must be the same that was  used to create the certificate)
 	private String keyFilePath = ""; 				// path to the p12-file containing the private key and the certificate

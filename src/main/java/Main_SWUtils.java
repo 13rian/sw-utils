@@ -1,13 +1,13 @@
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.mongodb.morphia.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.mongodb.ServerAddress;
 
 import ch.wenkst.sw_utils.Utils;
@@ -36,7 +36,7 @@ public class Main_SWUtils {
 	}
 	
 	
-	final static Logger logger = LogManager.getLogger(Main_SWUtils.class);    // initialize the logger
+	private static final Logger logger = LoggerFactory.getLogger(Main_SWUtils.class);
 
 	@SuppressWarnings({ "unchecked" })
 	public static void main(String[] args) {
@@ -44,8 +44,6 @@ public class Main_SWUtils {
 		// make sure to use the right file in lib/security (as described in the folder file_for_ecyption) 		   	   //
 		// Java 9: Security.setProperty("crypto.policy", "unlimited"); for the same effect 						   	   //
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		
-		new TestLog().log();
 		
 		
 		

@@ -2,11 +2,11 @@ package ch.wenkst.sw_utils.http.builder;
 
 import java.util.HashMap;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HttpResponseBuilder extends HttpBuilder {
-	private static Logger logger = LogManager.getLogger(HttpResponseBuilder.class);
+	private static final Logger logger = LoggerFactory.getLogger(HttpResponseBuilder.class);
 
 	private HashMap<Integer, String> httpStatusMap = null;
 

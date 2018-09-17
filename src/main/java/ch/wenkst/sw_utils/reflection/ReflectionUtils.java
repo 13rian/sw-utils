@@ -1,11 +1,12 @@
 package ch.wenkst.sw_utils.reflection;
 
 import java.lang.reflect.Field;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ReflectionUtils {
-	final static Logger logger = LogManager.getLogger(ReflectionUtils.class);    // initialize the logger
+	private static final Logger logger = LoggerFactory.getLogger(ReflectionUtils.class);
 	
 	/**
 	 *  allows to read out a property of an object if only the property name as String is known

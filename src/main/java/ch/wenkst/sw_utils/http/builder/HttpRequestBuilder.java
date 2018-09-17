@@ -2,11 +2,11 @@ package ch.wenkst.sw_utils.http.builder;
 
 import java.net.URL;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HttpRequestBuilder extends HttpBuilder {
-	private static Logger logger = LogManager.getLogger(HttpRequestBuilder.class);
+	private static final Logger logger = LoggerFactory.getLogger(HttpRequestBuilder.class);
 	
 	
 	/**

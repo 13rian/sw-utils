@@ -4,8 +4,9 @@ import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * provides several conversion methods. UTF-8 is always used to get the bytes from a String and vice versa
@@ -16,7 +17,7 @@ import org.apache.logging.log4j.Logger;
  * that has an underlying character set, which is not the binary representation you want.
  */
 public class Conversion {
-	final static Logger logger = LogManager.getLogger(Conversion.class);    	// initialize the logger
+	private static final Logger logger = LoggerFactory.getLogger(Conversion.class);
 	
 	private final static char[] hexArray = "0123456789ABCDEF".toCharArray(); 	// needed for hex conversions
 	

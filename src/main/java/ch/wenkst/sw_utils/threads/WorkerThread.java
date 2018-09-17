@@ -1,7 +1,7 @@
 package ch.wenkst.sw_utils.threads;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ch.wenkst.sw_utils.Utils;
 
@@ -10,7 +10,7 @@ import ch.wenkst.sw_utils.Utils;
  * STATE chain: STARTING -&gt; WORKING -&gt; SUSPENDING -&gt; SUSPENDED -&gt; RESUMING -&gt; WORKING -&gt; TERMINATING
  */
 public abstract class WorkerThread extends Thread {
-	final static Logger logger = LogManager.getLogger(WorkerThread.class);    // initialize the logger
+	private static final Logger logger = LoggerFactory.getLogger(WorkerThread.class);
 
 	// defines the different states of the thread
 	public enum ThreadState {

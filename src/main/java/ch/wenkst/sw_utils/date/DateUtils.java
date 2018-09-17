@@ -7,14 +7,14 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * holds some methods to handle dates and holidays
  */
 public class DateUtils {
-	final static Logger logger = LogManager.getLogger(DateUtils.class);    // initialize the logger	
+	private static final Logger logger = LoggerFactory.getLogger(DateUtils.class);
 
 	// static list of holiday dates (is only initialized once when it it is used for the first time)
 	private static ArrayList<Calendar> chHolidayList = null;
