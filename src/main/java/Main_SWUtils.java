@@ -1,19 +1,12 @@
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
-import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.mongodb.ServerAddress;
-
 import ch.wenkst.sw_utils.Utils;
 import ch.wenkst.sw_utils.crypto.CryptoUtils;
-import ch.wenkst.sw_utils.db.DBHandler;
-import ch.wenkst.sw_utils.db.EntityBase;
 import ch.wenkst.sw_utils.event.EventBoard;
 import ch.wenkst.sw_utils.event.managers.AsyncEventManager;
 import ch.wenkst.sw_utils.file.FileUtils;
@@ -22,7 +15,6 @@ import ch.wenkst.sw_utils.http.builder.HttpResponseBuilder;
 import ch.wenkst.sw_utils.http.parser.HttpRequestParser;
 import ch.wenkst.sw_utils.http.parser.HttpResponseParser;
 import ch.wenkst.sw_utils.scheduler.Scheduler;
-import ch.wenkst.sw_utils.tests.db.Car;
 import ch.wenkst.sw_utils.tests.events.Event;
 import ch.wenkst.sw_utils.tests.events.Listener;
 import ch.wenkst.sw_utils.tests.scheduler.PrintTask;
@@ -38,7 +30,6 @@ public class Main_SWUtils {
 	
 	private static final Logger logger = LoggerFactory.getLogger(Main_SWUtils.class);
 
-	@SuppressWarnings({ "unchecked" })
 	public static void main(String[] args) {
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// make sure to use the right file in lib/security (as described in the folder file_for_ecyption) 		   	   //
@@ -72,17 +63,6 @@ public class Main_SWUtils {
 		
 		// print the default providers
 		logger.info(CryptoUtils.getDefaultProviders());
-		
-		
-
-		///////////////////////////////////////////////////////////////////////////////////////////////
-		// 										FileHandler									 		 //
-		///////////////////////////////////////////////////////////////////////////////////////////////
-		System.out.println("\n FILE HANDLER TEST");
-		
-		// TODO
-		// FIND FILE AND FIND FILES BY PATTERS
-
 		
 		
 		
@@ -264,99 +244,6 @@ public class Main_SWUtils {
 		executor.shutdown();
 		
 
-		
-		
-		
-
-		///////////////////////////////////////////////////////////////////////////////////////////////
-		// 										MongoDB										 		 //
-		///////////////////////////////////////////////////////////////////////////////////////////////	
-		System.out.println("\n MONGO DB TEST");
-		
-		// note: to make the query most effective always query the one that restricts the results the most first
-
-		// define the parameters to connect to the mongoDB, the name of the collection is indicated as annotation in the entity Car
-		String mongoHost = "192.168.1.183";
-		int mongoPort = 27017;
-		String dbName = "test_db";
-
-		// test the connection
-		ArrayList<ServerAddress> hosts = new ArrayList<>();
-		hosts.add(new ServerAddress(mongoHost, mongoPort));
-		// List<ServerAddress> hosts = Arrays.asList(new ServerAddress(mongoHost, mongoPort));
-		boolean isReachable = DBHandler.testMongoDBConnection(hosts, 5000);
-		logger.info("connectin to mongoDB? " + isReachable);
-
-		if (isReachable) {
-
-			// connect to the database
-			DBHandler.connectToDB(mongoHost, mongoPort);
-
-			// delete all collections in the database (use only here for test cases!!!)
-			DBHandler.dropDatabase(dbName);
-
-			// create objects to save in the database
-			Car ford = new Car("Ford", 1600);
-			Car ford2 = new Car("Ford", 2000);
-			Car audi = new Car("Audi", 2500);
-			Car vw = new Car("VW", 2500);
-			Car mercedes = new Car("Mercedes", 1800);
-
-			// save objects o the database
-			DBHandler.saveToDB(ford, dbName);
-			DBHandler.saveToDB(ford2, dbName);
-			DBHandler.saveToDB(audi, dbName);
-			DBHandler.saveToDB(vw, dbName);
-			DBHandler.saveToDB(mercedes, dbName);
-
-			// retrieve entities from the database (single constraint)
-			Query<?> weightQuery = DBHandler.createFilterQuery(Car.class, "weight <=", 1900, null, dbName);
-			List<?> lightCars = DBHandler.getListFromQuery(weightQuery);
-			for (Object item: lightCars) {
-				Car car = (Car)item;
-				logger.info("low weight: " + car.getName());
-			}
-
-			// retrieve entities from the database (multiple constraints)
-			String[] constraints = {"weight <=", "name ="};
-			Object[] constraintVals = {1900, "Ford"};
-			Query<?> weightNameQuery = DBHandler.createAndQuery(Car.class, constraints, constraintVals, null, dbName);
-			List<?> lightFordCars = DBHandler.getListFromQuery(weightNameQuery);
-			for (Object item: lightFordCars) {
-				Car car = (Car)item;
-				logger.info("light Ford car: " + car.getName());
-			}
-
-			// update value
-			Query<?> updateValueQuery = DBHandler.createFilterQuery(Car.class, "weight =", 2500, null, dbName);
-			Query<EntityBase> updateValueQueryBE = (Query<EntityBase>)updateValueQuery; 						// query needs to be casted
-			DBHandler.updateEntityInDB("weight", 3000, dbName, updateValueQueryBE);
-
-
-			// update values
-			Query<?> updateValuesQuery = DBHandler.createFilterQuery(Car.class, "weight =", 3000, null, dbName);
-			Query<EntityBase> updateValuesQueryBE = (Query<EntityBase>)updateValuesQuery; 						// query needs to be casted
-			String[] fields = {"name", "weight"};
-			Object[] values = {"Tesla", 2900};
-			DBHandler.updateEntityInDB(fields, values, dbName, updateValuesQueryBE);
-
-
-			// delete objects from the database
-			Query<?> deleteEntityQuery = DBHandler.createFilterQuery(Car.class, "name =", "Tesla", null, dbName);
-			Query<EntityBase> deleteEntityQueryBE = (Query<EntityBase>)deleteEntityQuery; 										// query needs to be casted
-			DBHandler.deleteFromDB(dbName, deleteEntityQueryBE);
-
-			
-			// delete all collections in the database (use only here for test cases!!!)
-			DBHandler.dropDatabase(dbName);
-			
-
-			// disconnect from the database
-			DBHandler.disconnectFromDB();
-		} else {
-			System.out.println();
-		}
-		
 		
 
 		///////////////////////////////////////////////////////////////////////////////////////////////

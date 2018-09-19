@@ -16,23 +16,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
-import com.mongodb.ServerAddress;
 
 /**
  * handles the database operations with mongoDB and morphia as ORM
+ * the queries are synchronous which means that the method is blocked until the query is finished
  * things to know:
- * query.asList(new FindOptions().limit(1));   	// add additional options to the query
+ * query.asList(new FindOptions().limit(1));   	to add an additional options to the query
+ * note: to make the query most effective always query the one that restricts the results the most first
  */
-public class DBHandler {
-	private static final Logger logger = LoggerFactory.getLogger(DBHandler.class);
+public class MongoDbHandlerSync {
+	private static final Logger logger = LoggerFactory.getLogger(MongoDbHandlerSync.class);
 
 	// maps the dbName to the morphia's datastore (key: dbName, value: datastore) 
-	private static HashMap<String,Datastore> dataStoreMap = new HashMap<>(); 
+	private HashMap<String,Datastore> dataStoreMap = new HashMap<>(); 
 
-	private static MongoClient mongo = null;						// instance of the mongoDB driver
-	private static Morphia morphia = null; 			// instance of morphia that is used as a orm	
+	private MongoClient mongo = null;						// instance of the mongoDB driver
+	private Morphia morphia = null; 			// instance of morphia that is used as a orm	
 
 	/////////////////////////////////////////////////////////////////////////////////////////////
 	// 								Connection to the database 								   //
@@ -42,8 +42,9 @@ public class DBHandler {
 	 * establishes a connection to mongoDB
 	 * @param host 		host to connect to
 	 * @param port 		mongo-port
+	 * @return 			true if the connection was successfully established, false if an error occurred
 	 */
-	public static void connectToDB(String host, int port) {
+	public boolean connectToDB(String host, int port) {
 		try {
 			// initialize morphia and connect to to mongoDB
 			morphia = new Morphia();
@@ -53,9 +54,11 @@ public class DBHandler {
 			mongo = new MongoClient(clientURI);
 				
 			logger.info("successfully connected to mongoDB");
+			return true;
 
 		} catch (Exception e) {
 			logger.error("failed to connect to the database connecting to the database", e);
+			return false;
 		}
 	}
 	
@@ -66,8 +69,9 @@ public class DBHandler {
 	 * @param port 			the port of the mongoDB
 	 * @param username 		the user name
 	 * @param password 		the password
+	 * @return 			true if the connection was successfully established, false if an error occurred
 	 */
-	public static void connectToDB(String host, int port, String username, String password) {
+	public boolean connectToDB(String host, int port, String username, String password) {
 		try {
 			// initialize morphia and connect to to mongoDB
 			morphia = new Morphia();
@@ -77,20 +81,30 @@ public class DBHandler {
 			mongo = new MongoClient(clientURI);
 				
 			logger.info("successfully connected to mongoDB");
+			return true;
 
 		} catch (Exception e) {
 			logger.error("failed to connect to the database connecting to the database", e);
+			return false;
 		}
 	}
 
 
 	/**
 	 * disconnects from the database
+	 * @return 		true if the connection to mongodb was successfully close, false if an error occurred
 	 */
-	public static void disconnectFromDB() {
-		mongo.close(); 			// close the connection to the mongoDB
-		dataStoreMap.clear(); 	// clear the datastore map
-		logger.info("disconnected from mongoDB");
+	public boolean disconnectFromDB() {
+		try {
+			mongo.close(); 			// close the connection to the mongoDB
+			dataStoreMap.clear(); 	// clear the datastore map
+			logger.info("disconnected from mongoDB");
+			return true;
+
+		} catch (Exception e) {
+			logger.error("error disconnecting form mongoDB: ", e);
+			return false;
+		}
 	}
 
 
@@ -100,7 +114,7 @@ public class DBHandler {
 	 * @param dbName 	name of the database
 	 * @return  		the datastore of the passed dbName
 	 */
-	private static Datastore getDataStore(String dbName) {
+	private Datastore getDataStore(String dbName) {
 		Datastore datastore = dataStoreMap.get(dbName);
 		if (datastore == null) {
 			// datastore not found create a new one and put it into the dataStoreMap
@@ -114,33 +128,25 @@ public class DBHandler {
 
 	/**
 	 * tests the mongoDB connection for the passed hosts
-	 * @param hosts 				hosts of the replica set to connect to or just one host
+	 * @param host 					host to connect to
+	 * @param port 					mongo-port
 	 * @param connectionTimeout 	defines the timeout how long to wait for the db to connect in ms
 	 * @return				 		true if the connection was successfully established, false otherwise
 	 */
-	public static boolean testMongoDBConnection(ArrayList<ServerAddress> hosts, int connectionTimeout) {
+	public boolean isReachable(String host, int port, int connectionTimeout) {
 		MongoClient mongo = null;
 
 		try {		
-			// create the options for the connection timeouts (default: 30 secs)
-			MongoClientOptions.Builder optionsBuilder = MongoClientOptions.builder();
-			optionsBuilder.connectTimeout(connectionTimeout);
-			optionsBuilder.socketTimeout(connectionTimeout);
-			optionsBuilder.serverSelectionTimeout(connectionTimeout);
-			MongoClientOptions options = optionsBuilder.build();
-
-
 			// connect to the mongoDB with the defined options
-			if (hosts.size() == 1) {
-				String host = hosts.get(0).getHost();
-				int port = hosts.get(0).getPort();
-				mongo = new MongoClient(host, port);
-
-			} else {
-				mongo = new MongoClient(hosts, options);	
-				Document ping = new Document("ping", 1);
-				mongo.getDatabase("test").runCommand(ping);
-			}
+			String connectStr = new StringBuilder()
+					.append("mongodb://")
+					.append(host).append(":").append(port).append("/")
+					.append("?connectTimeoutMS=").append(connectionTimeout)
+					.append("&socketTimeoutMS=").append(connectionTimeout)
+					.append("&serverSelectionTimeoutMS=").append(connectionTimeout)
+					.toString();
+			MongoClientURI clientURI = new MongoClientURI(connectStr);
+			mongo = new MongoClient(clientURI);
 			
 			// ping
 			Document ping = new Document("ping", 1);
@@ -153,7 +159,7 @@ public class DBHandler {
 			return true;
 
 		} catch (Exception e) {
-			//			logger.info("Error testing for MongoDB: " + e.getMessage());
+			logger.info("error testing for the mongoDB connection: ", e);
 			if (mongo != null) {
 				// close the connection if one was established
 				mongo.close();
@@ -176,7 +182,7 @@ public class DBHandler {
 	 * @param dbName			 name of the database: the collection name is indicated as annotation in the db entity
 	 * @return					 the query to the database
 	 */
-	public static <T> Query<T> createFilterQuery(Class<T> entityClass, String constraintStr, Object constraintValue, String orderTerm, String dbName) {
+	public <T> Query<T> createFilterQuery(Class<T> entityClass, String constraintStr, Object constraintValue, String orderTerm, String dbName) {
 		Query<T> query = null;
 
 		// get the datastore
@@ -216,7 +222,7 @@ public class DBHandler {
 	 * @param dbName			 name of the database: the collection name is indicated as annotation in the db entity
 	 * @return  				 the query to the database
 	 */
-	public static <T> Query<T> createAndQuery(Class<T> entityClass, String[] constraintStrs, Object[] constraintValues, String orderTerm, String dbName) {
+	public <T> Query<T> createAndQuery(Class<T> entityClass, String[] constraintStrs, Object[] constraintValues, String orderTerm, String dbName) {
 		Query<T> query = null;
 
 		// get the datastore
@@ -257,7 +263,7 @@ public class DBHandler {
 	 * @param dbName			 name of the database: the collection name is indicated as annotation in the db entity
 	 * @return	 				 the query to the database
 	 */
-	public static <T> Query<T> createOrQuery(Class<T> entityClass, String field, Object[] orValues, String orderTerm, String dbName) {
+	public <T> Query<T> createOrQuery(Class<T> entityClass, String field, Object[] orValues, String orderTerm, String dbName) {
 		Query<T> query = null;
 
 		// get the datastore
@@ -297,7 +303,7 @@ public class DBHandler {
 	 * @param dbName			 name of the database: the collection name is indicated as annotation in the db entity
 	 * @return  				 the query to the database
 	 */
-	public static <T> Query<T> createQuery(Class<T> entityClass, String dbName) {
+	public <T> Query<T> createQuery(Class<T> entityClass, String dbName) {
 		Query<T> query = null;
 
 		// get the datastore
@@ -321,7 +327,7 @@ public class DBHandler {
 	 * @param entityClass 	class of the entity
 	 * @return 				name of the collection
 	 */
-	public static String getCollectionName(Class<?> entityClass) {
+	public String getCollectionName(Class<?> entityClass) {
 		String result = "";
 		Entity ann = entityClass.getAnnotation(Entity.class);
 		if (ann != null) {
@@ -341,15 +347,19 @@ public class DBHandler {
 	 * saves the passed object to the database
 	 * @param entity 	object to save in the database
 	 * @param dbName 	name of the database in which the object is saved
+	 * @return 			true if the entity was successfully saved, false if an error occurred
 	 */
-	public static void saveToDB(EntityBase entity, String dbName) {
+	public boolean saveToDB(EntityBase entity, String dbName) {
 		// get the datastore
 		Datastore datastore = getDataStore(dbName);
 		try {
 			// save the object in the database, the name of the collection is saved as annotation in the entity object
 			datastore.save(entity);
+			return true;
+			
 		} catch (Exception e) {
 			logger.error("error saving the document to the db: ", e);
+			return false;
 		}
 	}
 
@@ -358,16 +368,20 @@ public class DBHandler {
 	 * saves the passed object to the database
 	 * @param entityList 	list of object to save in the database
 	 * @param dbName 		name of the database in which the object is saved
+	 * @return 				true if the collections were successfully saved, false if an error occurred
 	 */
-	public void saveToDB(Iterable<EntityBase> entityList, String dbName) {
+	public boolean saveToDB(Iterable<?> entityList, String dbName) {
 		// get the datastore
 		Datastore datastore = getDataStore(dbName);
 
 		// save the object in the database, the name of the collection is saved as annotation in the entity object
 		try {
 			datastore.save(entityList);
+			return true;
+		
 		} catch (Exception e) {
 			logger.error("error saving the document to the db: ", e);
+			return false;
 		}
 	}
 	
@@ -380,7 +394,7 @@ public class DBHandler {
 	 * @param query 	database query
 	 * @return  		list of database entities 
 	 */
-	public static <T> List<T> getListFromQuery(Query<T> query) {
+	public <T> List<T> getListFromQuery(Query<T> query) {
 		List<T> list = new ArrayList<>();
 
 		try {
@@ -401,7 +415,7 @@ public class DBHandler {
 	 * @param findOptions 	additional options for the query	
 	 * @return  			list of database entities 
 	 */
-	public static <T> List<T> getListFromQuery(Query<T> query, FindOptions findOptions) {
+	public <T> List<T> getListFromQuery(Query<T> query, FindOptions findOptions) {
 		List<T> list = new ArrayList<>();
 
 		try {
@@ -422,17 +436,20 @@ public class DBHandler {
 	 * @param newValue  		the new value for the field
 	 * @param dbName 			the name of the database
 	 * @param query 			query that defines the entities to update
+	 * @return 					true if the update was successfully, false if an error occurred
 	 */
-	public static <T> void updateEntityInDB(String fieldToUpdate, Object newValue, String dbName, Query<T> query) {
+	public <T> boolean updateEntityInDB(String fieldToUpdate, Object newValue, String dbName, Query<T> query) {
 		// get the datastore
 		Datastore datastore = getDataStore(dbName);
 
 		try {	
 			UpdateOperations<T> updateOperations = datastore.createUpdateOperations(query.getEntityClass()).set(fieldToUpdate, newValue);
 			datastore.update(query, updateOperations);
+			return true;
 
 		} catch (Exception e) {
 			logger.error("error updating entities in the database: ", e);
+			return false;
 		}
 	}
 
@@ -444,8 +461,9 @@ public class DBHandler {
 	 * @param newValues 		the new value for the field
 	 * @param dbName 			the name of the database
 	 * @param query 			query that defines the entities to update
+	 * @return 					true if the update was successful, false if an error occurred
 	 */
-	public static <T> void updateEntityInDB(String[] fieldsToUpdate, Object[] newValues, String dbName, Query<T> query) {
+	public <T> boolean updateEntityInDB(String[] fieldsToUpdate, Object[] newValues, String dbName, Query<T> query) {
 		// get the datastore
 		Datastore datastore = getDataStore(dbName);
 
@@ -464,9 +482,12 @@ public class DBHandler {
 			} else {
 				logger.error("failed to update the entity in the database: fieldsToUpdate and new Values have not the same length");
 			}
+			
+			return true;
 
 		} catch (Exception e) {
 			logger.error("error updating entities in the database: ", e);
+			return false;
 		}
 	}
 
@@ -476,16 +497,19 @@ public class DBHandler {
 	 * @param <T> 		class of the db entity
 	 * @param dbName 	name of the database
 	 * @param query 	query that defines the entities to delete
+	 * @return 			true if the delete operation was successful, false if an error occurred
 	 */
-	public static <T> void deleteFromDB(String dbName, Query<T> query) {
+	public <T> boolean deleteFromDB(String dbName, Query<T> query) {
 		// get the datastore
 		Datastore datastore = getDataStore(dbName);
 
 		try {
 			datastore.delete(query);
+			return true;
 
 		} catch (Exception e) {
 			logger.error("error deleting from database");
+			return false;
 		}
 	}
 
@@ -495,17 +519,20 @@ public class DBHandler {
 	 * drops the whole collection in the db
 	 * @param entityClass 	the class of the db entity for which the whole collection should be dropped
 	 * @param dbName 		the name of the database
+	 * @return 				true if the collection was successfully dropped, false otherwise
 	 */
-	public void dropCollection(Class<?> entityClass, String dbName) {
+	public boolean dropCollection(Class<?> entityClass, String dbName) {
 		// get the datastore
 		Datastore datastore = getDataStore(dbName);
 
 		try {
 			String collectionName = getCollectionName(entityClass);
 			datastore.getDB().getCollection(collectionName).drop();
+			return true;
 
 		} catch (Exception e) {
 			logger.error("error dropping the collection");
+			return false;
 		}
 	}
 
@@ -515,8 +542,9 @@ public class DBHandler {
 	 * deletes all collections in the database, typically you don't want to call this method,
 	 * only in the test phase
 	 * @param dbName 	name of the database
+	 * @return 			true if the database was successfully dropped, false if an error occurred
 	 */
-	public static void dropDatabase(String dbName) {
+	public boolean dropDatabase(String dbName) {
 		// get the datastore
 		Datastore datastore = getDataStore(dbName);
 
@@ -524,15 +552,13 @@ public class DBHandler {
 		try {
 			logger.info("dropping all collections in: " + dbName);
 			datastore.getDB().dropDatabase(); 	
+			return true;
+			
 		} catch (Exception e) {
 			logger.error("error deleting all collections in the database: ", e);
+			return false;
 		}
 	}
-
-
-
-
-
-
-
 }
+
+

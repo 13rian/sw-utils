@@ -4,11 +4,14 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
 
 public class FileUtilsTest {
 	private static String fileUtilsDir = null; 		// the directory containing the file handler test files
@@ -244,11 +247,10 @@ public class FileUtilsTest {
 	public void findFilesByPatternTest() {
 		// find all csv files
 		String[] filePaths = FileUtils.findFilesByPattern(fileUtilsDir, "test", "csv");
-		Arrays.sort(filePaths);
-		String expectedFilePath1 = fileUtilsDir + "test1.csv";
-		String expectedFilePath2 = fileUtilsDir + "test2.csv";
+		String[] expectedPaths = {fileUtilsDir + "test1.csv", fileUtilsDir + "test2.csv"};
+		
 		Assertions.assertEquals(2, filePaths.length, "find existing file");
-		Assertions.assertArrayEquals(new String[] {expectedFilePath1, expectedFilePath2}, filePaths, "all files found");
+		MatcherAssert.assertThat("all files found", Arrays.asList(filePaths), Matchers.containsInAnyOrder(expectedPaths));
 
 				
 		// find a file with an ending that does not exist in the directory
