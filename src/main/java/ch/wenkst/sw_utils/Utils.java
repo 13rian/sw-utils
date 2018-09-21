@@ -35,6 +35,25 @@ public class Utils {
 	}
 	
 	
+	/** 
+	 * returns true if the operating system is windows
+	 * @return: 	true if the operating system is windows
+	 */
+	public static boolean isOSWindows() {
+		String osName = System.getProperty("os.name");
+		return osName.toUpperCase().contains("WIN") == true;
+	}
+
+	/** 
+	 * returns true if the operating system is linux
+	 * @return: 	true if the operating system is linux
+	 */
+	public static boolean isOSLinux() {
+		String osName = System.getProperty("os.name");
+		return osName.toUpperCase().contains("LINUX") == true;
+	}
+	
+	
 	/**
 	 * returns a log string containing information about free memory, total memory and the number of threads
 	 * @return 		string that contains the runtime informations

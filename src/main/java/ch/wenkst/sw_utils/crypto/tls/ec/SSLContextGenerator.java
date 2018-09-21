@@ -6,7 +6,7 @@ import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.cert.Certificate;
-import java.util.ArrayList;
+import java.util.List;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -28,13 +28,13 @@ public class SSLContextGenerator {
 	
 	/**
 	 * sets up the sslScontext for a secure connection, can be used for the server and the client
-	 * @param keyStorePassword 	keyStore password (must be the same as chosen to create the certificate)
 	 * @param p12FilePath 		the path to the p12-file containing the private key and the certificate
+	 * @param keyStorePassword 	keyStore password (must be the same as chosen to create the certificate)
 	 * @param trustedCerts  	a list of paths to crt-files of the trusted certificates (are added to the trustStore)
 	 * @param protocol	 		specifies the used tls protocol
 	 * @return 					ssl context
 	 */
-	public static SSLContext createSSLContext(String keyStorePassword, String p12FilePath, ArrayList<String> trustedCerts, String protocol) {
+	public static SSLContext createSSLContext(String p12FilePath, String keyStorePassword, List<String> trustedCerts, String protocol) {
 		try {
 			SSLContext sslContext = SSLContext.getInstance(protocol);
 			

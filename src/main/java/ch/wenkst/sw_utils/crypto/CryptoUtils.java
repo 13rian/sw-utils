@@ -59,6 +59,7 @@ import org.bouncycastle.operator.OutputEncryptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ch.wenkst.sw_utils.Utils;
 import ch.wenkst.sw_utils.conversion.Conversion;
 import ch.wenkst.sw_utils.file.FileUtils;
 
@@ -776,5 +777,23 @@ public class CryptoUtils {
 			return false;
 		}
 	}
+	
+	
+	
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//										utility methods 												     //
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/**
+	 * changes the source of random to /dev/urandom if the operating system is linux
+	 * this source has a lower chance of blocking
+	 */
+	public static void setSourceOfRandom() {
+		if (Utils.isOSLinux()) {
+			logger.info("operating system is linux, change the source of random to /dev/urandom");
+			System.setProperty("java.security.egd", "file:/dev/./urandom");
+		}
+	}
+	
+	
 
 }
