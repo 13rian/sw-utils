@@ -5,6 +5,7 @@ import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -73,13 +74,13 @@ public class Utils {
 	
 	/**
 	 * returns the stack trace of the passed exception as string
-	 * @param e 	an exception
+	 * @param th 	a throwable
 	 * @return 		the stack trace of the passed exception as string
 	 */
-	public static String exceptionToString(Exception e) {		
+	public static String exceptionToString(Throwable th) {		
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
-		e.printStackTrace(pw); 						// print the stack trace to the specified printer
+		th.printStackTrace(pw); 					// print the stack trace to the specified printer
 		String result = sw.toString(); 				// get the stack trace from the printer
 		return result;
 	}
@@ -97,6 +98,27 @@ public class Utils {
 	                    .map(f -> (Object) f.join())
 	                    .collect(Collectors.toList())
 	            );
+	}
+	
+	
+	/**
+	 * checks if all passed properties are present in the properties file
+	 * @param props 		the properties file
+	 * @param property 		properties that should be present in the properties file
+	 * @return 				true if no property is missing, and false if one property is not present
+	 */
+	public static boolean allPropsPresent(Properties props, String... property) {
+		boolean allPresent = true;
+		
+		// check if all properties are present
+		for (String prop : property) {
+			if (!props.containsKey(prop)) {
+				System.err.println("missing property in the logger-config prooperties file");
+				allPresent = false;
+			}
+		}
+		
+		return allPresent;
 	}
 	
 }

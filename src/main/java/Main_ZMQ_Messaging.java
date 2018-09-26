@@ -7,7 +7,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ch.wenkst.sw_utils.Utils;
-import ch.wenkst.sw_utils.file.XmlDoc;
 import ch.wenkst.sw_utils.messaging.zero_mq.pub_sub.PubSub_BrokerZMQ;
 import ch.wenkst.sw_utils.messaging.zero_mq.pub_sub.PublisherProducerZMQ;
 import ch.wenkst.sw_utils.messaging.zero_mq.pub_sub.SubscriberConsumerZMQ;

@@ -14,6 +14,7 @@ import ch.wenkst.sw_utils.http.builder.HttpRequestBuilder;
 import ch.wenkst.sw_utils.http.builder.HttpResponseBuilder;
 import ch.wenkst.sw_utils.http.parser.HttpRequestParser;
 import ch.wenkst.sw_utils.http.parser.HttpResponseParser;
+import ch.wenkst.sw_utils.logging.Log;
 import ch.wenkst.sw_utils.scheduler.Scheduler;
 import ch.wenkst.sw_utils.tests.events.Event;
 import ch.wenkst.sw_utils.tests.events.Listener;
@@ -35,6 +36,22 @@ public class Main_SWUtils {
 		// make sure to use the right file in lib/security (as described in the folder file_for_ecyption) 		   	   //
 		// Java 9: Security.setProperty("crypto.policy", "unlimited"); for the same effect 						   	   //
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		
+		
+		/////////////////////////////////////////////////////////////////////////////////////////////
+		// 										test the logger 								   //
+		/////////////////////////////////////////////////////////////////////////////////////////////
+		System.err.println("gg");
+		Log log = Log.getLogger(Main_SWUtils.class);
+		log.config("config log");
+		log.info("info log");
+		log.severe("severe test");
+	
+		String loggerConfig = "resource" + File.separator + "log" + File.separator + "log_config.properties";
+		Log.initLogger(loggerConfig);
+		log.config("config log");
+		log.info("info log");
+		log.severe("severe test");
 		
 		
 		
