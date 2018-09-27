@@ -65,6 +65,7 @@ import ch.wenkst.sw_utils.file.FileUtils;
 
 public class CryptoUtils {
 	private static final Logger logger = LoggerFactory.getLogger(CryptoUtils.class);
+	
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 								methods to register bouncy castle providers 								 //
@@ -76,6 +77,7 @@ public class CryptoUtils {
 		// Register the bouncy castle security provider, if not registered yet
 		if(Security.getProvider("BC") == null) {
 			Security.addProvider(new BouncyCastleProvider());
+			setSourceOfRandom();
 			logger.info("Successfully registered Bouncy Castle as crypto provider.");
 		}
 	}
@@ -111,6 +113,8 @@ public class CryptoUtils {
 			Security.insertProviderAt(new BouncyCastleProvider(), 3);
 			logger.info("Successfully registered Bouncy Castle BC as security provider at position 3.");
 		}
+		
+		setSourceOfRandom();
 	}
 
 

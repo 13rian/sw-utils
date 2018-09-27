@@ -15,7 +15,7 @@
 				<!-- default value, archives will be crated for every day -->
 				<TimeBasedTriggeringPolicy />
 				<!-- save file in the archive that are more than 1MB -->
-				<SizeBasedTriggeringPolicy size="1 MB" />
+				<SizeBasedTriggeringPolicy size="10 MB" />
 			</Policies>
 			<!-- maximal 20 files are kept, the oldest ones get deleted if more than 
 				21 are written per day -->
