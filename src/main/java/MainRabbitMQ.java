@@ -26,12 +26,12 @@ public class MainRabbitMQ {
 	public static void main(String[] args) {
 
 		// non-encrypted connections to the rabbitMQ server
-		// RabbitMQHander messageHandler = new RabbitMQHander("192.168.1.141", "test", "test");
+		// RabbitMQHander messageHandler = new RabbitMQHander("23.97.156.162", "efr", "efrserver");
 
 		// tls-encrypted connections to the rabbitMQ server
 		String p12FilePath = System.getProperty("user.dir") + File.separator + "rabbit_mq" + File.separator + "client" + File.separator + "client.cert.p12";
 		String caCertPath = System.getProperty("user.dir") + File.separator + "rabbit_mq" + File.separator + "server" + File.separator + "server.cert.pem";		
-		RabbitMQHander messageHandler = new RabbitMQHander("192.168.1.141", "test", "test", p12FilePath, "pwcelsi", caCertPath);
+		RabbitMQHander messageHandler = new RabbitMQHander("23.97.156.162", "efr", "efrserver", p12FilePath, "pwcelsi", caCertPath);
 
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

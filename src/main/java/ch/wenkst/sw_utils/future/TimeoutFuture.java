@@ -2,6 +2,7 @@ package ch.wenkst.sw_utils.future;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -47,6 +48,18 @@ public class TimeoutFuture<T> {
 	 */
 	public void complete(T value) {
 		future.complete(value);
+	}
+	
+	
+	/**
+	 * completes the future asynchronously, this is useful if some other code is ran after the future is completed
+	 * @param value 		value that is used to complete the future
+	 * @param executor 		an executor
+	 */
+	public void completeAsync(T value, Executor executor) {
+		executor.execute(() -> {
+			future.complete(value);
+		});
 	}
 
 }
