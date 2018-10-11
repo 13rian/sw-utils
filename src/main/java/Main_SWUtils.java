@@ -1,5 +1,4 @@
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import org.slf4j.Logger;
@@ -10,10 +9,6 @@ import ch.wenkst.sw_utils.crypto.CryptoUtils;
 import ch.wenkst.sw_utils.event.EventBoard;
 import ch.wenkst.sw_utils.event.managers.AsyncEventManager;
 import ch.wenkst.sw_utils.file.FileUtils;
-import ch.wenkst.sw_utils.http.builder.HttpRequestBuilder;
-import ch.wenkst.sw_utils.http.builder.HttpResponseBuilder;
-import ch.wenkst.sw_utils.http.parser.HttpRequestParser;
-import ch.wenkst.sw_utils.http.parser.HttpResponseParser;
 import ch.wenkst.sw_utils.logging.Log;
 import ch.wenkst.sw_utils.scheduler.Scheduler;
 import ch.wenkst.sw_utils.tests.events.Event;
@@ -32,12 +27,6 @@ public class Main_SWUtils {
 	private static final Logger logger = LoggerFactory.getLogger(Main_SWUtils.class);
 
 	public static void main(String[] args) {
-		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		// make sure to use the right file in lib/security (as described in the folder file_for_ecyption) 		   	   //
-		// Java 9: Security.setProperty("crypto.policy", "unlimited"); for the same effect 						   	   //
-		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		
-		
 		/////////////////////////////////////////////////////////////////////////////////////////////
 		// 										test the logger 								   //
 		/////////////////////////////////////////////////////////////////////////////////////////////
@@ -80,150 +69,7 @@ public class Main_SWUtils {
 		
 		// print the default providers
 		logger.info(CryptoUtils.getDefaultProviders());
-		
-		
-		
-		/////////////////////////////////////////////////////////////////////////////////////////////////
-		// 							test the http builder and parser								   //
-		/////////////////////////////////////////////////////////////////////////////////////////////////
-		System.out.println("\n HTTP TEST");
-		
-		// test the http request builder
-		logger.info("test the http request builder");
-		HttpRequestBuilder reqBuilder = new HttpRequestBuilder();
-		
-		reqBuilder.preparePost("https://i-api.eon.de/gwa/ClsManagementAdapter_In/v1/")
-		.setHeaderProperty("Content-Type", "text/plain")
-		.setHeaderProperty("Authorization", "Some secret code")
-		.setBody("This is the html request body\n with no deep meaning");
-		
-		logger.info("http request: \n" + reqBuilder.toString());
-		
-		
-		
-		// test the http response builder
-		logger.info("test the http response builder");
-		HttpResponseBuilder respBuilder = new HttpResponseBuilder();
 
-		respBuilder.status(200)
-		.setHeaderProperty("Content-Type", "text/plain")
-		.setHeaderProperty("Authorization", "Some secret code")
-		.setBody("Some http response body \n with no deep meaning");
-
-		logger.info("http response: \n" + respBuilder.toString());
-		
-		
-		
-		// test the http request parser
-		logger.info("test the http request parser");
-		HttpRequestParser reqParser = new HttpRequestParser();
-		
-		// feed chunk 1
-		String requestChunk =  
-				"POST /test HTTP/1.1\n" +
-				"Authorization: Bearer 2dd4f332cad2705bb89a209e407bc636\n" +
-				"Host: localhost:8001\n";
-		
-		
-		reqParser.addData(requestChunk.getBytes(StandardCharsets.US_ASCII));
-		logger.info("successfully parsed: " + reqParser.isComplete());
-		
-		// feed chunk 2
-		requestChunk = 
-				"User-Agent: AHC/1.0\n" +
-				"Connection: keep-alive\n" +
-				"Accept: */*\n" +
-				"Content-Type: text/xml\n" +
-				"Content-Length: 17\n" +
-				"\n" +
-				"aergf.qa";
-		reqParser.addData(requestChunk.getBytes(StandardCharsets.US_ASCII));
-		logger.info("successfully parsed: " + reqParser.isComplete());
-		
-		// feed chunk 3
-		requestChunk = "e4t.435zg";
-		reqParser.addData(requestChunk.getBytes(StandardCharsets.US_ASCII));
-		logger.info("successfully parsed: " + reqParser.isComplete());
-		
-		
-		logger.info("http-method: " + reqParser.getHttpMethod());
-		logger.info("status-txt: " + reqParser.getRequestURI());
-		logger.info("body: " + reqParser.getBodyStr());
-		
-		
-		
-		// test the http response parser
-		logger.info("test the http response parser");
-		logger.info("normal http response");
-		HttpResponseParser respParser = new HttpResponseParser();
-		String crlf = "\r\n";
-		
-		// test a normal http response
-		String httpResponse = 
-				"HTTP/1.1 200 OK\n" +
-				"Access-Control-Allow-Origin: *\n" +
-				"Access-Control-Allow-Headers: origin, content-type, accept, authorization\n" +
-				"Access-Control-Allow-Credentials: true\n" +
-				"Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, HEAD\n" +
-				"Content-Type: text/plain\n" +
-				"Content-Length: 37\n" +
-				"\n" +
-				"{\"params\":\"d81\",\"command\":\"testpost\"}";
-
-		respParser.addData(httpResponse.getBytes(StandardCharsets.US_ASCII));
-
-		logger.info("status: " + respParser.getStatus());
-		logger.info("status-txt: " + respParser.getStatusTxt());
-		logger.info("body: " + respParser.getBodyStr());
-
-		
-		// test a http response without a content length (the server closes the connection to indicate that the response is complete)
-		logger.info("http without a content length");
-		String httpResponse2 = 
-				"HTTP/1.1 200 OK\n" +
-				"Access-Control-Allow-Origin: *\n" +
-				"Access-Control-Allow-Headers: origin, content-type, accept, authorization\n" +
-				"Access-Control-Allow-Credentials: true\n" +
-				"Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, HEAD\n" +
-				"Content-Type: text/plain\n" +
-				"\n" +
-				"{\"params\":\"d81\",\"command\":\"testpost\"}";
-
-		respParser.clearAfterFullMessage();
-		respParser.addData(httpResponse2.getBytes(StandardCharsets.US_ASCII));
-		respParser.fullMessageReceived();
-
-		logger.info("status: " + respParser.getStatus());
-		logger.info("status-txt: " + respParser.getStatusTxt());
-		logger.info("body: " + respParser.getBodyStr());
-		
-		
-		// test a chunked http response
-		logger.info("chunked http response");
-		String httpResponse3 = 
-				"HTTP/1.1 200 OK" + crlf +
-				"Access-Control-Allow-Origin: *" + crlf +
-				"Access-Control-Allow-Headers: origin, content-type, accept, authorization" + crlf +
-				"Access-Control-Allow-Credentials: true" + crlf +
-				"Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, HEAD" + crlf +
-				"Transfer-Encoding: chunked" + crlf +
-				"Content-Type: text/plain" + crlf +
-				crlf +
-				"3" + crlf +
-				"lol" + crlf +
-				"3" + crlf + 
-				"man" + crlf + 
-				"0"
-				+ crlf;
-
-		respParser.clearAfterFullMessage();
-		respParser.addData(httpResponse3.getBytes(StandardCharsets.US_ASCII));
-		
-
-		logger.info("status: " + respParser.getStatus());
-		logger.info("status-txt: " + respParser.getStatusTxt());
-		logger.info("body: " + respParser.getBodyStr());
-		
 		
 	
 		
@@ -395,11 +241,4 @@ public class Main_SWUtils {
 	
 	
 	
-	
-	
-	
-	
-	
-
-
 }

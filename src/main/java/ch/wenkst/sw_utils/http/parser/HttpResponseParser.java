@@ -19,9 +19,16 @@ public class HttpResponseParser extends HttpParser {
 	 * extracts the status code and phrase from the status line
 	 */
 	private void parseStatusLine() {
+		// get the http status
 		String[] parts = firstLine.split(" ");
 		status = Integer.parseInt(parts[1]);
-		statusTxt = parts[2];		
+		
+		// get the http status text
+		statusTxt = "";
+		for (int i=2; i<parts.length; i++) {
+			statusTxt = statusTxt + parts[i] + " ";
+		}
+		statusTxt = statusTxt.trim();
 	}
 	
 	
