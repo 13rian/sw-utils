@@ -23,7 +23,6 @@ public class Main_SWUtils {
 		System.setProperty("log4j.configurationFile", "config/log4j2.xml");
 	}
 	
-	
 	private static final Logger logger = LoggerFactory.getLogger(Main_SWUtils.class);
 
 	public static void main(String[] args) {

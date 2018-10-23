@@ -1,8 +1,13 @@
 package ch.wenkst.sw_utils.threads;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ch.wenkst.sw_utils.Utils;
 
 public abstract class BaseThread extends Thread {
+	private static final Logger logger = LoggerFactory.getLogger(BaseThread.class);
+	
 	private boolean running = true;
 	protected int pollInterval = 0;
 
@@ -25,18 +30,23 @@ public abstract class BaseThread extends Thread {
 		
 	@Override
 	public void run() {
-		startWork();
-		
-		while (running) {			
-			// execute the task
-			doWork();	
+		try {
+			startWork();
 
-			if (pollInterval > 0) {
-				Utils.sleep(pollInterval);
+			while (running) {	
+				// execute the task
+				doWork();	 	
+
+				if (pollInterval > 0) {
+					Utils.sleep(pollInterval);
+				}
 			}
+
+			terminateWork();
+			
+		} catch (Exception e) {
+			logger.error("uncaught exception in implemented BaseThread methods: ", e);
 		}
-		
-		terminateWork();
 	}
 	
 	
