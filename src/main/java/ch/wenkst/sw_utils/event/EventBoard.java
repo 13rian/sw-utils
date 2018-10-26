@@ -66,7 +66,7 @@ public class EventBoard {
 	 * @param listener	 	the listener to register
 	 * @param eventName		the name of the event the listener should listen to
 	 */
-	public void registerListerner(IListener listener, String eventName) {
+	public void registerListener(IListener listener, String eventName) {
 		IEventManager eventManager = eventManagerMap.get(eventName);
 		if (eventManager == null) {
 			// event manager does not exist yet

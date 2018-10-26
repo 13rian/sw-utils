@@ -163,10 +163,10 @@ public class Main_SWUtils {
 		// create the listeners and register them
 		listener1 = new Listener("listener1", 500);
 		listener2 = new Listener("listener2", 300);
-		eventBoard.registerListerner(listener1, "new Email");
-		eventBoard.registerListerner(listener1, "new SMSss");
-		eventBoard.registerListerner(listener2, "new Email");
-		eventBoard.registerListerner(listener2, "new SMSss");
+		eventBoard.registerListener(listener1, "new Email");
+		eventBoard.registerListener(listener1, "new SMSss");
+		eventBoard.registerListener(listener2, "new Email");
+		eventBoard.registerListener(listener2, "new SMSss");
 		
 		// fire 4 events
 		System.out.println("sync with event board");
@@ -189,10 +189,10 @@ public class Main_SWUtils {
 		// create the listeners and register them
 		listener1 = new Listener("listener1", 2000);
 		listener2 = new Listener("listener2", 3000);
-		eventBoard.registerListerner(listener1, "new Email");
-		eventBoard.registerListerner(listener1, "new SMSss");
-		eventBoard.registerListerner(listener2, "new Email");
-		eventBoard.registerListerner(listener2, "new SMSss");
+		eventBoard.registerListener(listener1, "new Email");
+		eventBoard.registerListener(listener1, "new SMSss");
+		eventBoard.registerListener(listener2, "new Email");
+		eventBoard.registerListener(listener2, "new SMSss");
 		
 		// fire 4 events
 		System.out.println("same events sync, different events async with event board");
@@ -217,10 +217,10 @@ public class Main_SWUtils {
 		// create the listeners and register them
 		listener1 = new Listener("listener1", 2000);
 		listener2 = new Listener("listener2", 3000);
-		eventBoard.registerListerner(listener1, "new Email");
-		eventBoard.registerListerner(listener1, "new SMSss");
-		eventBoard.registerListerner(listener2, "new Email");
-		eventBoard.registerListerner(listener2, "new SMSss");
+		eventBoard.registerListener(listener1, "new Email");
+		eventBoard.registerListener(listener1, "new SMSss");
+		eventBoard.registerListener(listener2, "new Email");
+		eventBoard.registerListener(listener2, "new SMSss");
 		
 		// fire 4 events
 		System.out.println("async with event board");

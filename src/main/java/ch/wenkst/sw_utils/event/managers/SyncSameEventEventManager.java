@@ -33,8 +33,11 @@ public class SyncSameEventEventManager implements IEventManager {
 	@Override
 	public void register(IListener listener) {
 		synchronized (listeners) {
-			Object lock = new Object();			  // lock object to avoid executing the same event type asynchronous
-			listeners.put(listener, lock);
+			// avoid adding the same listener twice
+			if (listeners.containsKey(listener)) {
+				Object lock = new Object();			  // lock object to avoid executing the same event type asynchronous
+				listeners.put(listener, lock);
+			}
 		}
 	}
 

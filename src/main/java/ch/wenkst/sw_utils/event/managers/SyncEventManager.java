@@ -25,7 +25,10 @@ public class SyncEventManager implements IEventManager {
 	@Override
 	public void register(IListener listener) {
 		synchronized (listeners) {
-			listeners.add(listener);	
+			// avoid adding the same listener twice
+			if (listeners.contains(listener)) {
+				listeners.add(listener);	
+			}
 		}
 	}
 
