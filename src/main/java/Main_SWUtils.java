@@ -10,10 +10,8 @@ import ch.wenkst.sw_utils.event.EventBoard;
 import ch.wenkst.sw_utils.event.managers.AsyncEventManager;
 import ch.wenkst.sw_utils.file.FileUtils;
 import ch.wenkst.sw_utils.logging.Log;
-import ch.wenkst.sw_utils.scheduler.Scheduler;
 import ch.wenkst.sw_utils.tests.events.Event;
 import ch.wenkst.sw_utils.tests.events.Listener;
-import ch.wenkst.sw_utils.tests.scheduler.PrintTask;
 
 public class Main_SWUtils {
 //	// define a class initializer that is executed before any other properties and classes are loaded (since it is the 
@@ -70,42 +68,6 @@ public class Main_SWUtils {
 		logger.info(CryptoUtils.getDefaultProviders());
 
 		
-	
-		
-		
-		/////////////////////////////////////////////////////////////////////////////////////////////////
-		// 						test scheduler									   //
-		/////////////////////////////////////////////////////////////////////////////////////////////////
-		System.out.println("\n SCHEDULER TEST");
-		
-		
-		
-		// start the thread pool
-		int nThreads = 10;
-		ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
-		executor.setCorePoolSize(nThreads); 
-		
-		// create the scheduler with a poll interval of 100ms
-		Scheduler scheduler = new Scheduler(100, executor);
-		scheduler.start();
-		
-		// create two tasks and schedule them into the future
-		PrintTask printTask1 = new PrintTask(System.currentTimeMillis() + 2000, "PrintTask_1");
-		PrintTask printTask2 = new PrintTask(System.currentTimeMillis() + 1000, "PrintTask_2");
-		
-		logger.info("schedule tasks");
-		scheduler.addToTasks(printTask1);
-		scheduler.addToTasks(printTask2);
-		
-		
-		// stop the scheduler
-		scheduler.stopScheduler();
-		
-		// shutdown the executor
-		logger.info("shutdown executor");
-		executor.shutdown();
-		
-
 		
 
 		///////////////////////////////////////////////////////////////////////////////////////////////

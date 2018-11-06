@@ -1,8 +1,7 @@
 package ch.wenkst.sw_utils.scheduler;
 
 import java.util.ArrayList;
-import java.util.concurrent.ThreadPoolExecutor;
-
+import java.util.concurrent.Executor;
 import ch.wenkst.sw_utils.threads.BaseThread;
 
 
@@ -10,19 +9,20 @@ import ch.wenkst.sw_utils.threads.BaseThread;
  * One Thread that handles all tasks by periodically checking if the startTime is passed
  */
 public class Scheduler extends BaseThread {
-	private ThreadPoolExecutor threadPool = null; 							// executes the tasks asynchronously 
+	private Executor executor = null; 									// executes the tasks asynchronously 
 	private ArrayList<ScheduledTask> scheduledTasks = new ArrayList<>(); 	// holds all scheduled tasks
 	
 	
 	/**
 	 * Allows to schedule tasks in the future
 	 * @param pollInterval	 	poll interval for the thread
-	 * @param threadPool 		executor that calls the onStartTask asynchronously, can be null if the onStartTask should be called synchronously
+	 * @param executor 			thread pool: call the onStartTask method asynchronously,
+	 * 							null: call the onStartTask method synchronously
 	 */
-	public Scheduler(int pollInterval, ThreadPoolExecutor threadPool) {
+	public Scheduler(int pollInterval, Executor executor) {
 		super();
 		this.pollInterval = pollInterval;
-		this.threadPool = threadPool;
+		this.executor = executor;
 		
 		setName("scheduler");
 	}
@@ -79,9 +79,9 @@ public class Scheduler extends BaseThread {
 				}
 				
 				// start the execution of the task
-				if (threadPool != null) {
+				if (executor != null) {
 					// asynchronous call
-					threadPool.execute(() -> {
+					executor.execute(() -> {
 						task.onStartTask();
 					});
 				
@@ -102,6 +102,15 @@ public class Scheduler extends BaseThread {
 	@Override
 	public void terminateWork() {
 		// nothing to do		
+	}
+	
+	
+	/**
+	 * returns the number of scheduled tasks
+	 * @return
+	 */
+	public int getScheduledTaskCount() {
+		return scheduledTasks.size();
 	}
 
 
