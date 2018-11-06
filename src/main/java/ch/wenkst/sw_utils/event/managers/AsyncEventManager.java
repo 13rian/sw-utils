@@ -31,7 +31,7 @@ public class AsyncEventManager implements IEventManager {
 	public void register(IListener listener) {
 		synchronized (listeners) {
 			// avoid adding the same listener twice
-			if (listeners.contains(listener)) {
+			if (!listeners.contains(listener)) {
 				listeners.add(listener);
 			}
 		}

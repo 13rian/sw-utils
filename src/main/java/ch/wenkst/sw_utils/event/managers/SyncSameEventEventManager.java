@@ -34,7 +34,7 @@ public class SyncSameEventEventManager implements IEventManager {
 	public void register(IListener listener) {
 		synchronized (listeners) {
 			// avoid adding the same listener twice
-			if (listeners.containsKey(listener)) {
+			if (!listeners.containsKey(listener)) {
 				Object lock = new Object();			  // lock object to avoid executing the same event type asynchronous
 				listeners.put(listener, lock);
 			}
