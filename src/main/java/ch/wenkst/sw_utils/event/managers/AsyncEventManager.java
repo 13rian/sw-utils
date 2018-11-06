@@ -28,31 +28,27 @@ public class AsyncEventManager implements IEventManager {
 
 
 	@Override
-	public void register(IListener listener) {
-		synchronized (listeners) {
-			// avoid adding the same listener twice
-			if (!listeners.contains(listener)) {
-				listeners.add(listener);
-			}
+	public synchronized void register(IListener listener) {
+		// avoid adding the same listener twice
+		if (!listeners.contains(listener)) {
+			listeners.add(listener);
 		}
 	}
 
 
 	@Override
-	public void unregister(IListener listener) {
-		synchronized (listeners) {
-			listeners.remove(listener);
-		}
+	public synchronized void unregister(IListener listener) {
+		listeners.remove(listener);
 	}
 
 
 	@Override
-	public void fire(Object params) {
+	public synchronized void fire(Object params) {
 		// use the thread pool for the asynchronous events
-		synchronized (listeners) {
-			for (IListener listener : listeners) {
-				threadPool.execute(new NotifyListenersTask(listener, params));
-			}
+		for (IListener listener : listeners) {
+			threadPool.execute(() -> {
+				listener.handleEvent(eventName, params);
+			});
 		}
 	}
 
@@ -60,25 +56,6 @@ public class AsyncEventManager implements IEventManager {
 	@Override
 	public boolean hasListeners() {
 		return listeners.size() != 0;
-	}
-
-
-	/**
-	 * task that notifies a listener (i.e. calls the handleEvent() method)
-	 */
-	private class NotifyListenersTask implements Runnable {
-		private IListener listener = null; 		// the listener that should be notified
-		private Object params = null; 			// parameter object that is sent with the events
-
-		private NotifyListenersTask(IListener listener, Object params) {
-			this.listener = listener;
-			this.params = params;
-		}
-
-		@Override
-		public void run() {
-			listener.handleEvent(eventName, params);
-		}
 	}
 
 }

@@ -23,32 +23,27 @@ public class SyncEventManager implements IEventManager {
 
 
 	@Override
-	public void register(IListener listener) {
-		synchronized (listeners) {
-			// avoid adding the same listener twice
-			if (!listeners.contains(listener)) {
-				listeners.add(listener);	
-			}
+	public synchronized void register(IListener listener) {
+		// avoid adding the same listener twice
+		if (!listeners.contains(listener)) {
+			listeners.add(listener);	
 		}
 	}
 
 
 	@Override
-	public void unregister(IListener listener) {
-		synchronized (listeners) {
-			listeners.remove(listener);
-		}
+	public synchronized void unregister(IListener listener) {
+		listeners.remove(listener);
 	}
 
 
 	@Override
-	public void fire(Object params) {
+	public synchronized void fire(Object params) {
 		// inform the listeners synchronously
-		synchronized (listeners) {
-			for (IListener listener : listeners) {
-				listener.handleEvent(eventName, params);
-			}		
-		}
+
+		for (IListener listener : listeners) {
+			listener.handleEvent(eventName, params);
+		}		
 	}
 
 

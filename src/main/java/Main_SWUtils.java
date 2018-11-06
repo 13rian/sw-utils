@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 
 import ch.wenkst.sw_utils.Utils;
 import ch.wenkst.sw_utils.crypto.CryptoUtils;
-import ch.wenkst.sw_utils.event.EventBoard;
 import ch.wenkst.sw_utils.event.managers.AsyncEventManager;
 import ch.wenkst.sw_utils.file.FileUtils;
 import ch.wenkst.sw_utils.logging.Log;
@@ -116,80 +115,6 @@ public class Main_SWUtils {
 		System.out.println();
 		System.out.println();
 		
-		
-		// synchronous events with event board //
-		/////////////////////////////////////////
-		
-		EventBoard eventBoard = new EventBoard();	
-		
-		// create the listeners and register them
-		listener1 = new Listener("listener1", 500);
-		listener2 = new Listener("listener2", 300);
-		eventBoard.registerListener(listener1, "new Email");
-		eventBoard.registerListener(listener1, "new SMSss");
-		eventBoard.registerListener(listener2, "new Email");
-		eventBoard.registerListener(listener2, "new SMSss");
-		
-		// fire 4 events
-		System.out.println("sync with event board");
-		eventBoard.fireEvent("new Email", new Event("mail", "mail 1 received"));
-		eventBoard.fireEvent("new Email", new Event("mail", "mail 2 received"));
-		eventBoard.fireEvent("new SMSss", new Event("sms", "sms 1 received"));
-		eventBoard.fireEvent("new SMSss", new Event("sms", "sms 2 received"));
-		
-		
-		System.out.println();
-		System.out.println();
-		System.out.println();
-		
-		
-		// same events synchronous, different events asynchronous with event board //
-		/////////////////////////////////////////////////////////////////////////////
-		
-		eventBoard = new EventBoard(threadPool, false);	
-		
-		// create the listeners and register them
-		listener1 = new Listener("listener1", 2000);
-		listener2 = new Listener("listener2", 3000);
-		eventBoard.registerListener(listener1, "new Email");
-		eventBoard.registerListener(listener1, "new SMSss");
-		eventBoard.registerListener(listener2, "new Email");
-		eventBoard.registerListener(listener2, "new SMSss");
-		
-		// fire 4 events
-		System.out.println("same events sync, different events async with event board");
-		eventBoard.fireEvent("new Email", new Event("mail", "mail 1 received"));
-		eventBoard.fireEvent("new Email", new Event("mail", "mail 2 received"));
-		eventBoard.fireEvent("new SMSss", new Event("sms", "sms 1 received"));
-		eventBoard.fireEvent("new SMSss", new Event("sms", "sms 2 received"));
-		
-		// wait
-		Utils.sleep(8000);
-		
-		System.out.println();
-		System.out.println();
-		System.out.println();
-		
-		
-		// asynchronous events with event board //
-		//////////////////////////////////////////
-		
-		eventBoard = new EventBoard(threadPool, true);	
-		
-		// create the listeners and register them
-		listener1 = new Listener("listener1", 2000);
-		listener2 = new Listener("listener2", 3000);
-		eventBoard.registerListener(listener1, "new Email");
-		eventBoard.registerListener(listener1, "new SMSss");
-		eventBoard.registerListener(listener2, "new Email");
-		eventBoard.registerListener(listener2, "new SMSss");
-		
-		// fire 4 events
-		System.out.println("async with event board");
-		eventBoard.fireEvent("new Email", new Event("mail", "mail 1 received"));
-		eventBoard.fireEvent("new Email", new Event("mail", "mail 2 received"));
-		eventBoard.fireEvent("new SMSss", new Event("sms", "sms 1 received"));
-		eventBoard.fireEvent("new SMSss", new Event("sms", "sms 2 received"));
 
 		
 		// wait and shutdown the thread-pool
