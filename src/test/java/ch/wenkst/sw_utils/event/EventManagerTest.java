@@ -12,12 +12,16 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-public class EventBoardTest {
-	private static Executor executor = null; 		// thread pool executor for the event board
+import ch.wenkst.sw_utils.event.managers.AsyncEventManager;
+import ch.wenkst.sw_utils.event.managers.SyncEventManager;
+import ch.wenkst.sw_utils.event.managers.SyncSameEventEventManager;
+
+public class EventManagerTest {
+	private static Executor executor = null; 		// thread pool executor for the event managers
 	
 	
 	/**
-	 * sets up a thread pool for the event board
+	 * sets up a thread pool for the event managers
 	 */
 	@BeforeAll
 	public static void initializeExternalResources() {
@@ -35,39 +39,36 @@ public class EventBoardTest {
 	@Test
 	@DisplayName("sync events")
 	public void syncEvents() {
-		EventBoard eventBoard = new EventBoard();
-		
-		
+		// create synchronous event managers to send events
+		SyncEventManager eventManager0 = new SyncEventManager("event0");
+		SyncEventManager eventManager1 = new SyncEventManager("event1");
+		SyncEventManager eventManager2 = new SyncEventManager("event2");
+
 		// create the listeners and register them
 		EventListener listener1 = new EventListener(50);
 		EventListener listener2 = new EventListener(100);
 		
 		// register 2 listeners for 2 events
-		eventBoard.registerListener("event1", listener1);
-		eventBoard.registerListener("event2", listener1);
-		eventBoard.registerListener("event1", listener2);
-		eventBoard.registerListener("event2", listener2);
+		eventManager1.register(listener1);
+		eventManager2.register(listener1);
+		eventManager1.register(listener2);
+		eventManager2.register(listener2);
 		
 		
 		// fire 3 events synchronously
-		eventBoard.fireEvent("event0", "param0"); 	// no listener listens for this event
-		eventBoard.fireEvent("event1", "param1");
-		eventBoard.fireEvent("event2", "param2");
+		eventManager0.fire("param0"); 	// no listener listens for this event
+		eventManager1.fire("param1");
+		eventManager2.fire("param2");
 		
 		
 		// unregister listener1 from event1 and fire event 1
-		eventBoard.removeListener(listener1, "event1");
-		eventBoard.fireEvent("event1", "param3");
-		
-		
-		// unregister listener2 form all events and fire event 2
-		eventBoard.removeListener(listener2);
-		eventBoard.fireEvent("event2", "param4");
+		eventManager1.unregister(listener1);
+		eventManager1.fire("param3");
 		
 		
 		// check if the parameters were received in the correct order
 		String[] receivedParams1 = listener1.getReceivedParams();
-		Assertions.assertArrayEquals(new String[] {"param1", "param2", "param4"}, receivedParams1, "listener1 params");
+		Assertions.assertArrayEquals(new String[] {"param1", "param2"}, receivedParams1, "listener1 params");
 				
 		String[] receivedParams2 = listener2.getReceivedParams();
 		Assertions.assertArrayEquals(new String[] {"param1", "param2", "param3"}, receivedParams2, "listener2 params");
@@ -77,13 +78,11 @@ public class EventBoardTest {
 		// process time of listener 1 is 50, therefore the events need t be received in at least 100ms intervals
 		long[] timestamps1 = listener1.getReceivedTimestamps();
 		Assertions.assertTrue(timestamps1[1] - timestamps1[0] >= 50, "listener1 timestamps"); 
-		Assertions.assertTrue(timestamps1[2] - timestamps1[1] >= 50, "listener1 timestamps");
 		
 		
 		// process time of listener 2 is 100, therefore the events need t be received in at least 100ms intervals
 		long[] timestamps2 = listener2.getReceivedTimestamps();
 		Assertions.assertTrue(timestamps2[1] - timestamps2[0] >= 100, "listener2 timestamps");
-		Assertions.assertTrue(timestamps2[2] - timestamps2[1] >= 100, "listener2 timestamps");
 	}
 	
 	
@@ -95,8 +94,10 @@ public class EventBoardTest {
 	@Test
 	@DisplayName("all events async")
 	public void allEventsAsync() {
-		// an executor send out the events asynchronously, true means that same events are sent asynchronous as well
-		EventBoard eventBoard = new EventBoard(executor, true);
+		// create asynchronous event managers to send events
+		AsyncEventManager eventManager0 = new AsyncEventManager("event0", executor); 	// register no listener to this event manager
+		AsyncEventManager eventManager1 = new AsyncEventManager("event1", executor);
+		AsyncEventManager eventManager2 = new AsyncEventManager("event2", executor);
 		
 		
 		// create the listeners and register them
@@ -104,17 +105,17 @@ public class EventBoardTest {
 		EventListener listener2 = new EventListener(100);
 		
 		// register 2 listeners for 2 events
-		eventBoard.registerListener("event1", listener1);
-		eventBoard.registerListener("event2", listener1);
-		eventBoard.registerListener("event1", listener2);
-		eventBoard.registerListener("event2", listener2);
+		eventManager1.register(listener1);
+		eventManager2.register(listener1);
+		eventManager1.register(listener2);
+		eventManager2.register(listener2);
 		
 		
 		// fire 4 events asynchronously, as all events are fired at the same time param2 might arrive before param1
-		eventBoard.fireEvent("event0", "param0"); 	// no listener listens for this event
-		eventBoard.fireEvent("event1", "param1");
-		eventBoard.fireEvent("event2", "param2");
-		eventBoard.fireEvent("event2", "param3");
+		eventManager0.fire("param0"); 	// no listener listens for this event
+		eventManager1.fire("param1");
+		eventManager2.fire("param2");
+		eventManager2.fire("param3");
 		
 		// wait until the events arrived
 		Awaitility.await().atMost(2000, TimeUnit.MILLISECONDS).until(() -> {
@@ -123,22 +124,12 @@ public class EventBoardTest {
 				
 		
 		// unregister listener1 from event1 and fire event 1
-		eventBoard.removeListener(listener1, "event1");
-		eventBoard.fireEvent("event1", "param4");
+		eventManager1.unregister(listener1);
+		eventManager1.fire("param4");
 		
 		// wait until the event arrived
 		Awaitility.await().atMost(2000, TimeUnit.MILLISECONDS).until(() -> {
 			return listener2.getReceivedEvents().size() == 4;
-		});
-		
-		
-		// unregister listener2 form all events and fire event 2
-		eventBoard.removeListener(listener2);
-		eventBoard.fireEvent("event2", "param5");
-		
-		// wait until the event arrived
-		Awaitility.await().atMost(2000, TimeUnit.MILLISECONDS).until(() -> {
-			return listener1.getReceivedEvents().size() == 4;
 		});
 		
 		
@@ -149,7 +140,7 @@ public class EventBoardTest {
 		
 		// check if the parameters were received in the correct order 
 		String[] receivedParams1 = listener1.getReceivedParams();
-		Assertions.assertArrayEquals(new String[] {"param1", "param2", "param3", "param5"}, receivedParams1, "listener1 params");
+		Assertions.assertArrayEquals(new String[] {"param1", "param2", "param3"}, receivedParams1, "listener1 params");
 				
 		String[] receivedParams2 = listener2.getReceivedParams();
 		Assertions.assertArrayEquals(new String[] {"param1", "param2", "param3", "param4"}, receivedParams2, "listener2 params");
@@ -177,27 +168,28 @@ public class EventBoardTest {
 	@Test
 	@DisplayName("same events sync")
 	public void sameEventSync() {
-		// an executor send out the events asynchronously, false means that same events are sent synchronously
-		EventBoard eventBoard = new EventBoard(executor, false);
-		
+		// create sync same event managers to send events
+		SyncSameEventEventManager eventManager0 = new SyncSameEventEventManager("event0", executor); 	// register no listener to this event manager
+		SyncSameEventEventManager eventManager1 = new SyncSameEventEventManager("event1", executor);
+		SyncSameEventEventManager eventManager2 = new SyncSameEventEventManager("event2", executor);
 		
 		// create the listeners and register them
 		EventListener listener1 = new EventListener(50);
 		EventListener listener2 = new EventListener(100);
 		
 		// register 2 listeners for 2 events
-		eventBoard.registerListener("event1", listener1);
-		eventBoard.registerListener("event2", listener1);
-		eventBoard.registerListener("event1", listener2);
-		eventBoard.registerListener("event2", listener2);
+		eventManager1.register(listener1);
+		eventManager2.register(listener1);
+		eventManager1.register(listener2);
+		eventManager2.register(listener2);
 		
 		
 		// fire 5 events, as all events are fired at the same time param2 might arrive before param1
-		eventBoard.fireEvent("event0", "param0"); 	// no listener listens for this event
-		eventBoard.fireEvent("event1", "param1");
-		eventBoard.fireEvent("event1", "param2");
-		eventBoard.fireEvent("event2", "param3");
-		eventBoard.fireEvent("event2", "param4");
+		eventManager0.fire("param0"); 	// no listener listens for this event
+		eventManager1.fire("param1");
+		eventManager1.fire("param2");
+		eventManager2.fire("param3");
+		eventManager2.fire("param4");
 		
 		// wait until the events arrived
 		Awaitility.await().atMost(2000, TimeUnit.MILLISECONDS).until(() -> {
@@ -206,22 +198,12 @@ public class EventBoardTest {
 				
 		
 		// unregister listener1 from event1 and fire event 1
-		eventBoard.removeListener(listener1, "event1");
-		eventBoard.fireEvent("event1", "param5");
+		eventManager1.unregister(listener1);
+		eventManager1.fire("param5");
 		
 		// wait until the event arrived
 		Awaitility.await().atMost(2000, TimeUnit.MILLISECONDS).until(() -> {
 			return listener2.getReceivedEvents().size() == 5;
-		});
-		
-		
-		// unregister listener2 form all events and fire event 2
-		eventBoard.removeListener(listener2);
-		eventBoard.fireEvent("event2", "param6");
-		
-		// wait until the event arrived
-		Awaitility.await().atMost(2000, TimeUnit.MILLISECONDS).until(() -> {
-			return listener1.getReceivedEvents().size() == 5;
 		});
 		
 		
@@ -232,7 +214,7 @@ public class EventBoardTest {
 		
 		// check if the parameters were received in the correct order 
 		String[] receivedParams1 = listener1.getReceivedParams();
-		Assertions.assertArrayEquals(new String[] {"param1", "param2", "param3", "param4", "param6"}, receivedParams1, "listener1 params");
+		Assertions.assertArrayEquals(new String[] {"param1", "param2", "param3", "param4"}, receivedParams1, "listener1 params");
 				
 		String[] receivedParams2 = listener2.getReceivedParams();
 		Assertions.assertArrayEquals(new String[] {"param1", "param2", "param3", "param4", "param5"}, receivedParams2, "listener2 params");
@@ -255,6 +237,9 @@ public class EventBoardTest {
 	}
 	
 	
+
+	
+	
 	
 	/**
 	 * stops the executor
@@ -263,6 +248,8 @@ public class EventBoardTest {
 	public static void tearDownResources() {
 		((ThreadPoolExecutor) executor).shutdown();
 	}
+	
+
 }
 
 
