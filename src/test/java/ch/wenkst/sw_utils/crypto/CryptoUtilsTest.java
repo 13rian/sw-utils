@@ -43,9 +43,10 @@ public class CryptoUtilsTest {
 		// load the keys and certificates
 		// define the certificate directories
 		String sep = File.separator;
-		String receiverEncDir = System.getProperty("user.dir") + sep + "cmsCerts" + sep + "encryption" + sep + "receiver" + sep;
-		String senderEncDir = System.getProperty("user.dir") + sep + "cmsCerts" + sep + "encryption" + sep + "sender" + sep;
-		String senderSigDir = System.getProperty("user.dir") + sep + "cmsCerts" + sep + "signature" + sep + "sender" + sep;
+		String cryptoUtilsDir = System.getProperty("user.dir") + sep + "resource" + sep + "cryptoUtils" + sep;
+		String receiverEncDir = cryptoUtilsDir + "cmsCerts" + sep + "encryption" + sep + "receiver" + sep;
+		String senderEncDir = cryptoUtilsDir + "cmsCerts" + sep + "encryption" + sep + "sender" + sep;
+		String senderSigDir = cryptoUtilsDir + "cmsCerts" + sep + "signature" + sep + "sender" + sep;
 
 		// encryption crypto material
 		receiverEncKey = CryptoUtils.loadPrivateKey(receiverEncDir + "key.p12", "celsi-pw");
@@ -169,6 +170,17 @@ public class CryptoUtilsTest {
 		Assertions.assertFalse(CryptoUtils.validatePassword(password1, pwHash2), "wrong password hash");
 		Assertions.assertFalse(CryptoUtils.validatePassword(password2, pwHash1), "wrong password hash");
 	}
+	
+	
+	/**
+	 * load the private key from a pem file
+	 */
+	@Test
+	@DisplayName("private key from pem")
+	public void loadPemKeyTest() {
+		
+	}
+	
 	
 	
 	

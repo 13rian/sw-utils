@@ -391,12 +391,11 @@ public class CryptoUtils {
 	// 									methods to handle certificates		 									 //
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/**
-	 * loads the certificate in hex encoded der format from the passed certificate file path directory, the purpose specifies which certificate
-	 * should be loaded
+	 * loads the certificate in hex encoded der format from the passed certificate file path directory
 	 * @param certPath 		path of the cert file in cer format from which the certificate is read
 	 * @return 				hex encoded der
 	 */
-	public static String loadDERCertificate(String certPath) {
+	public static String loadCertFromDer(String certPath) {
 		String result = "";
 
 		// extract the certificate
@@ -510,11 +509,11 @@ public class CryptoUtils {
 	// 											methods to handle keys 									 		 //
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/**
-	 * load the private key as hex encoded der from the passed keyFile path
+	 * load the private key as hex encoded der from the passed pem keyFile path
 	 * @param keyPath 		path of the key file in pem format from which the key is read
 	 * @return 				hex encoded der
 	 */
-	public static String loadDERPrivateKey(String keyPath) {
+	public static String loadPkFromPem(String keyPath) {
 		String result = "";
 
 		try {

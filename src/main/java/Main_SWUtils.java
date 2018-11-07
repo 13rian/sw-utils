@@ -46,11 +46,11 @@ public class Main_SWUtils {
 		String certPath = FileUtils.findFileByPattern(certDir, "TLS", "cer");
 		
 		// load the key in der (tested, it is working)
-		String keyDER = CryptoUtils.loadDERPrivateKey(keyPath);
+		String keyDER = CryptoUtils.loadPkFromPem(keyPath);
 		System.out.println(keyDER);
 		
 		// load the cert in der format (tested it is working)
-		String certDER = CryptoUtils.loadDERCertificate(certPath);
+		String certDER = CryptoUtils.loadCertFromDer(certPath);
 		System.out.println(certDER);
 		
 		
