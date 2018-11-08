@@ -1,8 +1,12 @@
 import java.io.File;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ch.wenkst.sw_utils.Utils;
+import ch.wenkst.sw_utils.conversion.Conversion;
 import ch.wenkst.sw_utils.crypto.CryptoUtils;
 import ch.wenkst.sw_utils.file.FileUtils;
 import ch.wenkst.sw_utils.logging.Log;
@@ -40,18 +44,48 @@ public class Main_SWUtils {
 		/////////////////////////////////////////////////////////////////////////////////////////////////
 		System.out.println("\n SECURITY UTILS"); 
 		
-		// certificate handling method
-		String certDir = Utils.getWorkDir() + File.separator + "resource" + File.separator + "certs";
-		String keyPath = FileUtils.findFileByPattern(certDir, "TLS", "pem");
-		String certPath = FileUtils.findFileByPattern(certDir, "TLS", "cer");
+		CryptoUtils.registerBC();
 		
-		// load the key in der (tested, it is working)
-		String keyDER = CryptoUtils.loadPkFromPem(keyPath);
-		System.out.println(keyDER);
+		String sep = File.separator;
+		String certDir = System.getProperty("user.dir") + sep + "resource" + sep + "cryptoUtils" + sep + "certs" + sep;
 		
-		// load the cert in der format (tested it is working)
-		String certDER = CryptoUtils.loadCertFromDer(certPath);
-		System.out.println(certDER);
+		// cert
+		String pemCertPath = certDir + "server.cert.pem";
+		String derCertPath = certDir + "server.cert.cer";
+		
+		// load the object from the file
+		X509Certificate cert1 = CryptoUtils.certFromFile(pemCertPath);
+		X509Certificate cert2 = CryptoUtils.certFromFile(derCertPath);
+		
+		// load the b64 encoded der certificate
+		String b64Cert1 = CryptoUtils.derFromCertFile(pemCertPath, CryptoUtils.FORMAT_PEM);
+		String b64Cert2 = CryptoUtils.derFromCertFile(derCertPath, CryptoUtils.FORMAT_DER);
+		
+		X509Certificate cert11 = CryptoUtils.certFromDer(Conversion.base64StrToByteArray(b64Cert1));
+		X509Certificate cert22 = CryptoUtils.certFromDer(Conversion.base64StrToByteArray(b64Cert2));
+		
+		
+		
+		
+		
+		// key
+		String pemKeyPath = certDir + "server.key.pem";
+		String derKeyPath = certDir + "server.key.der";
+		
+
+		// load the key object from the file
+		PrivateKey key1 = CryptoUtils.keyFromFile(pemKeyPath, CryptoUtils.FORMAT_PEM);
+		PrivateKey key2 = CryptoUtils.keyFromFile(derKeyPath, CryptoUtils.FORMAT_DER);
+		
+		
+		
+		
+		// load the b64 encoded der key
+		String b64Key1 = CryptoUtils.derFromKeyFile(pemKeyPath, CryptoUtils.FORMAT_PEM);
+		String b64Key2 = CryptoUtils.derFromKeyFile(derKeyPath, CryptoUtils.FORMAT_DER);
+		
+		PrivateKey pk11 = CryptoUtils.keyFromDer(Conversion.base64StrToByteArray(b64Key1));
+		PrivateKey pk22 = CryptoUtils.keyFromDer(Conversion.base64StrToByteArray(b64Key2));
 		
 		
 		

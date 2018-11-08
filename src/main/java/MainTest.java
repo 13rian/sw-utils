@@ -2,18 +2,17 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
-import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.Base64;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
@@ -33,8 +32,7 @@ public class MainTest {
 		CryptoUtils.registerBC();
 		
 		String sep = File.separator;
-		String cryptoUtilsDir = System.getProperty("user.dir") + sep + "resource" + sep + "cryptoUtils" + sep;
-		String certDir = cryptoUtilsDir + "certs" + sep + "server" + sep;
+		String certDir = System.getProperty("user.dir") + sep + "resource" + sep + "cryptoUtils" + sep + "certs" + sep;
 		
 		// cert
 		String pemCertPath = certDir + "server.cert.pem";
@@ -59,31 +57,22 @@ public class MainTest {
 		String pemKeyPath = certDir + "server.key.pem";
 		String derKeyPath = certDir + "server.key.der";
 		
-//		try {
-//			KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");
-//			keyFactory.
-//			
-//		} catch (Exception e) {
-//			logger.error("exception: ", e);
-//		}
+
+		// load the key object from the file
+		PrivateKey key1 = keyFromFile(pemKeyPath, FORMAT_PEM);
+		PrivateKey key2 = keyFromFile(derKeyPath, FORMAT_DER);
 		
 		
-		// load the b64 encoded der ke
+		
+		
+		// load the b64 encoded der key
 		String b64Key1 = derFromKeyFile(pemKeyPath, FORMAT_PEM);
-		String b64Key1_5 = loadPEM(pemKeyPath);
 		String b64Key2 = derFromKeyFile(derKeyPath, FORMAT_DER);
 		
-		try {
-			PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(Base64.getMimeDecoder().decode(b64Key1_5));
-			KeyFactory kf = KeyFactory.getInstance("ECDSA", "BC");
-			PrivateKey pk = kf.generatePrivate(keySpec);
-			System.out.println("parsed");
-
-		} catch (Exception e) {
-			logger.error("exception: ", e);
-		}
-
+		PrivateKey pk11 = keyFromDer(Conversion.base64StrToByteArray(b64Key1));
+		PrivateKey pk22 = keyFromDer(Conversion.base64StrToByteArray(b64Key2));
 		
+	
 		
 		
 		System.out.println("end");
@@ -91,21 +80,7 @@ public class MainTest {
 	}
 	
 	
-	private static String loadPEM(String path) {
-		try {
-			InputStream inputStream = new FileInputStream(path);
-			String pem = new String(inputStream.readAllBytes(), StandardCharsets.ISO_8859_1);
-			Pattern parse = Pattern.compile("(?m)(?s)^---*BEGIN.*---*$(.*)^---*END.*---*$.*");
-			String encoded = parse.matcher(pem).replaceFirst("$1");
-			inputStream.close();
-			// return Base64.getMimeDecoder().decode(encoded);
-			return encoded;
 
-		} catch (Exception e) {
-			logger.error("error parsing the pem-file " + path, e);
-			return null;
-		}
-	}
 	
 	
 	
@@ -113,15 +88,15 @@ public class MainTest {
 	/**
 	 * loads a certificate from a pem or a der file
 	 * @param path 	the path to the certificate file
-	 * @return 	the certificate
+	 * @return 		the certificate
 	 */
 	public static X509Certificate certFromFile(String path) {
 		try {
-			File keyFile = new File(path);
-			FileInputStream keyInput = new FileInputStream(keyFile);
+			File certFile = new File(path);
+			FileInputStream certInput = new FileInputStream(certFile);
 
 			CertificateFactory cf = CertificateFactory.getInstance("X.509", "BC");
-			return (X509Certificate) cf.generateCertificate(keyInput);
+			return (X509Certificate) cf.generateCertificate(certInput);
 
 		} catch (Exception e) {
 			logger.error("error loading the certificate: ", e);
@@ -145,14 +120,14 @@ public class MainTest {
 			return cert;
 
 		} catch (Exception e) {
-			logger.error("error reading the certificate: ", e);
+			logger.error("error creating a certificate from the passed bytes: ", e);
 			return null;
 		}
 	}
 	
 	
 	/**
-	 * loads the der bytes from the passed certificate file
+	 * loads the base64 encoded certificate form the passed certificate file
 	 * @param path 		path to the certificate file
 	 * @param format 	der or pem use CryptoUtils.FORMAT_DER or CryptoUtils.FORMAT_PEM
 	 * @return 			certificate as b64 encoded der
@@ -164,67 +139,20 @@ public class MainTest {
 			return b64Cert;
 			
 		} else if (format == FORMAT_PEM) {
-			String b64Cert = derCertFromPem(path);
-			return b64Cert;
+			List<String> pemObjs = loadPem(path);
+			if (pemObjs != null && pemObjs.size() > 0) {
+				return pemObjs.get(0);
+			} else {
+				logger.error("no pem objects found in the passed pem file");
+				return null;
+			}
 			
 		} else {
 			logger.error("passed file format " + format + " is not implemented");
 			return null;
 		}
 	}
-	
-	
-	/**
-	 * load the certificate as b64 encoded der from the passed pem cert file path
-	 * @param path 			path of the cert file in pem format from which the certificate is read
-	 * @return 				certificate as b64 encoded der
-	 */
-	private static String derCertFromPem(String path) {
-		try {
-			InputStream inputStream = new FileInputStream(path);
-			InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-			BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-			StringBuilder strBuilder = new StringBuilder();
-
-
-			String line = "";
-			boolean certBegan = false;
-			while (line != null) {
-				line = bufferedReader.readLine(); 		// read the next line
-
-				// check for the first line
-				if (line.startsWith("-----BEGIN ") && line.endsWith(" CERTIFICATE-----")) {
-					certBegan = true;
-					continue;
-				} 
-
-				// check for the last line
-				if (line.startsWith("-----END ") && line.endsWith(" CERTIFICATE-----")) {
-					break;
-				}
-
-				// append the line to the cert
-				if (certBegan) {
-					strBuilder.append(line.trim());
-				}
-			}
-
-			// close the resources
-			bufferedReader.close();
-			inputStreamReader.close();
-			inputStream.close();
-			String b64Cert =  strBuilder.toString();
-			return b64Cert;
-
-		} catch (Exception e) {
-			logger.error("error reading the certificate from " + path, e);
-			return null;
-		}
-	}
-	
-	
-	
-	
+		
 	
 	
 	
@@ -232,7 +160,52 @@ public class MainTest {
 	
 	/////////////// key
 	/**
-	 * loads the der bytes from the passed key file
+	 * loads a key from a pem or a der file
+	 * @param path 		the path to the key file
+	 * @param format 	der or pem use CryptoUtils.FORMAT_DER or CryptoUtils.FORMAT_PEM
+	 * @return 			the private key
+	 */
+	public static PrivateKey keyFromFile(String path, int format) {
+		// load the b64 encoded der key
+		String b64Key;
+		if (format == FORMAT_DER) {
+			b64Key = derFromKeyFile(path, FORMAT_DER);
+						
+		} else if (format == FORMAT_PEM) {
+			b64Key = derFromKeyFile(path, FORMAT_PEM);
+			
+		} else {
+			logger.error("passed file format " + format + " is not implemented");
+			return null;
+		}		
+		
+		// create the private key from the der bytes
+		PrivateKey pk = keyFromDer(Conversion.base64StrToByteArray(b64Key));
+		return pk;
+	}
+	
+	
+	/**
+	 * loads a private key from the byte array in the DER format
+	 * @param keyBytes 		byte array containing the key information	
+	 * @return 				the Java object that contains the private key
+	 */
+	public static PrivateKey keyFromDer(byte[] keyBytes) {
+		try {
+			PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
+			KeyFactory kf = KeyFactory.getInstance("EC", "BC");
+			PrivateKey pk = kf.generatePrivate(keySpec);			
+			return pk;
+
+		} catch (Exception e) {
+			logger.error("error creating a private key from the passed bytes: ", e);
+			return null;
+		}
+	}
+	
+	
+	/**
+	 * loads the base64 encoded key form the passed key file
 	 * @param path 		path to the key file
 	 * @param format 	der or pem use CryptoUtils.FORMAT_DER or CryptoUtils.FORMAT_PEM
 	 * @return 			key as b64 encoded der
@@ -244,8 +217,13 @@ public class MainTest {
 			return b64Key;
 			
 		} else if (format == FORMAT_PEM) {
-			String b64Key = derKeyFromPem(path);
-			return b64Key;
+			List<String> pemObjs = loadPem(path);
+			if (pemObjs != null && pemObjs.size() > 0) {
+				return pemObjs.get(0);
+			} else {
+				logger.error("no pem objects found in the passed pem file");
+				return null;
+			}
 			
 		} else {
 			logger.error("passed file format " + format + " is not implemented");
@@ -255,36 +233,38 @@ public class MainTest {
 	
 	
 	/**
-	 * load the key as b64 encoded der from the passed pem key file path
-	 * @param path 			path of the cert file in pem format from which the certificate is read
-	 * @return 				certificate as b64 encoded der
+	 * loads the base64 encoded key or certificate form the passed pem-file
+	 * @param path 	path to the pem-file
+	 * @return 		base64 encoded der content of the pem file
 	 */
-	private static String derKeyFromPem(String path) {
+	private static List<String> loadPem(String path) {
+		ArrayList<String> result = new ArrayList<>();
 		try {
 			InputStream inputStream = new FileInputStream(path);
 			InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
 			BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
 			StringBuilder strBuilder = new StringBuilder();
 
-
-			String line = "";
-			boolean certBegan = false;
-			while (line != null) {
-				line = bufferedReader.readLine(); 		// read the next line
-
+			boolean readContent = false;
+			String line;
+			while ((line = bufferedReader.readLine()) != null) {
 				// check for the first line
-				if (line.startsWith("-----BEGIN ") && line.endsWith(" PRIVATE KEY-----")) {
-					certBegan = true;
+				if (line.contains("BEGIN")) {
+					readContent = true;
 					continue;
 				} 
 
 				// check for the last line
-				if (line.startsWith("-----END ") && line.endsWith(" PRIVATE KEY-----")) {
-					break;
+				if (line.contains("END")) {
+					String pemObj = strBuilder.toString();
+					result.add(pemObj);
+					strBuilder.setLength(0);
+					readContent = false;
+					continue;
 				}
 
 				// append the line to the cert
-				if (certBegan) {
+				if (readContent) {
 					strBuilder.append(line.trim());
 				}
 			}
@@ -293,13 +273,11 @@ public class MainTest {
 			bufferedReader.close();
 			inputStreamReader.close();
 			inputStream.close();
-			String b64Cert =  strBuilder.toString();
-			return b64Cert;
+			return result;
 
 		} catch (Exception e) {
 			logger.error("error reading the private key from " + path, e);
 			return null;
 		}
-	}
-	
+	}	
 }

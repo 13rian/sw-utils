@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.KeyStore;
@@ -16,10 +15,11 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.security.Signature;
-import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.Enumeration;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -31,13 +31,6 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
-import org.bouncycastle.asn1.ASN1Encodable;
-import org.bouncycastle.asn1.ASN1InputStream;
-import org.bouncycastle.asn1.ASN1ObjectIdentifier;
-import org.bouncycastle.asn1.ASN1OctetString;
-import org.bouncycastle.asn1.ASN1Primitive;
-import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.DERTaggedObject;
 import org.bouncycastle.cms.CMSAlgorithm;
 import org.bouncycastle.cms.CMSEnvelopedData;
 import org.bouncycastle.cms.CMSEnvelopedDataGenerator;
@@ -49,12 +42,8 @@ import org.bouncycastle.cms.jcajce.JceCMSContentEncryptorBuilder;
 import org.bouncycastle.cms.jcajce.JceKeyAgreeEnvelopedRecipient;
 import org.bouncycastle.cms.jcajce.JceKeyAgreeRecipientId;
 import org.bouncycastle.cms.jcajce.JceKeyAgreeRecipientInfoGenerator;
-import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec;
-import org.bouncycastle.jce.spec.ECPrivateKeySpec;
 import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
-import org.bouncycastle.operator.DefaultAlgorithmNameFinder;
 import org.bouncycastle.operator.OutputEncryptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,6 +54,10 @@ import ch.wenkst.sw_utils.file.FileUtils;
 
 public class CryptoUtils {
 	private static final Logger logger = LoggerFactory.getLogger(CryptoUtils.class);
+	
+	// define two constants for the certificate and key format
+	public static final int FORMAT_DER = 1;
+	public static final int FORMAT_PEM = 2;
 	
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -391,45 +384,123 @@ public class CryptoUtils {
 	// 									methods to handle certificates		 									 //
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/**
-	 * loads the certificate in hex encoded der format from the passed certificate file path directory
-	 * @param certPath 		path of the cert file in cer format from which the certificate is read
-	 * @return 				hex encoded der
+	 * loads the base64 encoded key or certificate form the passed pem-file
+	 * @param path 	path to the pem-file
+	 * @return 		base64 encoded der content of the pem file
 	 */
-	public static String loadCertFromDer(String certPath) {
-		String result = "";
-
-		// extract the certificate
+	private static List<String> loadPem(String path) {
+		ArrayList<String> result = new ArrayList<>();
 		try {
-			byte[] certBytes = FileUtils.readByteArrFromFile(certPath);
-			result = Conversion.byteArrayToHexStr(certBytes);
+			InputStream inputStream = new FileInputStream(path);
+			InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+			BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+			StringBuilder strBuilder = new StringBuilder();
+
+			boolean readContent = false;
+			String line;
+			while ((line = bufferedReader.readLine()) != null) {
+				// check for the first line
+				if (line.contains("BEGIN")) {
+					readContent = true;
+					continue;
+				} 
+
+				// check for the last line
+				if (line.contains("END")) {
+					String pemObj = strBuilder.toString();
+					result.add(pemObj);
+					strBuilder.setLength(0);
+					readContent = false;
+					continue;
+				}
+
+				// append the line to the cert
+				if (readContent) {
+					strBuilder.append(line.trim());
+				}
+			}
+
+			// close the resources
+			bufferedReader.close();
+			inputStreamReader.close();
+			inputStream.close();
+			return result;
 
 		} catch (Exception e) {
-			logger.error("error loading the certificate from " + certPath, e);
+			logger.error("error reading the private key from " + path, e);
+			return null;
 		}
+	}	
+	
+	
+	/**
+	 * loads a certificate from a pem or a der file
+	 * @param path 	the path to the certificate file
+	 * @return 		the certificate
+	 */
+	public static X509Certificate certFromFile(String path) {
+		try {
+			File certFile = new File(path);
+			FileInputStream certInput = new FileInputStream(certFile);
 
-		return result;
+			CertificateFactory cf = CertificateFactory.getInstance("X.509", "BC");
+			return (X509Certificate) cf.generateCertificate(certInput);
+
+		} catch (Exception e) {
+			logger.error("error loading the certificate: ", e);
+			return null;
+		}
 	}
-
-
+	
+	
 	/**
 	 * loads a security certificate from the byte array in the DER format
 	 * @param certBytes 	byte array containing the certificate information	
 	 * @return 				the Java object that contains the security certificate
 	 */
-	public static Certificate loadCertFromDER(byte[] certBytes) {
+	public static X509Certificate certFromDer(byte[] certBytes) {
 		try {
 			// certificate factory
 			CertificateFactory certFactory = CertificateFactory.getInstance("X.509", "BC");
 			ByteArrayInputStream is = new ByteArrayInputStream(certBytes); 
-			Certificate cert = certFactory.generateCertificate(is);
+			X509Certificate cert = (X509Certificate) certFactory.generateCertificate(is);
 
 			return cert;
 
 		} catch (Exception e) {
-			logger.error("error reading the certificate: ", e);
+			logger.error("error creating a certificate from the passed bytes: ", e);
 			return null;
 		}
 	}
+	
+	
+	/**
+	 * loads the base64 encoded certificate form the passed certificate file
+	 * @param path 		path to the certificate file
+	 * @param format 	der or pem use CryptoUtils.FORMAT_DER or CryptoUtils.FORMAT_PEM
+	 * @return 			certificate as b64 encoded der
+	 */
+	public static String derFromCertFile(String path, int format) {
+		if (format == FORMAT_DER) {
+			byte[] b64CertBytes = FileUtils.readByteArrFromFile(path);
+			String b64Cert = Conversion.byteArrayToBase64(b64CertBytes);
+			return b64Cert;
+			
+		} else if (format == FORMAT_PEM) {
+			List<String> pemObjs = loadPem(path);
+			if (pemObjs != null && pemObjs.size() > 0) {
+				return pemObjs.get(0);
+			} else {
+				logger.error("no pem objects found in the passed pem file");
+				return null;
+			}
+			
+		} else {
+			logger.error("passed file format " + format + " is not implemented");
+			return null;
+		}
+	}
+	
 
 
 	/**
@@ -482,26 +553,6 @@ public class CryptoUtils {
 		// all certificates are valid
 		return true;
 	}
-	
-	
-	/**
-	 * loads the certificate from the passed file path
-	 * @param path	 path to the certificate
-	 * @return		 the certificate
-	 */
-	public static X509Certificate loadCertificate(String path) {				
-		try {
-			File keyFile = new File(path);
-			FileInputStream keyInput = new FileInputStream(keyFile);
-
-			CertificateFactory cf = CertificateFactory.getInstance("X.509");
-			return (X509Certificate) cf.generateCertificate(keyInput);
-
-		} catch (Exception e) {
-			logger.error("error loading the certificate: ", e);
-			return null;
-		}
-	}
 
 
 
@@ -509,129 +560,101 @@ public class CryptoUtils {
 	// 											methods to handle keys 									 		 //
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/**
-	 * load the private key as hex encoded der from the passed pem keyFile path
-	 * @param keyPath 		path of the key file in pem format from which the key is read
-	 * @return 				hex encoded der
+	 * loads a key from a pem or a der file
+	 * @param path 		the path to the key file
+	 * @param format 	der or pem use CryptoUtils.FORMAT_DER or CryptoUtils.FORMAT_PEM
+	 * @return 			the private key
 	 */
-	public static String loadPkFromPem(String keyPath) {
-		String result = "";
-
-		try {
-			InputStream inputStream = new FileInputStream(keyPath);
-			InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-			BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-			StringBuilder strBuilder = new StringBuilder();
-
-
-			String line = "";
-			while (line != null) {
-				line = bufferedReader.readLine(); 		// read the next line
-
-				// check for the first line
-				if (line.startsWith("-----BEGIN ") && line.endsWith(" PRIVATE KEY-----")) {
-					continue;
-				} 
-
-				// check for the last line
-				if (line.startsWith("-----END ") && line.endsWith(" PRIVATE KEY-----")) {
-					break;
-				}
-
-				// append the line to the key
-				strBuilder.append(line.trim());
-			}
-
-			// close the resources
-			bufferedReader.close();
-			inputStreamReader.close();
-			inputStream.close();
-			byte[] keyBytes = Conversion.base64StrToByteArray(strBuilder.toString());
-
-			// convert the der key to hex
-			result = Conversion.byteArrayToHexStr(keyBytes);
-
-		} catch (Exception e) {
-			logger.error("error reading the key from ", e);
-		}
-
-
-		return result;
+	public static PrivateKey keyFromFile(String path, int format) {
+		// load the b64 encoded der key
+		String b64Key;
+		if (format == FORMAT_DER) {
+			b64Key = derFromKeyFile(path, FORMAT_DER);
+						
+		} else if (format == FORMAT_PEM) {
+			b64Key = derFromKeyFile(path, FORMAT_PEM);
+			
+		} else {
+			logger.error("passed file format " + format + " is not implemented");
+			return null;
+		}		
+		
+		// create the private key from the der bytes
+		PrivateKey pk = keyFromDer(Conversion.base64StrToByteArray(b64Key));
+		return pk;
 	}
-
-
+	
+	
 	/**
-	 * loads the private key from the byte array in DER format (PKCS8 encoded key)
-	 * @param pkcs8key 		the byte array containing the key information
-	 * @return 				the private key
+	 * loads a private key from the byte array in the DER format
+	 * @param keyBytes 		byte array containing the key information	
+	 * @return 				the Java object that contains the private key
 	 */
-	public static PrivateKey loadPrivateKeyFromDER(byte[] pkcs8key) {
-
+	public static PrivateKey keyFromDer(byte[] keyBytes) {
 		try {
-			ASN1InputStream asninput = new ASN1InputStream(pkcs8key);
-			ASN1Primitive p = null;
-			String strPrivKey = null;
-			String curveName = ""; 		// to extract the name of the curve
-
-			while ((p = asninput.readObject()) != null) {
-				// read out the private key
-				ASN1Sequence asn1 = ASN1Sequence.getInstance(p);
-				ASN1OctetString octstr = ASN1OctetString.getInstance(asn1.getObjectAt(1)); 	// private key is the second object
-				strPrivKey = Conversion.byteArrayToHexStr(octstr.getOctets());				// as a control if correct key read
-				//				System.out.println("privateKey: " + strPrivKey);				
-
-
-				// read out the curve name of the private key
-				DefaultAlgorithmNameFinder nameFinder = new DefaultAlgorithmNameFinder();
-				ASN1Encodable asn1Enc = asn1.getObjectAt(2); 					// object identifier (oid) is the third object
-				DERTaggedObject derObj = (DERTaggedObject)asn1Enc;
-				ASN1ObjectIdentifier oid = (ASN1ObjectIdentifier)derObj.getObject();
-				curveName = nameFinder.getAlgorithmName(oid);				
-			}
-
-			// close the input stream
-			asninput.close();
-
-			// create the curve parameters from the curve name
-			ECNamedCurveParameterSpec curveParams = ECNamedCurveTable.getParameterSpec(curveName);
-			BigInteger bigIntKey = new BigInteger(strPrivKey, 16); 			// key as big integer
-			ECPrivateKeySpec priKeySpec = new ECPrivateKeySpec(bigIntKey, curveParams);
-
-			// create the key from the private key specs
-			KeyFactory factory = KeyFactory.getInstance("ECDSA", "BC");
-			PrivateKey privateKey = factory.generatePrivate(priKeySpec);
-
-			return privateKey;
+			PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
+			KeyFactory kf = KeyFactory.getInstance("EC", "BC");
+			PrivateKey pk = kf.generatePrivate(keySpec);			
+			return pk;
 
 		} catch (Exception e) {
-			logger.error("failed to read in key: ", e);
+			logger.error("error creating a private key from the passed bytes: ", e);
 			return null;
 		}
 	}
 	
 	
 	/**
-	 * loads the private key from the keyfile
-	 * @param path	 	path to the key, only .p12
-	 * @param password  export password of the private key
-	 * @return	 		the private key
+	 * loads the base64 encoded key form the passed key file
+	 * @param path 		path to the key file
+	 * @param format 	der or pem use CryptoUtils.FORMAT_DER or CryptoUtils.FORMAT_PEM
+	 * @return 			key as b64 encoded der
 	 */
-	public static PrivateKey loadPrivateKey(String path, String password) {		
-		try {
-			KeyStore ks = KeyStore.getInstance("PKCS12");
-			File keyFile = new File(path);
-
-			FileInputStream fis = new FileInputStream(keyFile);
-			ks.load(fis, password.toCharArray());
-
-			Enumeration<String> aliases = ks.aliases();
-			String alias = aliases.nextElement();
-			return (PrivateKey) ks.getKey(alias, password.toCharArray());
-
-		} catch (Exception e) {
-			logger.error("error loading private key: ", e);
+	public static String derFromKeyFile(String path, int format) {
+		if (format == FORMAT_DER) {
+			byte[] b64KeyBytes = FileUtils.readByteArrFromFile(path);
+			String b64Key = Conversion.byteArrayToBase64(b64KeyBytes);
+			return b64Key;
+			
+		} else if (format == FORMAT_PEM) {
+			List<String> pemObjs = loadPem(path);
+			if (pemObjs != null && pemObjs.size() > 0) {
+				return pemObjs.get(0);
+			} else {
+				logger.error("no pem objects found in the passed pem file");
+				return null;
+			}
+			
+		} else {
+			logger.error("passed file format " + format + " is not implemented");
 			return null;
 		}
 	}
+	
+	
+//	/**
+//	 * loads the private key from a p12-file
+//	 * @param path	 	path to the key, only .p12
+//	 * @param password  export password of the private key
+//	 * @return	 		the private key
+//	 */
+//	public static PrivateKey keyFromP12(String path, String password) {		
+//		try {
+//			KeyStore ks = KeyStore.getInstance("PKCS12");
+//			File keyFile = new File(path);
+//
+//			FileInputStream fis = new FileInputStream(keyFile);
+//			ks.load(fis, password.toCharArray());
+//
+//			Enumeration<String> aliases = ks.aliases();
+//			String alias = aliases.nextElement();
+//			return (PrivateKey) ks.getKey(alias, password.toCharArray());
+//
+//		} catch (Exception e) {
+//			logger.error("error loading private key: ", e);
+//			return null;
+//		}
+//	}
 	
 
 
