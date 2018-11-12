@@ -4,21 +4,27 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.Provider;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.security.Signature;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 
 import javax.crypto.Cipher;
@@ -443,8 +449,14 @@ public class CryptoUtils {
 			File certFile = new File(path);
 			FileInputStream certInput = new FileInputStream(certFile);
 
-			CertificateFactory cf = CertificateFactory.getInstance("X.509", "BC");
-			return (X509Certificate) cf.generateCertificate(certInput);
+			CertificateFactory certFactory;
+			if (Security.getProvider("BC") == null) {
+				certFactory = CertificateFactory.getInstance("X.509");
+			} else {
+				certFactory = CertificateFactory.getInstance("X.509", "BC");
+			}
+			
+			return (X509Certificate) certFactory.generateCertificate(certInput);
 
 		} catch (Exception e) {
 			logger.error("error loading the certificate: ", e);
@@ -460,8 +472,12 @@ public class CryptoUtils {
 	 */
 	public static X509Certificate certFromDer(byte[] certBytes) {
 		try {
-			// certificate factory
-			CertificateFactory certFactory = CertificateFactory.getInstance("X.509", "BC");
+			CertificateFactory certFactory;
+			if (Security.getProvider("BC") == null) {
+				certFactory = CertificateFactory.getInstance("X.509");
+			} else {
+				certFactory = CertificateFactory.getInstance("X.509", "BC");
+			}
 			ByteArrayInputStream is = new ByteArrayInputStream(certBytes); 
 			X509Certificate cert = (X509Certificate) certFactory.generateCertificate(is);
 
@@ -593,8 +609,15 @@ public class CryptoUtils {
 	public static PrivateKey keyFromDer(byte[] keyBytes) {
 		try {
 			PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
-			KeyFactory kf = KeyFactory.getInstance("EC", "BC");
-			PrivateKey pk = kf.generatePrivate(keySpec);			
+			
+			KeyFactory keyFactory;
+			if (Security.getProvider("BC") == null) {
+				keyFactory = KeyFactory.getInstance("EC");
+			} else {
+				keyFactory = KeyFactory.getInstance("EC", "BC");
+			}
+			
+			PrivateKey pk = keyFactory.generatePrivate(keySpec);			
 			return pk;
 
 		} catch (Exception e) {
@@ -632,30 +655,78 @@ public class CryptoUtils {
 	}
 	
 	
-//	/**
-//	 * loads the private key from a p12-file
-//	 * @param path	 	path to the key, only .p12
-//	 * @param password  export password of the private key
-//	 * @return	 		the private key
-//	 */
-//	public static PrivateKey keyFromP12(String path, String password) {		
-//		try {
-//			KeyStore ks = KeyStore.getInstance("PKCS12");
-//			File keyFile = new File(path);
-//
-//			FileInputStream fis = new FileInputStream(keyFile);
-//			ks.load(fis, password.toCharArray());
-//
-//			Enumeration<String> aliases = ks.aliases();
-//			String alias = aliases.nextElement();
-//			return (PrivateKey) ks.getKey(alias, password.toCharArray());
-//
-//		} catch (Exception e) {
-//			logger.error("error loading private key: ", e);
-//			return null;
-//		}
-//	}
+	/**
+	 * loads the private key from a p12-file from the entry with the passed alias
+	 * @param path	 	path to the key, only .p12
+	 * @param password  export password of the private key
+	 * @param alias 	the alias of the key entry
+	 * @return	 		the private key
+	 */
+	public static PrivateKey keyFromP12(String path, String password, String alias) {		
+		try {
+			KeyStore keyStore = keyStoreFromP12(path, password);
+
+			return (PrivateKey) keyStore.getKey(alias, password.toCharArray());
+
+		} catch (Exception e) {
+			logger.error("error loading private key: ", e);
+			return null;
+		}
+	}
 	
+	
+	/**
+	 * loads the private key from a p12-file from the first entry
+	 * @param path	 	path to the key, only .p12
+	 * @param password  export password of the private key
+	 * @param alias 	the alias of the key entry
+	 * @return	 		the private key
+	 */
+	public static PrivateKey keyFromP12(String path, String password) {		
+		try {
+			KeyStore keyStore = keyStoreFromP12(path, password);
+
+			Enumeration<String> aliases = keyStore.aliases();
+			String alias = aliases.nextElement();
+			return (PrivateKey) keyStore.getKey(alias, password.toCharArray());
+
+		} catch (Exception e) {
+			logger.error("error loading private key: ", e);
+			return null;
+		}
+	}
+	
+	
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// 									methods to handle key/trust stores 							  			  //
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * creates a key store form a p12 file
+	 * @param path 			path to the p12-file
+	 * @param password 		password for the p12-file
+	 * @return 				key store that contains the entries of the p12-file
+	 * @throws KeyStoreException 
+	 * @throws NoSuchProviderException 
+	 * @throws IOException 
+	 * @throws CertificateException 
+	 * @throws NoSuchAlgorithmException 
+	 */
+	public static KeyStore keyStoreFromP12(String path, String password) throws KeyStoreException, NoSuchProviderException, NoSuchAlgorithmException, CertificateException, IOException {
+		KeyStore keyStore;
+		if (Security.getProvider("BC") == null) {
+			keyStore = KeyStore.getInstance("PKCS12");
+		} else {
+			keyStore = KeyStore.getInstance("PKCS12", "BC");
+		}
+
+		File keyFile = new File(path);
+		FileInputStream fis = new FileInputStream(keyFile);
+		keyStore.load(fis, password.toCharArray());
+		
+		return keyStore;
+	}
 
 
 

@@ -28,13 +28,13 @@ public class SSLContextGenerator_BP {
 
 	/**
 	 * sets up the sslScontext for a secure connection, can be used for the server and the client
-	 * @param keyStorePassword	keyStore password (must be the same as chosen to create the certificate)
 	 * @param keyFilePath 		the path to the p12-file containing the private key and the certificate
+	 * @param keyStorePassword	keyStore password (must be the same as chosen to create the certificate)
 	 * @param trustedCertPaths	a list of paths to crt-files of the trusted certificates (are added to the trustStore)
 	 * @param protocol 			the used tls protocol
 	 * @return	 				the SSLContext that is used to create the SSL socket
 	 */
-	public static SSLContext createSSLContext(String keyStorePassword, String keyFilePath, ArrayList<String> trustedCertPaths, String protocol) {
+	public static SSLContext createSSLContext(String keyFilePath, String keyStorePassword, ArrayList<String> trustedCertPaths, String protocol) {
 		try {
 			SSLContext sslContext = SSLContext.getInstance(protocol, "BCJSSE");
 			

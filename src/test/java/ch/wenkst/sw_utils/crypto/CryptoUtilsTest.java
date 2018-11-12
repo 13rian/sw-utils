@@ -49,15 +49,15 @@ public class CryptoUtilsTest {
 		String senderSigDir = cryptoUtilsDir + "cmsCerts" + sep + "signature" + sep + "sender" + sep;
 
 		// encryption crypto material
-		receiverEncKey = CryptoUtils.loadPrivateKey(receiverEncDir + "key.p12", "celsi-pw");
-		receiverEncCert = CryptoUtils.loadCertificate(receiverEncDir + "certificate.pem");  
+		receiverEncKey = CryptoUtils.keyFromP12(receiverEncDir + "key.p12", "celsi-pw");
+		receiverEncCert = CryptoUtils.certFromFile(receiverEncDir + "certificate.pem");  
 
-		senderEncKey = CryptoUtils.loadPrivateKey(senderEncDir + "key.p12", "celsi-pw");   		
-		senderEncCert = CryptoUtils.loadCertificate(senderEncDir + "certificate.pem"); 		
+		senderEncKey = CryptoUtils.keyFromP12(senderEncDir + "key.p12", "celsi-pw");   		
+		senderEncCert = CryptoUtils.certFromFile(senderEncDir + "certificate.pem"); 		
 
 		//  signature crypto material
-		senderSigKey = CryptoUtils.loadPrivateKey(senderSigDir + "key.p12", "celsi-pw");   		
-		senderSigCert = CryptoUtils.loadCertificate(senderSigDir + "certificate.pem"); 		
+		senderSigKey = CryptoUtils.keyFromP12(senderSigDir + "key.p12", "celsi-pw");   		
+		senderSigCert = CryptoUtils.certFromFile(senderSigDir + "certificate.pem"); 		
 	}
 
 

@@ -5,10 +5,8 @@ import java.security.cert.X509Certificate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ch.wenkst.sw_utils.Utils;
 import ch.wenkst.sw_utils.conversion.Conversion;
 import ch.wenkst.sw_utils.crypto.CryptoUtils;
-import ch.wenkst.sw_utils.file.FileUtils;
 import ch.wenkst.sw_utils.logging.Log;
 
 public class Main_SWUtils {
