@@ -87,13 +87,6 @@ public class HttpRequestBuilder extends HttpBuilder {
 
 		return this;
 	}
-
-
-
-
-
-
-
 }
 
 

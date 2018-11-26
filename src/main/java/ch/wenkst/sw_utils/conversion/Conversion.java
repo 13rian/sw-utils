@@ -4,6 +4,7 @@ import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -285,8 +286,8 @@ public class Conversion {
 	 * @param barr	 	the byte array to convert
 	 * @return	 		the converted arrayList
 	 */
-	public static ArrayList<Byte> byteArrayToArrayList(byte[] barr) {
-		ArrayList<Byte> result = new ArrayList<Byte>();
+	public static List<Byte> byteArrayToArrayList(byte[] barr) {
+		List<Byte> result = new ArrayList<Byte>();
 		for (int i=0; i<barr.length; i++) {
 			result.add(barr[i]);
 		}
@@ -299,7 +300,7 @@ public class Conversion {
 	 * @param aList 	arrayList to convert
 	 * @return 			the converted byte array
 	 */
-	public static byte[] arrayListToByteArray(ArrayList<Byte> aList) {
+	public static byte[] arrayListToByteArray(List<Byte> aList) {
 		byte[] result = new byte[aList.size()];
 		for (int i=0; i<aList.size(); i++) {
 			result[i] = aList.get(i);

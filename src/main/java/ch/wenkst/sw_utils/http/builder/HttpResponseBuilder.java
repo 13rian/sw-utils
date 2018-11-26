@@ -17,7 +17,6 @@ public class HttpResponseBuilder extends HttpBuilder {
 	public HttpResponseBuilder() {
 		super();
 
-		// not complete at all, needs to be completed if desired
 		httpStatusMap = new HashMap<>();
 		httpStatusMap.put(100, "Continue");
 		httpStatusMap.put(101, "Switching Protocols");

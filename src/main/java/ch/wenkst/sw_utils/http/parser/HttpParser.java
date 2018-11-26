@@ -2,6 +2,9 @@ package ch.wenkst.sw_utils.http.parser;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,12 +22,12 @@ public class HttpParser {
 	private static final byte LINE_FEED_BYTE = (byte) '\n'; 		// define the newline byte
 	private static final String PROTOCOL = "HTTP/1.1"; 				// defines the http protocol
 
-	private ArrayList<Byte> proccessedBytes = new ArrayList<>();	// holds the processed bytes of the http message, it is used as a temporary buffer
+	private List<Byte> proccessedBytes = new ArrayList<>();			// holds the processed bytes of the http message, it is used as a temporary buffer
 	protected String firstLine = ""; 								// the first line of the http message
-	protected ArrayList<String> headerLines = null; 				// holds all lines of the header
+	protected Map<String, String> headerFields = null; 				// holds all header field properties
 	private int contentLength = -1; 								// the content length header property
-	private ArrayList<Byte> chunkBytes = new ArrayList<>(); 		// holds the bytes of one body chunk
-	private ArrayList<Byte> bodyBytes = new ArrayList<>(); 			// holds the bytes of the body
+	private List<Byte> chunkBytes = new ArrayList<>(); 				// holds the bytes of one body chunk
+	private List<Byte> bodyBytes = new ArrayList<>(); 				// holds the bytes of the body
 
 	// indicates if the server usded the chunked encoding (length \r\n chunk length \r\n chunk 0, 0 indicates the end of the received chunks)
 	// the length is encoded as hex
@@ -37,7 +40,7 @@ public class HttpParser {
 	 * holds methods to parse a http message
 	 */
 	public HttpParser() {
-		headerLines = new ArrayList<>();  					
+		headerFields = new HashMap<>();  					
 	}
 
 
@@ -107,8 +110,9 @@ public class HttpParser {
 					} 							
 
 				} else {
-					// line is not empty, add it to the header lines list
-					headerLines.add(line);
+					// line is not empty, add it to the header fields list
+					String[] parts = line.split(":");
+					headerFields.put(parts[0].trim(), parts[1].trim());
 				}			
 
 				// clear the buffer
@@ -149,7 +153,6 @@ public class HttpParser {
 							state = State.CHUNK_LENGTH_RECEIVED;
 						}
 					}
-
 				}
 
 
@@ -191,18 +194,17 @@ public class HttpParser {
 	}
 
 
-
-
 	/**
 	 * extracts the content length from the header properties
 	 */
 	private void extractContentLength() {
-		for (String line : headerLines) {
-			if (line.contains("Content-Length:")) {
-				String[] parts = line.split(":");
-				String strLength = parts[1].trim();
-				contentLength = Integer.parseInt(strLength);
+		String contentLengthStr = headerFields.get("Content-Length");
+		try {
+			if (contentLengthStr != null) {
+				contentLength = Integer.parseInt(contentLengthStr);
 			}
+		} catch (Exception e) {
+			logger.error("error parsing the content length header field: ", e);
 		}
 
 		// log an error if the content length is missing
@@ -212,9 +214,8 @@ public class HttpParser {
 			// test if the message is chunked
 			isChunked = isChunked();
 			if (!isChunked) {
-				logger.debug("http message has no content length and is not chunked");
+				logger.error("http message has no content length and is not chunked");
 			}
-
 		}
 	}
 
@@ -224,10 +225,10 @@ public class HttpParser {
 	 * @return 		true id the transfer encoding is chunked, false otherwise
 	 */
 	private boolean isChunked() {
-		for (String line : headerLines) {
-			if (line.contains("Transfer-Encoding: chunked")) {
-				return true;
-			}
+		String transferEncoding = headerFields.get("Transfer-Encoding");
+		
+		if (transferEncoding != null && transferEncoding.equals("chunked")) {
+			return true;
 		}
 
 		return false;
@@ -254,7 +255,7 @@ public class HttpParser {
 	public void clearAfterFullMessage() {
 		state = State.NONE;
 
-		headerLines = new ArrayList<>();  				
+		headerFields = new HashMap<>();  				
 		contentLength = -1; 				
 		bodyBytes = new ArrayList<>(); 
 		isChunked = false;
@@ -275,7 +276,16 @@ public class HttpParser {
 		} else {
 			logger.error("fullMessageReceived called but the state is not HEADER_RECEIVED");
 		}
-
+	}
+	
+	
+	/**
+	 * retrieves the value of the passed header field
+	 * @param prop 	the name of the header field property
+	 * @return 		the value of the header field or null if the field is not present
+	 */
+	public String getHeaderField(String prop) {
+		return headerFields.get(prop);
 	}
 
 
@@ -287,6 +297,4 @@ public class HttpParser {
 	public String getBodyStr() {
 		return new String(getBodyBytes(), StandardCharsets.US_ASCII);
 	}
-
-
 }

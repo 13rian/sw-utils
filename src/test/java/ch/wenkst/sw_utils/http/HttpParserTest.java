@@ -198,6 +198,24 @@ public class HttpParserTest {
 	}
 	
 	
+	/**
+	 * parse the header field of http requests
+	 */
+	@Test
+	@DisplayName("http request header")
+	public void httpRequestHeader() {
+		HttpRequestParser reqParser = new HttpRequestParser();
+				
+		// add the data to the parser
+		reqParser.addData(httpRequest.getBytes(StandardCharsets.UTF_8));
+		
+		// test the parsed values
+		Assertions.assertEquals(reqParser.getHeaderField("User-Agent"), "AHC/1.0", "user-agent field");
+		Assertions.assertEquals(reqParser.getHeaderField("Connection"), "keep-alive", "connection field");
+		Assertions.assertTrue(reqParser.getHeaderField("fake-field") == null, "non existent field");
+	}
+	
+	
 	
 	/////////////////////////////////////////////////////////////////////////////////////////
 	// 									http response 									   //
