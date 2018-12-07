@@ -1,5 +1,6 @@
 package ch.wenkst.sw_utils;
 
+import java.io.FileReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
@@ -9,10 +10,45 @@ import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import ch.wenkst.sw_utils.conversion.Conversion;
+
 /**
  * holds a collection of frequently used methods
  */
 public class Utils {
+	private static final Logger logger = LoggerFactory.getLogger(Utils.class);
+	
+	/**
+	 * pints the startup message with the maven version and some hava properties
+	 */
+	public static void logStartupMessage() {
+		try {
+			MavenXpp3Reader reader = new MavenXpp3Reader();
+	        Model model = reader.read(new FileReader("pom.xml"));
+	        int formatLength = 23;	        
+	        
+	        logger.info("--------------------------------------------------------------------------------------------");
+	        logger.info("starting up " + model.getName());
+	        logger.info(Conversion.padRight("groupId: ", formatLength) + model.getGroupId());
+	        logger.info(Conversion.padRight("artifactId: ", formatLength) + model.getArtifactId());
+	        logger.info(Conversion.padRight("version: ", formatLength) + model.getVersion());
+	        
+			logger.info(Conversion.padRight("java version: ", formatLength) + System.getProperty("java.version"));
+			logger.info(Conversion.padRight("java runtime name: ", formatLength) + System.getProperty("java.runtime.name"));
+			logger.info(Conversion.padRight("java runtime version: ", formatLength) + System.getProperty("java.runtime.version"));
+			logger.info(Conversion.padRight("java home: ", formatLength) + System.getProperty("java.home"));
+	        logger.info("--------------------------------------------------------------------------------------------");
+	        
+		} catch (Exception e) {
+			logger.error("error parsing the maven pom file: ", e);
+		}
+	}
+	
 		
 	/**
 	 * put the caller to sleep for the passed amount of time in ms

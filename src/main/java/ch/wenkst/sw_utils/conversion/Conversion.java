@@ -353,6 +353,17 @@ public class Conversion {
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
+	 * adds a padding of spaces on the left side of the passed string if it is shorter than the passed length
+	 * @param str 		the string that is padded
+	 * @param length 	desired length
+	 * @return 			the string with the padding on the left side
+	 */
+	public static String padLeft(String str, int length) {
+		return padLeft(str, ' ', length);
+	}
+    
+    
+	/**
 	 * adds a padding on the left side of the passed string if it is shorter than the passed length
 	 * @param str 		the string that is padded
 	 * @param padChar 	character to pad the string with
@@ -367,6 +378,17 @@ public class Conversion {
 		
 		String paddedStr = new String(new char[length - strLength]).replace('\0', padChar) + str;
 		return paddedStr;
+	}
+	
+	
+	/**
+	 * adds a padding of spaces on the right side of the passed string if it is shorter than the passed length
+	 * @param str 		the string that is padded
+	 * @param length 	desired length
+	 * @return 			the string with the padding on the right side
+	 */
+	public static String padRight(String str, int length) {
+		return padRight(str, ' ', length);
 	}
 	
 	
