@@ -157,7 +157,9 @@ public class FileUtils {
 
 		// create the file and ensure that the parent directories exist
 		File file = new File(filePath);
-		file.getParentFile().mkdirs();
+		if (file.getParentFile() != null) {
+			file.getParentFile().mkdirs();
+		}
 
 		// write the new file
 		try {

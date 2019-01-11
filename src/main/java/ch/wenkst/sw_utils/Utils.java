@@ -24,9 +24,10 @@ public class Utils {
 	private static final Logger logger = LoggerFactory.getLogger(Utils.class);
 	
 	/**
-	 * pints the startup message with the maven version and some hava properties
+	 * pints the startup message with the maven version and some java properties
+	 * @return 		true if the pom-file was successfully parsed, false if an error occurred
 	 */
-	public static void logStartupMessage() {
+	public static boolean logStartupMessage() {
 		try {
 			MavenXpp3Reader reader = new MavenXpp3Reader();
 	        Model model = reader.read(new FileReader("pom.xml"));
@@ -43,9 +44,11 @@ public class Utils {
 			logger.info(Conversion.padRight("java runtime version: ", formatLength) + System.getProperty("java.runtime.version"));
 			logger.info(Conversion.padRight("java home: ", formatLength) + System.getProperty("java.home"));
 	        logger.info("--------------------------------------------------------------------------------------------");
+	        return true;
 	        
 		} catch (Exception e) {
 			logger.error("error parsing the maven pom file: ", e);
+			return false;
 		}
 	}
 	
