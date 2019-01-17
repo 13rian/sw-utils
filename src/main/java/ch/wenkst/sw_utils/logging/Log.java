@@ -221,7 +221,7 @@ public class Log {
 
         	} else {
         		try {
-        			long fileSize = Long.parseLong(fileSizeStr);
+        			int fileSize = Integer.parseInt(fileSizeStr);
         			int fileCount = Integer.parseInt(fileCountStr);
         			fileHandler = new FileHandler(logFilePath, fileSize, fileCount, true);
 
