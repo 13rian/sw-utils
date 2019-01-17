@@ -65,6 +65,21 @@ public class Utils {
 		}
 	}
 	
+
+	/**
+	 * puts the caller to an infinity sleep. this method is intended to keep the main thread alive
+	 * @param sleepInterval		interval for the periodic sleep
+	 */
+	public static void infinitySleep(int sleepInterval) {
+		while (true) {
+			try {
+				Thread.sleep(20000);
+			} catch (InterruptedException e) {
+				logger.error("sleep interrupted: ", e);
+			}
+		}
+	}
+	
 	
 	/**
 	 * returns the current working directory of the running program

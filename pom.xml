@@ -155,9 +155,40 @@
   	</dependencies>
   	
   	
-  	<!-- plugin needed for java 11
+  	
 	<build>
     	<plugins>
+    		<!-- attach the source to the project, other projects that import this one can look at the source -->
+   		    <plugin>
+		      	<groupId>org.apache.maven.plugins</groupId>
+		      	<artifactId>maven-source-plugin</artifactId>
+		      	<executions>
+		        	<execution>
+		          		<id>attach-sources</id>
+		          		<goals>
+		            		<goal>jar</goal>
+		          		</goals>
+		        	</execution>
+		      	</executions>
+		    </plugin>
+		    
+		    
+		    <!-- attach the java doc 
+		    <plugin>
+		      	<groupId>org.apache.maven.plugins</groupId>
+		      	<artifactId>maven-javadoc-plugin</artifactId>
+		      	<executions>
+			        <execution>
+			          	<id>attach-javadocs</id>
+			          	<goals>
+			            	<goal>jar</goal>
+			          	</goals>
+			        </execution>
+		      	</executions>
+		    </plugin>
+		    -->
+    	
+    		<!-- plugin only needed for java 11
     		<plugin>
     			<groupId>org.apache.maven.plugins</groupId>
     			<artifactId>maven-compiler-plugin</artifactId>
@@ -166,7 +197,8 @@
         			<release>${java.version}</release>
     			</configuration>
 			</plugin>
+			 -->
     	</plugins>
 	</build>
-	 -->
+	
 </project>
