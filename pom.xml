@@ -163,6 +163,7 @@
   	</dependencies>
   	
   	
+  	<!-- plugin needed for java 11
 	<build>
     	<plugins>
     		<plugin>
@@ -175,4 +176,5 @@
 			</plugin>
     	</plugins>
 	</build>
+	 -->
 </project>
