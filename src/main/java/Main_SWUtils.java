@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import ch.wenkst.sw_utils.Utils;
 import ch.wenkst.sw_utils.conversion.Conversion;
 import ch.wenkst.sw_utils.crypto.CryptoUtils;
+import ch.wenkst.sw_utils.file.FileUtils;
 import ch.wenkst.sw_utils.logging.Log;
 
 public class Main_SWUtils {
@@ -102,6 +103,16 @@ public class Main_SWUtils {
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// startup message
 		Utils.logStartupMessage();
+		
+		
+		
+		// new methods
+		String fileExtension = FileUtils.fileExtension("hallo/test.qq");
+		System.out.println("file-extension: " + fileExtension);
+		
+		String rawName = FileUtils.rawFileName("hallo/test");
+		System.out.println("file-extension: " + rawName);
+		
 
 
 		

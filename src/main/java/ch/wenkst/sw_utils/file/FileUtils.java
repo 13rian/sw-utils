@@ -25,13 +25,13 @@ import org.slf4j.LoggerFactory;
 
 public class FileUtils {
 	private static final Logger logger = LoggerFactory.getLogger(FileUtils.class);
-	
+
 	// define the constants to recursively copy a directory
 	public static final int COMPLETE_REPLACE = 0; 	// the directory is completely replaced
 	public static final int NO_REPLACE = 1; 		// if the directory already exists it will not be replaced
 	public static final int MERGE_REPLACE = 2; 		// the directories will be merged, files that already exist will be replace 
 	public static final int MERGE_NO_REPLACE = 3; 	// the directories will be merged, files that already exist will not be replace 
-	
+
 
 
 	/**
@@ -108,17 +108,17 @@ public class FileUtils {
 		}
 
 		File[] files = dir.listFiles((directory, fileName) -> {
-		    return fileName.endsWith(end) && (pattern == null || fileName.contains(pattern));
+			return fileName.endsWith(end) && (pattern == null || fileName.contains(pattern));
 		});
-		
+
 		if (files.length == 0) {
 			return null;
 		} else {
 			return files[0].getAbsolutePath();
 		}
 	}
-	
-	
+
+
 	/**
 	 * returns an array of all absolute file paths of files in the searchDir that contain pattern and end with end
 	 * @param searchDir 	the directory in which the file is searched
@@ -133,14 +133,14 @@ public class FileUtils {
 		}
 
 		File[] files = dir.listFiles((directory, fileName) -> {
-		    return fileName.endsWith(end) && (pattern == null || fileName.contains(pattern));
+			return fileName.endsWith(end) && (pattern == null || fileName.contains(pattern));
 		});
-		
+
 		String[] result = new String[files.length];
 		for (int i=0; i<files.length; i++) {
 			result[i] = files[i].getAbsolutePath();
 		}
-		
+
 		return result;
 	}
 
@@ -174,8 +174,8 @@ public class FileUtils {
 			return false;
 		}		
 	}
-	
-	
+
+
 	/**
 	 * copies a file, the destination directory will be created if it does not exist
 	 * @param srcFilePath 		the path of the source file to copy
@@ -197,7 +197,7 @@ public class FileUtils {
 				Files.copy(sourcePath, destinationPath, StandardCopyOption.COPY_ATTRIBUTES);
 			}
 			return true;
-			
+
 		} catch (Exception e) {
 			logger.error("error copying file form " + srcFilePath + " to " + destFilePath, e);
 			return false;
@@ -216,6 +216,7 @@ public class FileUtils {
 		try {
 			Path sourcePath = Paths.get(srcFilePath);
 			Path destinationPath = Paths.get(destFilePath);
+
 
 			// create the parent directory if it does not already exist
 			Files.createDirectories(destinationPath.getParent());
@@ -245,7 +246,7 @@ public class FileUtils {
 			if (!Files.exists(Paths.get(filePath))) {
 				return true;
 			}
-			
+
 			Path path = Paths.get(filePath);
 			Files.delete(path);
 			return true;
@@ -271,13 +272,13 @@ public class FileUtils {
 		try {
 			// check if the destination directory already exists, do not follow symbolic links
 			boolean dirExists = Files.exists(Paths.get(destDir), new LinkOption[] {LinkOption.NOFOLLOW_LINKS});
-			
+
 			// if the directory should not be replaced, check if it exists
 			if (option == NO_REPLACE && dirExists) {
 				logger.error("error copying dir " + srcDir + " to " + destDir + " destination directory already exists");
 				return false;
 			}
-			
+
 			// if the directory should be replaced delete it first
 			if (option == COMPLETE_REPLACE  && dirExists) {
 				boolean deleted = deleteDir(destDir);
@@ -286,7 +287,7 @@ public class FileUtils {
 					return false;
 				}
 			}
-			
+
 			// create the instance of the copy visitor
 			MergeFileVisitor copyVisitor = null;
 			if (option == MERGE_NO_REPLACE) {
@@ -294,7 +295,7 @@ public class FileUtils {
 			} else {
 				copyVisitor = new MergeFileVisitor(true);
 			}			
-			
+
 			copyVisitor.cursor = Paths.get(destDir);
 			Files.walkFileTree(Paths.get(srcDir), copyVisitor);
 			return true;
@@ -317,14 +318,14 @@ public class FileUtils {
 		try {
 			Files.walkFileTree(rootPath, new DeleteFileVisitor());
 			return true;
-			
+
 		} catch(Exception e) {
 			logger.error("error deleting the directory " + dir, e);
 			return false;
 		}
 	}
-	
-	
+
+
 	/**
 	 * deletes the content of the passed directory
 	 * @param dir 	the path of the directory of which the content should e deleted
@@ -337,7 +338,7 @@ public class FileUtils {
 			if (!dirDeleted) {
 				return false;
 			}
-			
+
 			// recreate the directory
 			new File(dir).mkdirs();
 			return true;
@@ -382,7 +383,7 @@ public class FileUtils {
 					lines.add(0, line);
 					baOutputStream.reset(); 	// reset the buffer
 
-				// do not write carriage returns to the byte array output stream
+					// do not write carriage returns to the byte array output stream
 				} else if (b != 13) {
 					baOutputStream.write(b);
 				}
@@ -390,8 +391,8 @@ public class FileUtils {
 				// decrease the pointer by one in order to set it to the next last byte
 				bytePointer--;
 			}
-			
-			
+
+
 			// get the first line of the file that has no new line character in front of it
 			if (lines.size() < lineCount) {
 				// extract the line and add it to the array list of lines
@@ -430,7 +431,7 @@ public class FileUtils {
 	}
 
 
-	
+
 	/**
 	 * reads the first line of a file
 	 * @param filePath 	the path to the file
@@ -439,8 +440,8 @@ public class FileUtils {
 	public static String readFirstLine(String filePath) {
 		return readNthLine(filePath, 1);
 	}
-	
-	
+
+
 	/**
 	 * reads the nth line of a file
 	 * @param filePath 		the path of the file
@@ -449,20 +450,20 @@ public class FileUtils {
 	 */
 	public static String readNthLine(String filePath, long lineNumber) {
 		String result = null;
-		
+
 		try {
 			Stream<String> lines = Files.lines(Paths.get(filePath)); 
 			result = lines.skip(lineNumber-1).findFirst().get();
 			lines.close();
-			
+
 		} catch (Exception e) {
-			 logger.error("nth line number of the file " + filePath + "could not be read: ", e);
+			logger.error("nth line number of the file " + filePath + "could not be read: ", e);
 		}
-		
+
 		return result;
 	}
-	
-	
+
+
 	/**
 	 * appends text to a file with random access file, the method does not get slower with increasing file size
 	 * @param filePath 		the path of the file
@@ -474,7 +475,7 @@ public class FileUtils {
 		append(filePath, bytes);
 	}
 
-	
+
 	/**
 	 * appends bytes to a file with random access file, the method does not get slower with increasing file size
 	 * @param filePath 	the path of the file
@@ -488,14 +489,48 @@ public class FileUtils {
 			raf.seek(fileLength);
 			raf.write(bytes);
 			raf.close();
-			
+
 		} catch (Exception e) {
 			logger.error("error appending to the file " + filePath + ": ", e);
 		}
 	}
 
 
+	/**
+	 * returns the extension of the passed file path
+	 * @param filePath 		the path of the file from which the extension is extracted
+	 * @return 				the extension of the file or null if there is none
+	 */
+	public static String fileExtension(String filePath) {
+		String fileExtension = null;
+		if (filePath.contains(".")) {
+			Path path = Paths.get(filePath);
+			String fileName = path.getFileName().toString();
+			fileExtension = fileName.substring(fileName.lastIndexOf("."));
+		}
+
+		return fileExtension;
+	}
 	
+	
+	/**
+	 * returns the fileName without the extension
+	 * @param filePath 		the path of the file from which the name should be extracted
+	 * @return 				the name of the file without the extension, or the file name
+	 * 						if there is not extension
+	 */
+	public static String rawFileName(String filePath) {
+		Path path = Paths.get(filePath);
+		String fileName = path.getFileName().toString();
+		if (filePath.contains(".")) {
+			return fileName.substring(0, fileName.lastIndexOf("."));
+		} else {
+			return fileName;
+		}
+	}
+
+
+
 	/**
 	 * the file visitor that is needed in order to copy a directory recursively
 	 * files that already exist in the destination will be replaced
@@ -504,7 +539,7 @@ public class FileUtils {
 		private boolean replaceFiles = true;
 		private boolean isFirst = true; 	// true if no file was copied yet in this directory
 		private Path cursor; 				// destination path
-		
+
 		private MergeFileVisitor(boolean replaceFiles) {
 			this.replaceFiles = replaceFiles;
 		}
@@ -517,13 +552,13 @@ public class FileUtils {
 				Path target = cursor.resolve(dir.getName(dir.getNameCount() - 1));
 				cursor = target;
 			}
-			
+
 			// only copy the directory if it does not already exist
 			boolean dirExists = Files.exists(cursor, new LinkOption[] {LinkOption.NOFOLLOW_LINKS});
 			if (!dirExists) {
 				Files.copy(dir, cursor, StandardCopyOption.COPY_ATTRIBUTES);
 			}
-			
+
 			isFirst = false;
 			return FileVisitResult.CONTINUE;
 		}
@@ -531,7 +566,7 @@ public class FileUtils {
 		@Override
 		public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 			Path target = cursor.resolve(file.getFileName());
-			
+
 			if (replaceFiles) {
 				// replace the file in the destination directory
 				Files.copy(file, target, StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
@@ -541,7 +576,7 @@ public class FileUtils {
 					Files.copy(file, target, StandardCopyOption.COPY_ATTRIBUTES);
 				}
 			}				
-			
+
 			return FileVisitResult.CONTINUE;
 		}
 
@@ -558,9 +593,9 @@ public class FileUtils {
 			return FileVisitResult.CONTINUE;
 		}
 	};	
-	
 
-	
+
+
 	/**
 	 * the file visitor that is used to recursively delete a directory
 	 */
