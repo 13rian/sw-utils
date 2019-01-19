@@ -2,7 +2,7 @@ package ch.wenkst.sw_utils.db;
 
 import org.mongodb.morphia.annotations.Entity;
 
-import ch.wenkst.sw_utils.db.EntityBase;
+import ch.wenkst.sw_utils.db.sync.EntityBase;
 
 /**
  * test class to map into mongoDB with morphia, the name of the collection is

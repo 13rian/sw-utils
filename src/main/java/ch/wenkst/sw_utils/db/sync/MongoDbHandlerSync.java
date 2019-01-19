@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils.db;
+package ch.wenkst.sw_utils.db.sync;
 
 import java.util.ArrayList;
 import java.util.HashMap;

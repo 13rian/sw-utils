@@ -210,7 +210,7 @@ public class FileUtils {
 	 * @param srcFilePath 		the path of the source file to move
 	 * @param destFilePath 		the path of the destination file
 	 * @param replaceExisting 	true if the file should be replaced if it already exists
-	 * @return 					true if the file was successfully moved, flase if an error occurred
+	 * @return 					true if the file was successfully moved, false if an error occurred
 	 */
 	public static boolean moveFile(String srcFilePath, String destFilePath, boolean replaceExisting) {
 		try {

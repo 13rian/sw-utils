@@ -13,6 +13,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mongodb.morphia.query.Query;
 
+import ch.wenkst.sw_utils.db.sync.MongoDbHandlerSync;
+
 public class MongoDbHandlerSyncTest {
 	private static MongoDbHandlerSync dbHandler = null; 	 // the db handler object that handles the connection to the db
 	

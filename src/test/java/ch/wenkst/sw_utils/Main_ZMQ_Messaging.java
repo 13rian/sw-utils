@@ -1,3 +1,4 @@
+package ch.wenkst.sw_utils;
 
 
 import java.nio.charset.StandardCharsets;

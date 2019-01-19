@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils.db;
+package ch.wenkst.sw_utils.db.sync;
 
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.Id;
