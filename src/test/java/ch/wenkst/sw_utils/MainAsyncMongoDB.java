@@ -44,10 +44,10 @@ public class MainAsyncMongoDB {
 		// connect to the db
 		boolean isConnected = dbHandler.connecToDB("192.168.152.128", 27017, 10, "AsyncTest");
 		
-		// send the ping
-		boolean isPingSent = dbHandler.testConnection();
-		
-		logger.info("connection test finished, isConnected: " + isConnected + ", isPingSent: " + isPingSent);
+//		// send the ping
+//		boolean isPingSent = dbHandler.testConnection();
+//		
+//		logger.info("connection test finished, isConnected: " + isConnected + ", isPingSent: " + isPingSent);
 		
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// 											with java objects 													//
@@ -123,6 +123,9 @@ public class MainAsyncMongoDB {
 		Utils.sleep(200);
 		query = Filters.not(Filters.eq("address.zip", null));
 		Bson update = Updates.set("address.zip", null);
+		
+		// example to combine updates
+		// Updates.combine(Updates.set("address.zip", null), Updates.set("age", 23));
 		
 		CallbackSubscriber<UpdateResult> updateSub = new CallbackSubscriber<>((result, error) ->  {
 			if (error == null) {
@@ -273,7 +276,7 @@ public class MainAsyncMongoDB {
 		Bson index5 = Indexes.compoundIndex(Indexes.descending("age"), Indexes.ascending("name"));
 		dbHandler.createIndex("Person", index5, null, new PrintSubscriber<String>("ascending-and-descending-compound-index"));
 		
-		// create a unique index, the filed age and name cannot be the same
+		// create a unique index, the field age and name cannot be the same
 		IndexOptions indexOptions = new IndexOptions().unique(true);
 		Bson index6 = Indexes.ascending("name", "stars");
 		dbHandler.createIndex("Person", index6, indexOptions, new PrintSubscriber<String>("unique-index"));

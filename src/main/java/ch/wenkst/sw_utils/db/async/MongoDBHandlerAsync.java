@@ -1,6 +1,5 @@
 package ch.wenkst.sw_utils.db.async;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -16,8 +15,8 @@ import org.bson.conversions.Bson;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 
+import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
-import com.mongodb.ServerAddress;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
@@ -30,7 +29,6 @@ import com.mongodb.reactivestreams.client.Success;
 
 import ch.wenkst.sw_utils.db.async.base.BaseEntity;
 import ch.wenkst.sw_utils.db.async.base.EntityInfo;
-import ch.wenkst.sw_utils.db.async.subscriber.BlockingSubscriber;
 
 public class MongoDBHandlerAsync {
 	final static Logger logger = LogManager.getLogger(MongoDBHandlerAsync.class);    // initialize the logger
@@ -68,24 +66,6 @@ public class MongoDBHandlerAsync {
 	// 												Connection to the database 								   			  //
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	
-	/**
-	 * establishes a connection to the mongodb
-	 * @param hosts 	the list of server addresses to connect to
-	 * @param timeout 	the time in seconds how long to wait for the connection establishment (more than 30secs makes no sense)
-	 * 					as the timeout of the mongo client is 30 seconds
-	 * @param dbName 	the name of the db to use
-	 * @return 			true if the connection was successfully established, false otherwise
-	 */
-	public boolean connecToDB(List<ServerAddress> hosts, int timeout, String dbName) {
-		boolean isConnected = connecToDB(hosts, timeout);
-		if (isConnected) {
-			database = mongoClient.getDatabase(dbName);
-		}
-		return isConnected;
-	}
-	
-	
 	/**
 	 * establishes a connection to the mongodb
 	 * @param host 		the host to connect to
@@ -96,11 +76,7 @@ public class MongoDBHandlerAsync {
 	 * @return 			true if the connection was successfully established, false otherwise
 	 */
 	public boolean connecToDB(String host, int port, int timeout, String dbName) {
-		boolean isConnected = connecToDB(host, port, timeout);
-		if (isConnected) {
-			database = mongoClient.getDatabase(dbName);
-		}
-		return isConnected;
+		return connecToDB(host, port, timeout, null, null, dbName);
 	}
 	
 	
@@ -110,25 +86,31 @@ public class MongoDBHandlerAsync {
 	 * @param port 		the port of the mongo db
 	 * @param timeout 	the time in seconds how long to wait for the connection establishment (more than 30secs makes no sense)
 	 * 					as the timeout of the mongo client is 30 seconds
+	 * @param username	the user name if the db is authenticated, null otherwise
+	 * @param password  the password if the db is authenticated, null otherwise
+	 * @param dbName 	the name of the db to use
 	 * @return 			true if the connection was successfully established, false otherwise
 	 */
-	public boolean connecToDB(String host, int port, int timeout) {
-		List<ServerAddress> hosts = new ArrayList<>();
-		hosts.add(new ServerAddress(host, 27017));
+	public boolean connecToDB(String host, int port, int timeout, String username, String password, String dbName) {
+		String connString = createConnectString(host, port, username, password);
+		logger.info("connect to db " + dbName + ", connection string: " + connString);
 		
-		return connecToDB(hosts, timeout);
+		boolean isConnected = connecToDB(connString, timeout);
+		if (isConnected) {
+			database = mongoClient.getDatabase(dbName);
+		}
+		return isConnected;
 	}
-
 	
 	
 	/**
 	 * establishes a connection to the mongodb
-	 * @param hosts 	the list of server addresses to connect to
-	 * @param timeout 	the time in seconds how long to wait for the connection establishment (more than 30secs makes no sense)
-	 * 					as the timeout of the mongo client is 30 seconds
-	 * @return 			true if the connection was successfully established, false otherwise
+	 * @param connectString 	mongodb connection string to connect to the db
+	 * @param timeout 			the time in seconds how long to wait for the connection establishment (more than 30secs makes no sense)
+	 * 							as the timeout of the mongo client is 30 seconds
+	 * @return 					true if the connection was successfully established, false otherwise
 	 */
-	public boolean connecToDB(List<ServerAddress> hosts, int timeout) {
+	public boolean connecToDB(String connectString, int timeout) {
 		// before using the driver with java objects a CodecRegistry needs to be configured. This includes codecs that
 		// handle the translation to and form bson for the java objects. 
 		// This combines the default codec registry, with the PojoCodecProvider configured to automatically create PojoCodecs
@@ -145,73 +127,98 @@ public class MongoDBHandlerAsync {
 		// configure the mongo client	
 		MongoClientSettings settings = MongoClientSettings.builder()
 				.codecRegistry(pojoCodecRegistry)
-				// .applyConnectionString(new ConnectionString("mongodb://192.168.1.184:27017"))
-                .applyToClusterSettings(builder -> {
-	                builder.hosts(hosts);
-	             })
+				.applyConnectionString(new ConnectionString(connectString))
+//                .applyToClusterSettings(builder -> {
+//	                builder.hosts(hosts); 		
+//	             })
 				.applyToSocketSettings(builder -> {
-					builder.connectTimeout(30, TimeUnit.SECONDS);
+					builder.connectTimeout(timeout, TimeUnit.SECONDS);
 				})
 				.applyToServerSettings(builder -> {
 					builder.addServerListener(statusListener);
 				})
 				.build();
 		
-		mongoClient = MongoClients.create(settings);
-		logger.info("mongo client created");
-		
+		mongoClient = MongoClients.create(settings);		
 		
 		// wait for the db to establish the connection
 		try {
-			connectionFuture.get(timeout, TimeUnit.SECONDS);
-			logger.info("connection to mongo db successfully established");
-			return true;
+			boolean connEstablished = connectionFuture.get(timeout, TimeUnit.SECONDS);
+			if (connEstablished) {
+				logger.info("connection to mongo db successfully established");
+			} else {
+				logger.info("failed to establish a connection to mongo db");
+			}
+			
+			return connEstablished;
 			
 		} catch (Exception e) {
-			logger.error("failed to establish a connection to the mongo db: ", e);
+			logger.error("failed to establish a connection to mongo db: ", e);
 			return false;
 		}
 	}
 	
 	
 	/**
-	 * sends a ping to the db in order to check the connection
-	 * @param dbName 	the name of the db to use
-	 * @return 			true if the connection is open, false otherwise
+	 * creates the connect string to connect to mongodb
+	 * @param host 			the host of the db
+	 * @param port 			the port of the db
+	 * @param username 		user name, if the db is authenticated, null otherwise 
+	 * @param password 		password, if the db is authenticated, null otherwise 
+	 * @return 				the connect string which can be used to open the connection to the db
 	 */
-	public boolean testConnection(String dbName) {
-		MongoDatabase db = getDatabase(dbName);
-		return testConnection(db);
+	private String createConnectString(String host, int port, String username, String password) {
+		// create the connect string from the values in the configuration file
+		StringBuilder sb = new StringBuilder();
+		sb.append("mongodb://");
+		if (username != null && password != null) {
+			sb.append(username).append(":");
+			sb.append(password).append("@");
+		}
+		sb.append(host).append(":").append(port);
+		return sb.toString();
 	}
 	
-	/**
-	 * sends a ping to the db in order to check the connection
-	 * @return 			true if the connection is open, false otherwise
-	 */
-	public boolean testConnection() {
-		return testConnection(database);
-	}
-	
-	
-	/**
-	 * sends a ping to the db in order to check the connection
-	 * @param databse 	the db to use	
-	 * @return 			true if the connection is open, false otherwise
-	 */
-	private boolean testConnection(MongoDatabase database) {
-		Publisher<String> publisher = mongoClient.listDatabaseNames();
-		BlockingSubscriber<String> strSubscriber = new BlockingSubscriber<>();
-		publisher.subscribe(strSubscriber);
-		
-		try {
-			List<String> strAnswer = strSubscriber.get(10, TimeUnit.SECONDS);
-			logger.debug("successfully sent the ping to mongodb: " + strAnswer);
-			return true;
-		} catch (Exception e) {
-			logger.error("failed to send the ping to mongdb: ", e);
-			return false;
-		}		
-	}
+
+// 	not necessary because the connect method will fail if the db is not reachable 
+//	/**
+//	 * sends a ping to the db in order to check the connection
+//	 * @param dbName 	the name of the db to use
+//	 * @return 			true if the connection is open, false otherwise
+//	 */
+//	public boolean testConnection(String dbName) {
+//		MongoDatabase db = getDatabase(dbName);
+//		return testConnection(db);
+//	}
+//	
+//	/**
+//	 * sends a ping to the db in order to check the connection
+//	 * @return 			true if the connection is open, false otherwise
+//	 */
+//	public boolean testConnection() {
+//		return testConnection(database);
+//	}
+//	
+//	
+//	/**
+//	 * sends a ping to the db in order to check the connection
+//	 * @param databse 	the db to use	
+//	 * @return 			true if the connection is open, false otherwise
+//	 */
+//	private boolean testConnection(MongoDatabase database) {
+//		Publisher<String> publisher = mongoClient.listDatabaseNames();
+//		BlockingSubscriber<String> strSubscriber = new BlockingSubscriber<>();
+//		publisher.subscribe(strSubscriber);
+//		
+//		try {
+//			List<String> strAnswer = strSubscriber.get(10, TimeUnit.SECONDS);
+//			logger.debug("successfully sent the ping to mongodb: " + strAnswer);
+//			return true;
+//		} catch (Exception e) {
+//			logger.error("failed to send the ping to mongdb: ", e);
+//			return false;
+//		}		
+//	}
 	
 	
 	/**

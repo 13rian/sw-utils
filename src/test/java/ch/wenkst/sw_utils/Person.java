@@ -6,7 +6,7 @@ import org.bson.types.ObjectId;
 import ch.wenkst.sw_utils.db.async.base.BaseEntity;
 import ch.wenkst.sw_utils.db.async.base.EntityInfo;
 
-@EntityInfo(db="AsyncTest", collection="Person")
+@EntityInfo(collection="Person")
 public final class Person extends BaseEntity {
     private String id;
     private String name;

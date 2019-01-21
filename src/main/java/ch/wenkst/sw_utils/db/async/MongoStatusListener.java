@@ -11,7 +11,7 @@ import com.mongodb.event.ServerListener;
 import com.mongodb.event.ServerOpeningEvent;
 
 public class MongoStatusListener implements ServerListener {
-	final static Logger logger = LogManager.getLogger(MongoStatusListener.class);    // initialize the logger
+	final static Logger logger = LogManager.getLogger(MongoStatusListener.class);
 	
 	private CompletableFuture<Boolean> connectionFuture = null;
 	
@@ -29,10 +29,8 @@ public class MongoStatusListener implements ServerListener {
 
     @Override
     public void serverDescriptionChanged(ServerDescriptionChangedEvent event) {
-
         if (event.getNewDescription().isOk()) {
         	connectionFuture.complete(true);
-        
         } else if (event.getNewDescription().getException() != null) {
             logger.error("error in mongo server description: ", event.getNewDescription().getException());
             connectionFuture.complete(false);

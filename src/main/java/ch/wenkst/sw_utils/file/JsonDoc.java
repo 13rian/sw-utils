@@ -384,7 +384,7 @@ public class JsonDoc {
 			return jsonObj.get(tag).getAsString();
 
 		} catch (Exception e) {
-			logger.error("failed to read the string form tag " + tag, e);
+			logger.error("failed to read the string form tag " + tag);
 			return defaultVal;
 		}
 	}
@@ -409,7 +409,7 @@ public class JsonDoc {
 			return strArr;
 
 		} catch (Exception e) {
-			logger.error("failed to read the string array form tag " + tag, e);
+			logger.error("failed to read the string array form tag " + tag);
 			return new String[0];
 		}
 	}
@@ -428,7 +428,7 @@ public class JsonDoc {
 			return jsonObj.get(tag).getAsInt();
 
 		} catch (Exception e) {
-			logger.error("failed to read the int form tag " + tag, e);
+			logger.error("failed to read the int form tag " + tag);
 			return defaultVal;
 		}
 	}
@@ -453,7 +453,7 @@ public class JsonDoc {
 			return intArr;
 
 		} catch (Exception e) {
-			logger.error("failed to read the int array form tag " + tag, e);
+			logger.error("failed to read the int array form tag " + tag);
 			return new int[0];
 		}
 	}
@@ -472,7 +472,7 @@ public class JsonDoc {
 			return jsonObj.get(tag).getAsLong();
 
 		} catch (Exception e) {
-			logger.error("failed to read the long form tag " + tag, e);
+			logger.error("failed to read the long form tag " + tag);
 			return defaultVal;
 		}
 	}
@@ -497,7 +497,7 @@ public class JsonDoc {
 			return longArr;
 
 		} catch (Exception e) {
-			logger.error("failed to read the long array form tag " + tag, e);
+			logger.error("failed to read the long array form tag " + tag);
 			return new long[0];
 		}
 	}
@@ -516,7 +516,7 @@ public class JsonDoc {
 			return jsonObj.get(tag).getAsDouble();
 
 		} catch (Exception e) {
-			logger.error("failed to read the double form tag " + tag, e);
+			logger.error("failed to read the double form tag " + tag);
 			return defaultVal;
 		}
 	}
@@ -541,7 +541,7 @@ public class JsonDoc {
 			return doubleArr;
 
 		} catch (Exception e) {
-			logger.error("failed to read the double array form tag " + tag, e);
+			logger.error("failed to read the double array form tag " + tag);
 			return new double[0];
 		}
 	}
@@ -560,7 +560,7 @@ public class JsonDoc {
 			return jsonObj.get(tag).getAsBoolean();
 
 		} catch (Exception e) {
-			logger.error("failed to read the boolean form tag " + tag, e);
+			logger.error("failed to read the boolean form tag " + tag);
 			return defaultVal;
 		}
 	}
@@ -585,7 +585,7 @@ public class JsonDoc {
 			return booleanArr;
 
 		} catch (Exception e) {
-			logger.error("failed to read the boolean array form tag " + tag, e);
+			logger.error("failed to read the boolean array form tag " + tag);
 			return new boolean[0];
 		}
 	}
