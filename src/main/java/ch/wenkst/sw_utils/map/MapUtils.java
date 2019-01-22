@@ -5,6 +5,9 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+
 import ch.wenkst.sw_utils.conversion.Conversion;
 
 /**
@@ -302,6 +305,49 @@ public class MapUtils {
 		
 		} catch (Exception e) {
 			logger.error("error creating the filtered hash map: ", e);
+			return null;
+		}
+	}
+	
+	
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// 													conversion map <-> object  											       //
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/**
+	 * converts a map to a java object
+	 * @param map 		a map containing the properties of the object
+	 * @param clazz 	the class of the object that is created form the map
+	 * @return 			object representing the passed map or null if an error occurred
+	 */
+	public static <T> T mapToObj(Map<String, Object> map, Class<T> clazz) {
+		try {
+			Gson gson = new Gson();
+			JsonElement jsonElement = gson.toJsonTree(map);
+			T pojo = gson.fromJson(jsonElement, clazz);
+			return pojo;
+			
+		} catch (Exception e) {
+			logger.error("failed to convert the map to an object: ", e);
+			return null;
+		}
+	}
+	
+	
+	/**
+	 * converts a java object to a map
+	 * @param pojo 		object that is converted to a map
+	 * @return 			map that represents the passed object or null if an error occurred
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> Map<String, Object> objToMap(T pojo) {
+		try {
+			Gson gson = new Gson();
+			String jsonStr = gson.toJson(pojo); 
+			Map<String, Object> map = gson.fromJson(jsonStr, Map.class);
+			return map;
+			
+		} catch (Exception e) {
+			logger.error("failed to convert the map to an object: ", e);
 			return null;
 		}
 	}

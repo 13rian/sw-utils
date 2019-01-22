@@ -2,6 +2,8 @@ package ch.wenkst.sw_utils;
 import java.io.File;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +13,7 @@ import ch.wenkst.sw_utils.conversion.Conversion;
 import ch.wenkst.sw_utils.crypto.CryptoUtils;
 import ch.wenkst.sw_utils.file.FileUtils;
 import ch.wenkst.sw_utils.logging.Log;
+import ch.wenkst.sw_utils.map.MapUtils;
 
 public class Main_SWUtils {
 //	// define a class initializer that is executed before any other properties and classes are loaded (since it is the 
@@ -115,6 +118,16 @@ public class Main_SWUtils {
 		
 		String rawName = FileUtils.rawFileName("hallo/test");
 		System.out.println("file-extension: " + rawName);
+		
+		
+		Map<String, Object> hm = new HashMap<>();
+		hm.put("name", "Temperature");
+		hm.put("timestamp", 1532274524000L);
+		hm.put("value", 29.3);
+		Data data = MapUtils.mapToObj(hm, Data.class);
+		
+		
+		Map<String, Object> dataHm = MapUtils.objToMap(data);
 		
 
 

@@ -5,9 +5,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 
 /**
  * provides several conversion methods. UTF-8 is always used to get the bytes from a String and vice versa
@@ -418,5 +422,4 @@ public class Conversion {
 	public static String strReverse(String str) {
 		return new StringBuilder(str).reverse().toString();
 	}
-
 }
