@@ -633,18 +633,24 @@ public class MongoDBHandlerAsync {
 	
 	/**
 	 * returns the collection that can be used to make queries
+	 * if the EntityInfo annotation is missing the db name from the connect method is used
+	 * and the classname is used for the collection name
 	 * @param classObj 		the class of the db entity
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public MongoCollection<BaseEntity> getCollection(Class classObj) {
 		EntityInfo entityInfo = (EntityInfo) classObj.getAnnotation(EntityInfo.class);
-    	String dbName = entityInfo.db();
-    	String collectionName = entityInfo.collection();
+    	String dbName = ""; 
+    	String collectionName = "";
+		if (entityInfo != null) {
+			dbName = entityInfo.db();
+	    	collectionName = entityInfo.collection();
+		}
     	
-    	// check if the collection is specified
+    	
+    	// if the collection name is not specified take the class name 
     	if (collectionName.isEmpty()) {
-    		logger.error("value collection in the EntityInfo annotation is missing");
-    		return null;
+    		collectionName = classObj.getSimpleName();
     	}
     	
     	// define the database to use

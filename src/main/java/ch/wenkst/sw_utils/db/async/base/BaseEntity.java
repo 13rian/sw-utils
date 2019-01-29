@@ -38,7 +38,7 @@ public class BaseEntity {
     	MongoDBHandlerAsync dbHandler = MongoDBHandlerAsync.getInstance();
 		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
 			if (error == null) {
-				logger.error("failed to save the entity to the db: ", error);
+				logger.error("failed to save the entity " + getClass().getSimpleName() + " to the db: ", error);
 			}
 		});
     	
