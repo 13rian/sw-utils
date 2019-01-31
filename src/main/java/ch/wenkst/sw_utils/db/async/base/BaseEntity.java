@@ -17,6 +17,7 @@ public class BaseEntity {
 
     /**
      * models the base class for the entity in the db
+     * care: arrays are not supported, use list instead
      */
     public BaseEntity() {
     	id = new ObjectId().toHexString();
