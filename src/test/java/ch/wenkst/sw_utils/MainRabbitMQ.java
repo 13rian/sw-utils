@@ -41,6 +41,11 @@ public class MainRabbitMQ {
 		SSLContext sslContext = SSLContextGenerator.createSSLContext(p12FilePath, "pwcelsi", trustedCerts, "TLSv1.2");
 		RabbitMQHander messageHandler = RabbitMQHander.getInstance();
 		messageHandler.init("23.97.156.162", 5671, "efr", "efrserver", sslContext);
+		
+		
+		// test the connection
+		boolean reachable = messageHandler.isReachable();
+		logger.info("is reachable: " + reachable);
 	
 
 

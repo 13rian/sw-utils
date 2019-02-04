@@ -72,15 +72,18 @@ public class BroadcastPublisherRMQ extends CommunicatorBase {
 	
 	/**
 	 * broadcasts a message to all listening consumers on a defines exchange
-	 * @param messageBytes 			message bytes to send
+	 * @param messageBytes 		message bytes to send
+	 * @return 					true if the message was successfully published, false if an error occurred
 	 */
-	public void publishMessage(byte[] messageBytes) {
+	public boolean publishMessage(byte[] messageBytes) {
 		try {
 			// publish the message on the exchange, the temporary queue is used
 			channel.basicPublish(exchangeName, "", null, messageBytes);
-
+			return true;
+			
 		} catch (Exception e) {
-			logger.error("error broadcastiing message on exchangeName " + exchangeName + ": ", e);
+			logger.error("error broadcasting message on exchangeName " + exchangeName + ": ", e);
+			return false;
 		}
 	}
 	

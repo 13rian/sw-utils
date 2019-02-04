@@ -73,6 +73,22 @@ public class RabbitMQHander {
 	}
 	
 	
+	/**
+	 * tests if the rabbit mq server is reachable
+	 * @return 	true if reachable, false if not
+	 */
+	public boolean isReachable() {	
+		BroadcastPublisherRMQ broadcaster = getBroadcastPublisher("test-queue");
+		
+		boolean isReachable = broadcaster.publishMessage("test-message".getBytes());
+		if (isReachable) {
+			broadcaster.disconnect();
+		}
+		
+		return isReachable;
+	}
+	
+	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 									factory methods to create new rabbitMQ-communicators 							  //
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
