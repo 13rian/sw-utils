@@ -1,6 +1,7 @@
 package ch.wenkst.sw_utils.messaging.rabbit_mq;
 
 import java.util.ArrayList;
+import javax.net.ssl.SSLContext;
 
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.IMessageReceiver;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.broadcaster.BroadcastConsumerRMQ;
@@ -10,51 +11,65 @@ import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.routing.RoutingPublis
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.worker.WorkerConsumerRMQ;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.worker.WorkerPublisherRMQ;
 
-public class RabbitMQHander {
-		
-	private String host = ""; 				// rabbitMQ server host
-	private String username = ""; 			// user name of the rabbitMQ server account
-	private String password = ""; 			// password of the rabbitmMQ server account
-	private String p12FilePath = null; 		// p12 file path for the key store
-	private String p12Password = ""; 		// password for the p12-file
-	private String caCertPath = null; 		// ca-cert file path for the trust store 
-	private boolean isTLS = false;
-
+public class RabbitMQHander {	
+	private static RabbitMQHander instance = null; 	// instance for the singleton access
+	
+	private String host = "localhost"; 				// rabbitMQ server host
+	private int port = 5672; 						// rabbitMQ server port, default for non-ssl is 5672
+	private String username = "guest"; 				// user name of the rabbitMQ server account
+	private String password = "guest"; 				// password of the rabbitmMQ server account
+	private SSLContext sslContext = null; 			// the ssl context to handle the tls connection
+	
 	
 	/**
-	 * constructor used for non-encrypted connection to the message server rabbitMQ
-	 * @param host	 		host of the rabbitMQ server
-	 * @param username		the user name of the rabbitMQ server account
-	 * @param password 		the password of the rabbitMQ server account
+	 * handles the connection to the message server rabbitMQ
 	 */
-	public RabbitMQHander(String host, String username, String password) {
-		this.host = host;
-		this.username = username;
-		this.password = password;
-		
-		// no tls
-		isTLS = false;
+	protected RabbitMQHander() {
+
 	}
 	
 	
 	/**
-	 * constructor used for tls-encrypted connection to the message server rabbitMQ
+	 * returns the instance of the rabbitMQHandler
+	 * @return
+	 */
+	public static RabbitMQHander getInstance() {
+		if(instance == null) {
+			instance = new RabbitMQHander();
+		}	      
+		return instance;
+	}
+
+
+	/**
+	 * initialization for non-encrypted connection to the message server rabbitMQ
 	 * @param host	 		host of the rabbitMQ server
+	 * @param port 			port of the rabbitMQ server
 	 * @param username		the user name of the rabbitMQ server account
 	 * @param password 		the password of the rabbitMQ server account
-	 * @param p12FilePath   p12 file path for the key store
-	 * @param caCertPath 	ca-cert file path for the trust store
 	 */
-	public RabbitMQHander(String host, String username, String password, String p12FilePath, String p12Password, String caCertPath) {
+	public void init(String host, int port, String username, String password) {
 		this.host = host;
+		this.port = port;
 		this.username = username;
 		this.password = password;
-		this.p12FilePath = p12FilePath;
-		this.p12Password = p12Password;
-		this.caCertPath = caCertPath;
-		
-		// use tls
-		isTLS = true;
+	}
+	
+	
+	/**
+	 * initialization for tls-encrypted connection to the message server rabbitMQ
+	 * @param host	 		host of the rabbitMQ server
+	 * @param port 			port of the rabbitMQ server
+	 * @param username		the user name of the rabbitMQ server account
+	 * @param password 		the password of the rabbitMQ server account
+	 * @param sslContext   	ssl context to handle the tls connection
+	 */
+	public void init(String host, int port, String username, String password, SSLContext sslContext) {
+		this.host = host;
+		this.port = port;
+		this.username = username;
+		this.password = password;
+		this.sslContext = sslContext;
 	}
 	
 	
@@ -137,70 +152,27 @@ public class RabbitMQHander {
 	}
 	
 
-
+	public boolean isTls() {
+		return sslContext != null;
+	}
+	
 	public String getHost() {
 		return host;
 	}
-
-
-	public void setHost(String host) {
-		this.host = host;
+	
+	public int getPort() {
+		return port;
 	}
-
 
 	public String getUsername() {
 		return username;
 	}
 
-
-	public void setUsername(String username) {
-		this.username = username;
-	}
-
-
 	public String getPassword() {
 		return password;
 	}
 
-
-	public void setPassword(String password) {
-		this.password = password;
+	public SSLContext getSslContext() {
+		return sslContext;
 	}
-
-
-	public String getP12FilePath() {
-		return p12FilePath;
-	}
-
-
-	public void setP12FilePath(String p12FilePath) {
-		this.p12FilePath = p12FilePath;
-	}
-
-
-	public String getCaCertPath() {
-		return caCertPath;
-	}
-
-
-	public void setCaCertPath(String caCertPath) {
-		this.caCertPath = caCertPath;
-	}
-
-
-	public boolean isTLS() {
-		return isTLS;
-	}
-
-
-	public void setTLS(boolean isTLS) {
-		this.isTLS = isTLS;
-	}
-
-
-	public String getP12Password() {
-		return p12Password;
-	}
-
-
 }

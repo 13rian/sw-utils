@@ -31,12 +31,12 @@ import ch.wenkst.sw_utils.db.async.base.BaseEntity;
 import ch.wenkst.sw_utils.db.async.base.EntityInfo;
 
 public class MongoDBHandlerAsync {
-	final static Logger logger = LogManager.getLogger(MongoDBHandlerAsync.class);    // initialize the logger
+	final static Logger logger = LogManager.getLogger(MongoDBHandlerAsync.class);
 	
 	private static MongoDBHandlerAsync instance = null; 	// instance for the singleton access
 	
-	private MongoClient mongoClient = null;			// the client to the mongo db
-	private MongoDatabase database = null; 			// name of the database to use
+	private MongoClient mongoClient = null;					// the client to the mongo db
+	private MongoDatabase database = null; 					// name of the database to use
 	
 	// map of the databases, key: name of the db, value: the db object
 	private HashMap<String, MongoDatabase> dbMap = null;

@@ -31,7 +31,7 @@ public class SSLContextGenerator {
 	 * @param p12FilePath 		the path to the p12-file containing the private key and the certificate
 	 * @param keyStorePassword 	keyStore password (must be the same as chosen to create the certificate)
 	 * @param trustedCerts  	a list of paths to crt-files of the trusted certificates (are added to the trustStore)
-	 * @param protocol	 		specifies the used tls protocol
+	 * @param protocol	 		specifies the used tls protocol, e.g. "TLSv1.2"
 	 * @return 					ssl context
 	 */
 	public static SSLContext createSSLContext(String p12FilePath, String keyStorePassword, List<String> trustedCerts, String protocol) {
@@ -85,7 +85,7 @@ public class SSLContextGenerator {
 	 * @param privateKey 		the own private key
 	 * @param ownCert	 		the certificate for the keystore (own certificate)
 	 * @param caCert	 		certificate of the certificate authority
-	 * @param protocol 			the used tls protocol
+	 * @param protocol 			the used tls protocol, e.g. "TLSv1.2"
 	 * @return	 				the SSLContext that is used to create the SSL socket
 	 */
 	public static SSLContext createSSLContext(String keyStorePassword, PrivateKey privateKey, Certificate ownCert, Certificate caCert, String protocol) {

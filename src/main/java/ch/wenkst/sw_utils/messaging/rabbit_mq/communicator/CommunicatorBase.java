@@ -1,9 +1,5 @@
 package ch.wenkst.sw_utils.messaging.rabbit_mq.communicator;
 
-import java.util.ArrayList;
-
-import javax.net.ssl.SSLContext;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,7 +7,6 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
-import ch.wenkst.sw_utils.crypto.tls.ec.SSLContextGenerator;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.RabbitMQHander;
 
 public class CommunicatorBase {
@@ -25,7 +20,7 @@ public class CommunicatorBase {
 
 	/**
 	 * base to create publishers and consumers to interact with the rabbitMQ server
-	 * in order to be parallel, each consumer and publsiher needs its own channel
+	 * in order to be parallel, each consumer and publisher needs its own channel
 	 * @param mqHandler 	handler that manages the interaction with rabbitMQ 
 	 */
 	public CommunicatorBase(RabbitMQHander mqHandler) {
@@ -44,23 +39,14 @@ public class CommunicatorBase {
 	private boolean connect() {
 		ConnectionFactory factory = null;
 
-		if (mqHandler.isTLS()) {
-			// setup the ssl context
-			// define the keys and certs that are used for the tls connection
-			ArrayList<String> trustedCerts = new ArrayList<>();
-			trustedCerts.add(mqHandler.getCaCertPath());
-			String tlsProtocol = "TLSv1.2";
-
-			// create the ssl context
-			SSLContext sslContext = SSLContextGenerator.createSSLContext(mqHandler.getP12FilePath(), mqHandler.getP12Password(), trustedCerts, tlsProtocol);
-
+		if (mqHandler.getSslContext() != null) {
 			// configure the tls encrypted connection
 			factory = new ConnectionFactory();
 			factory.setHost(mqHandler.getHost());
 			factory.setUsername(mqHandler.getUsername());
 			factory.setPassword(mqHandler.getPassword());
-			factory.setPort(5671); 					// port for the tls connection
-			factory.useSslProtocol(sslContext); 	// set the ssl context
+			factory.setPort(mqHandler.getPort()); 	 																	
+			factory.useSslProtocol(mqHandler.getSslContext()); 
 		
 		} else {
 			// configure the non encrypted connection
@@ -68,6 +54,7 @@ public class CommunicatorBase {
 			factory.setHost(mqHandler.getHost());
 			factory.setUsername(mqHandler.getUsername());
 			factory.setPassword(mqHandler.getPassword());
+			factory.setPort(mqHandler.getPort()); 
 		}
 
 		
@@ -79,11 +66,11 @@ public class CommunicatorBase {
 			// create the channel
 			channel = connection.createChannel();     
 
-			logger.info("successfully established a " + ((mqHandler.isTLS()) ? "tls" : "non") + "-connection to rabbitMQ");
+			logger.info("successfully established a " + ((mqHandler.isTls()) ? "tls" : "non") + "-connection to rabbitMQ");
 			return true;
 			
 		} catch (Exception e) {
-			logger.info("error establishing a " + ((mqHandler.isTLS()) ? "tls" : "non") + "-encrypted connection to rabbitMQ: ", e);
+			logger.info("error establishing a " + ((mqHandler.isTls()) ? "tls" : "non") + "-encrypted connection to rabbitMQ: ", e);
 			return false;
 		}
 	}
