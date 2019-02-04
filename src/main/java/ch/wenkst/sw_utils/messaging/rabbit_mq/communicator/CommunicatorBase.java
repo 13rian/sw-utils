@@ -10,11 +10,11 @@ import com.rabbitmq.client.ConnectionFactory;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.RabbitMQHander;
 
 public class CommunicatorBase {
-	private static final Logger logger = LoggerFactory.getLogger(RabbitMQHander.class);
+	private static final Logger logger = LoggerFactory.getLogger(CommunicatorBase.class);
 
 	protected RabbitMQHander mqHandler = null; 	// handler that manages the interaction with rabbitMQ
 
-	private Connection connection = null; 	// holds the connection to the rabbitMQ server
+	private Connection connection = null; 		// holds the connection to the rabbitMQ server
 	protected Channel channel = null; 			// channel of the rabbitMQ server on which new queues can be declared
 
 

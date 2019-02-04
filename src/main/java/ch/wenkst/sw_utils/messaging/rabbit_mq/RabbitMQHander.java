@@ -1,6 +1,7 @@
 package ch.wenkst.sw_utils.messaging.rabbit_mq;
 
-import java.util.ArrayList;
+import java.util.List;
+
 import javax.net.ssl.SSLContext;
 
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.IMessageReceiver;
@@ -78,9 +79,9 @@ public class RabbitMQHander {
 	 * @return 	true if reachable, false if not
 	 */
 	public boolean isReachable() {	
-		BroadcastPublisherRMQ broadcaster = getBroadcastPublisher("test-queue");
+		BroadcastPublisherRMQ broadcaster = getBroadcastPublisher("testQueue");
 		
-		boolean isReachable = broadcaster.publishMessage("test-message".getBytes());
+		boolean isReachable = broadcaster.publishMessage("test message".getBytes());
 		if (isReachable) {
 			broadcaster.disconnect();
 		}
@@ -163,7 +164,7 @@ public class RabbitMQHander {
 	 * @param messageReceiver	method that defines what happens with the received message
 	 * @return
 	 */
-	public RoutingConsumerRMQ getRoutingConsumer(String exchangeName, ArrayList<String> routingKeys, IMessageReceiver messageReceiver) {
+	public RoutingConsumerRMQ getRoutingConsumer(String exchangeName, List<String> routingKeys, IMessageReceiver messageReceiver) {
 		return new RoutingConsumerRMQ(this, exchangeName, routingKeys, messageReceiver);
 	}
 	

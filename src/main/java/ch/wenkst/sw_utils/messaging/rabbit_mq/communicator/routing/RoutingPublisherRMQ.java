@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.MessageProperties;
 
 import ch.wenkst.sw_utils.messaging.rabbit_mq.RabbitMQHander;
@@ -42,7 +43,7 @@ public class RoutingPublisherRMQ extends CommunicatorBase {
 		try {
 			// declare the new exchange, direct: a message goes to the queues whose binding key exactly matches
 			// the routing key of the message.
-			channel.exchangeDeclare(exchangeName, "direct");   
+			channel.exchangeDeclare(exchangeName, BuiltinExchangeType.DIRECT, false, true, null);
 			
 			logger.info("successfully declared a new exchange " + exchangeName);
 

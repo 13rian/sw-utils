@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
@@ -49,7 +50,7 @@ public class BroadcastConsumerRMQ extends CommunicatorBase {
 	private void declareExchange() {
 		try {
 			// declare the new exchange, fanout means it is sent to all queues that are bound to this exchange
-			channel.exchangeDeclare(exchangeName, "fanout");   
+			channel.exchangeDeclare(exchangeName, BuiltinExchangeType.FANOUT, false, true, null); 
 			
 			// create a temporary queue that is removed after the client disconnects
 			String queueName = channel.queueDeclare().getQueue();

@@ -2,11 +2,13 @@ package ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.routing;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
@@ -21,8 +23,8 @@ public class RoutingConsumerRMQ extends CommunicatorBase {
 	// name of the exchange, any queue can be bound to this exchange and receive messages, this way messages are
 	// not just sent to one named queue
 	private String exchangeName = "";
-	private String queueName = "";					// the name of the temporary queue (exists until the client disconnects)
-	private ArrayList<String> routingKeys = null; 	// list of routing keys, only messages with routing keys in this list are received 
+	private String queueName = "";				// the name of the temporary queue (exists until the client disconnects)
+	private List<String> routingKeys = null; 	// list of routing keys, only messages with routing keys in this list are received 
 
 	// holds the user defined method to handle a received message
 	private IMessageReceiver messageReceiver = null; 		
@@ -35,7 +37,7 @@ public class RoutingConsumerRMQ extends CommunicatorBase {
 	 * @param routingKeys 			list of routing keys, only messages with routing keys in this list are received
 	 * @param messageReceiver   	holds the user defined method to handle a received message
 	 */
-	public RoutingConsumerRMQ(RabbitMQHander mqHandler, String exchangeName, ArrayList<String> routingKeys, IMessageReceiver messageReceiver) {
+	public RoutingConsumerRMQ(RabbitMQHander mqHandler, String exchangeName, List<String> routingKeys, IMessageReceiver messageReceiver) {
 		super(mqHandler);
 
 		this.exchangeName = exchangeName;
@@ -60,13 +62,13 @@ public class RoutingConsumerRMQ extends CommunicatorBase {
 		try {
 			// declare the new exchange, direct: a message goes to the queues whose binding key exactly matches
 			// the routing key of the message.
-			channel.exchangeDeclare(exchangeName, "direct");   
+			channel.exchangeDeclare(exchangeName, BuiltinExchangeType.DIRECT, false, true, null);
 
 			// create a temporary queue that is removed after the client disconnects
 			String queueName = channel.queueDeclare().getQueue();
 
 			// bind the queue to all the defined routing keys
-			for(String routingKey : routingKeys){
+			for(String routingKey : routingKeys) {
 				channel.queueBind(queueName, exchangeName, routingKey);
 			}
 

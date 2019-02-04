@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.MessageProperties;
 
 import ch.wenkst.sw_utils.messaging.rabbit_mq.RabbitMQHander;
@@ -40,7 +41,7 @@ public class BroadcastPublisherRMQ extends CommunicatorBase {
 	private void declareExchange() {
 		try {
 			// declare the new exchange, fanout means it is sent to all queues that are bound to this exchange
-			channel.exchangeDeclare(exchangeName, "fanout");   
+			channel.exchangeDeclare(exchangeName, BuiltinExchangeType.FANOUT, false, true, null);
 			
 			logger.info("successfully declared a new exchange " + exchangeName);
 

@@ -264,7 +264,7 @@ public class MongoDBHandlerAsync {
 	 * @param entities 		the list of entities to save to the db
 	 * @param subscriber 	subscriber to the insert many publisher
 	 */
-	public void insertMany(List<? extends BaseEntity> entities, Subscriber<Success> subscriber) {
+	public void insertMany(List<BaseEntity> entities, Subscriber<Success> subscriber) {
 		if (entities.size() < 1) {
 			return;
 		}
