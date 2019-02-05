@@ -5,6 +5,7 @@ import java.util.List;
 import javax.net.ssl.SSLContext;
 
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.IMessageReceiver;
+import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.MessageRMQ;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.broadcaster.BroadcastConsumerRMQ;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.broadcaster.BroadcastPublisherRMQ;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.routing.RoutingConsumerRMQ;
@@ -80,8 +81,7 @@ public class RabbitMQHander {
 	 */
 	public boolean isReachable() {	
 		BroadcastPublisherRMQ broadcaster = getBroadcastPublisher("testQueue");
-		
-		boolean isReachable = broadcaster.publishMessage("test message".getBytes());
+		boolean isReachable = broadcaster.publishMessage(new MessageRMQ("test message"));
 		if (isReachable) {
 			broadcaster.disconnect();
 		}

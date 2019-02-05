@@ -1,16 +1,12 @@
 package ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.routing;
 
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.BuiltinExchangeType;
-import com.rabbitmq.client.MessageProperties;
-
 import ch.wenkst.sw_utils.messaging.rabbit_mq.RabbitMQHander;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.CommunicatorBase;
+import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.MessageRMQ;
 
 public class RoutingPublisherRMQ extends CommunicatorBase {
 	private static final Logger logger = LoggerFactory.getLogger(RoutingPublisherRMQ.class);
@@ -43,56 +39,30 @@ public class RoutingPublisherRMQ extends CommunicatorBase {
 		try {
 			// declare the new exchange, direct: a message goes to the queues whose binding key exactly matches
 			// the routing key of the message.
-			channel.exchangeDeclare(exchangeName, BuiltinExchangeType.DIRECT, false, true, null);
+			channel.exchangeDeclare(exchangeName, BuiltinExchangeType.DIRECT, durable, autoDelete, null);
 			
 			logger.info("successfully declared a new exchange " + exchangeName);
 
 		} catch (Exception e) {
 			logger.error("error declaring the new exchange " + exchangeName + ": ", e);
 		}
-	}
-	
-	
-	
-	/**
-	 * broadcasts a message to all listening consumers on a defines exchange
-	 * @param messageBytes 			message bytes to send
-	 * @param routingKey 			defines a subset of all messages, consumers can listen to only a subset of the routing keys
-	 * @param headerProperties 		the message header properties
-	 */
-	public void publishMessage(byte[] messageBytes, String routingKey, Map<String, Object> headerProperties) {
-		try {
-			// publish the message on the exchange, the temporary queue is used
-			AMQP.BasicProperties msgProperties = MessageProperties.TEXT_PLAIN;
-			msgProperties = msgProperties.builder().headers(headerProperties).build();
-			channel.basicPublish(exchangeName, routingKey, msgProperties, messageBytes);
-
-		} catch (Exception e) {
-			logger.error("error routing message on exchangeName " + exchangeName + ", routing key " + routingKey + ": ", e);
-		}
-	}
-	
+	}	
 	
 	
 	/**
 	 * broadcasts a message to all listening consumers on a defines exchange
-	 * @param messageBytes 			message bytes to send
-	 * @param routingKey 			defines a subset of all messages, consumers can listen to only a subset of the routing keys
+	 * @param message 			the message to send
+	 * @param routingKey 		defines a subset of all messages, consumers can listen to only a
+	 * 							subset of the routing keys
 	 */
-	public void publishMessage(byte[] messageBytes, String routingKey) {
+	public void publishMessage(MessageRMQ message, String routingKey) {
 		try {
 			// publish the message on the exchange, the temporary queue is used
-			channel.basicPublish(exchangeName, routingKey, null, messageBytes);
+			channel.basicPublish(exchangeName, routingKey, message.getProperties(), message.getBody());
 
 		} catch (Exception e) {
 			logger.error("error broadcasting message on exchangeName " + exchangeName + ", routing key " + routingKey + ": ", e);
 		}
 	}
-	
-	
-	
-		
-	
-	
 	
 }

@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import ch.wenkst.sw_utils.Utils;
 import ch.wenkst.sw_utils.crypto.tls.ec.SSLContextGenerator;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.RabbitMQHander;
+import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.MessageRMQ;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.broadcaster.BroadcastConsumerRMQ;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.broadcaster.BroadcastPublisherRMQ;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.routing.RoutingConsumerRMQ;
@@ -63,16 +64,16 @@ public class MainRabbitMQ {
 		String workerQueueName = "worker_queue";
 
 		// define worker 1
-		WorkerConsumerRMQ workerConsumer1 = messageHandler.getWorkerConsumer(workerQueueName, (messageBytes, headerProps) -> {
-			String messageStr = new String(messageBytes);
+		WorkerConsumerRMQ workerConsumer1 = messageHandler.getWorkerConsumer(workerQueueName, (message) -> {
+			String messageStr = message.getBodyStr();
 			logger.info("worker1 received message " + messageStr);
 			Utils.sleep(200);
 			logger.info("worker1 finished processing");
 		});
 
 		// define worker 2
-		WorkerConsumerRMQ workerConsumer2 = messageHandler.getWorkerConsumer(workerQueueName, (messageBytes, headerProps) -> {
-			String messageStr = new String(messageBytes);
+		WorkerConsumerRMQ workerConsumer2 = messageHandler.getWorkerConsumer(workerQueueName, (message) -> {
+			String messageStr = message.getBodyStr();
 			logger.info("worker2 received message " + messageStr);
 			Utils.sleep(500);
 			logger.info("worker2 finished processing");
@@ -81,10 +82,10 @@ public class MainRabbitMQ {
 
 		// define a publisher and publish 4 messages
 		WorkerPublisherRMQ workerPublisher = messageHandler.getWorkerPublisher(workerQueueName);
-		workerPublisher.publishMessage("message1".getBytes());
-		workerPublisher.publishMessage("message2".getBytes());
-		workerPublisher.publishMessage("message3".getBytes());
-		workerPublisher.publishMessage("message4".getBytes());
+		workerPublisher.publishMessage(new MessageRMQ("message1"));
+		workerPublisher.publishMessage(new MessageRMQ("message2"));
+		workerPublisher.publishMessage(new MessageRMQ("message3"));
+		workerPublisher.publishMessage(new MessageRMQ("message4"));
 
 
 		Utils.sleep(1100);
@@ -112,14 +113,14 @@ public class MainRabbitMQ {
 
 		// define 2 consumers that listen for all messages for a certain exchange
 		// define consumer 1
-		BroadcastConsumerRMQ broadcastConsumer1 = messageHandler.getBroadcastConsumer(broadcastExchangeName, (messageBytes, headerProps) -> {
-			String messageStr = new String(messageBytes);
+		BroadcastConsumerRMQ broadcastConsumer1 = messageHandler.getBroadcastConsumer(broadcastExchangeName, (message) -> {
+			String messageStr = message.getBodyStr();
 			logger.info("broadcastConsumer1 received message " + messageStr);
 		});
 
 		// define consumer 2
-		BroadcastConsumerRMQ broadcastConsumer2 = messageHandler.getBroadcastConsumer(broadcastExchangeName, (messageBytes, headerProps) -> {
-			String messageStr = new String(messageBytes);
+		BroadcastConsumerRMQ broadcastConsumer2 = messageHandler.getBroadcastConsumer(broadcastExchangeName, (message) -> {
+			String messageStr = message.getBodyStr();
 			logger.info("broadcastConsumer2 received message " + messageStr);
 		});
 
@@ -128,10 +129,10 @@ public class MainRabbitMQ {
 		BroadcastPublisherRMQ broadcastPublisher1 = messageHandler.getBroadcastPublisher(broadcastExchangeName);
 		BroadcastPublisherRMQ broadcastPublisher2 = messageHandler.getBroadcastPublisher(broadcastExchangeName);
 
-		broadcastPublisher1.publishMessage("message1 from broadcaster1".getBytes());
-		broadcastPublisher2.publishMessage("message1 from broadcaster2".getBytes());
-		broadcastPublisher1.publishMessage("message2 from broadcaster1".getBytes());
-		broadcastPublisher2.publishMessage("message2 from broadcaster2".getBytes());
+		broadcastPublisher1.publishMessage(new MessageRMQ("message1 from broadcaster1"));
+		broadcastPublisher2.publishMessage(new MessageRMQ("message1 from broadcaster2"));
+		broadcastPublisher1.publishMessage(new MessageRMQ("message2 from broadcaster1"));
+		broadcastPublisher2.publishMessage(new MessageRMQ("message2 from broadcaster2"));
 
 
 		Utils.sleep(500);
@@ -165,8 +166,8 @@ public class MainRabbitMQ {
 		routingKeys1.add("#");
 
 		
-		RoutingConsumerRMQ routingConsumer1 = messageHandler.getRoutingConsumer(routingExchangeName, routingKeys1 , (messageBytes, headerProps) -> {
-			String messageStr = new String(messageBytes);
+		RoutingConsumerRMQ routingConsumer1 = messageHandler.getRoutingConsumer(routingExchangeName, routingKeys1 , (message) -> {
+			String messageStr = message.getBodyStr();
 			logger.info("routingConsumer1 received message " + messageStr);
 		});
 		
@@ -175,18 +176,18 @@ public class MainRabbitMQ {
 		routingKeys2.add("info");
 		routingKeys2.add("error");
 		
-		RoutingConsumerRMQ routingConsumer2 = messageHandler.getRoutingConsumer(routingExchangeName, routingKeys2 , (messageBytes, headerProps) -> {
-			String messageStr = new String(messageBytes);
+		RoutingConsumerRMQ routingConsumer2 = messageHandler.getRoutingConsumer(routingExchangeName, routingKeys2 , (message) -> {
+			String messageStr = message.getBodyStr();
 			logger.info("routingConsumer2 received message " + messageStr);
 		});
 		
 		
 		// define a publisher that sends messages with different routing keys
 		RoutingPublisherRMQ routingPublisher = messageHandler.getRoutingPublisher(routingExchangeName);
-		routingPublisher.publishMessage("log1 trace".getBytes(), "trace");
-		routingPublisher.publishMessage("log1 debug".getBytes(), "debug");
-		routingPublisher.publishMessage("log1 info".getBytes(), "info");
-		routingPublisher.publishMessage("log1 error".getBytes(), "error");
+		routingPublisher.publishMessage(new MessageRMQ("log1 trace"), "trace");
+		routingPublisher.publishMessage(new MessageRMQ("log1 debug"), "debug");
+		routingPublisher.publishMessage(new MessageRMQ("log1 info"), "info");
+		routingPublisher.publishMessage(new MessageRMQ("log1 error"), "error");
 		
 		
 		// remove and add routing keys
@@ -196,10 +197,10 @@ public class MainRabbitMQ {
 		routingConsumer2.removeFromRoutingKeys("info"); 	// receive only error now	  
 		
 		// publish again
-		routingPublisher.publishMessage("log2 trace".getBytes(), "trace");
-		routingPublisher.publishMessage("log2 debug".getBytes(), "debug");
-		routingPublisher.publishMessage("log2 info".getBytes(), "info");
-		routingPublisher.publishMessage("log2 error".getBytes(), "error");
+		routingPublisher.publishMessage(new MessageRMQ("log2 trace"), "trace");
+		routingPublisher.publishMessage(new MessageRMQ("log2 debug"), "debug");
+		routingPublisher.publishMessage(new MessageRMQ("log2 info"), "info");
+		routingPublisher.publishMessage(new MessageRMQ("log2 error"), "error");
 
 		
 		

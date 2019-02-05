@@ -11,6 +11,7 @@ import com.rabbitmq.client.Envelope;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.RabbitMQHander;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.CommunicatorBase;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.IMessageReceiver;
+import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.MessageRMQ;
 
 public class WorkerConsumerRMQ extends CommunicatorBase {
 	private static final Logger logger = LoggerFactory.getLogger(WorkerConsumerRMQ.class);
@@ -46,10 +47,6 @@ public class WorkerConsumerRMQ extends CommunicatorBase {
 	 * declares a new queue 
 	 */
 	private void declareQueue() {
-		boolean durable = false; 		// if true the queue survives a server restart 
-		boolean exclusive = false; 		// if true this queue is restricted to this connection
-		boolean autoDelete = true; 		// if true the queue is deleted if no longer used
-
 		try {
 			// ensure that messages are sent to receivers that are not busy (not round robin principle)
 			int prefetchCount = 1;
@@ -100,8 +97,9 @@ public class WorkerConsumerRMQ extends CommunicatorBase {
 		@Override
 		public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
 			// call the user defined method to handle the message
-			try {			
-				messageReceiver.handleMessage(body, properties.getHeaders());
+			try {
+				MessageRMQ message = new MessageRMQ(body, envelope, properties);
+				messageReceiver.handleMessage(message);
 
 			} catch (Exception e) {
 				logger.error("error handling worker message: ", e);
@@ -116,9 +114,6 @@ public class WorkerConsumerRMQ extends CommunicatorBase {
 		}
 
 	}
-
-
-
 
 }
 

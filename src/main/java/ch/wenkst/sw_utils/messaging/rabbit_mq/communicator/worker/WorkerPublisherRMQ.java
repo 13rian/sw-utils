@@ -1,15 +1,11 @@
 package ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.worker;
 
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.MessageProperties;
-
 import ch.wenkst.sw_utils.messaging.rabbit_mq.RabbitMQHander;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.CommunicatorBase;
+import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.MessageRMQ;
 
 public class WorkerPublisherRMQ extends CommunicatorBase {
 	private static final Logger logger = LoggerFactory.getLogger(WorkerPublisherRMQ.class);
@@ -38,10 +34,6 @@ public class WorkerPublisherRMQ extends CommunicatorBase {
 	 * declares a new queue 
 	 */
 	private void declareQueue() {
-		boolean durable = false; 		// if true the queue survives a server restart 
-		boolean exclusive = false; 		// if true this queue is restricted to this connection
-		boolean autoDelete = true; 		// if true the queue is deleted if no longer used
-
 		try {
 			// declare the new queue
 			channel.queueDeclare(queueName, durable, exclusive, autoDelete, null);
@@ -53,48 +45,19 @@ public class WorkerPublisherRMQ extends CommunicatorBase {
 	}
 	
 	
-	
 	/**
 	 * sends a message to the passed routing key, the routing key is the name of the queue a receiver needs to listen
-	 * @param messageBytes 			message bytes to send
-	 * @param headerProperties 		the message header properties
+	 * @param message 			the message to send
 	 */
-	public void publishMessage(byte[] messageBytes, Map<String, Object> headerProperties) {
+	public void publishMessage(MessageRMQ message) {
 		try {
 			// name of the exchange is empty (first param), which denotes the default or nameless exchange: 
 			// messages are routed to the queue with the name specified by routingKey (here queueName), if it exists.
-			AMQP.BasicProperties msgProperties = MessageProperties.TEXT_PLAIN;
-			msgProperties = msgProperties.builder().headers(headerProperties).build();
-			channel.basicPublish("", queueName, msgProperties, messageBytes);
+			channel.basicPublish("", queueName, message.getProperties(), message.getBody());
 
 		} catch (Exception e) {
 			logger.error("error sending message to queue " + queueName + ": ", e);
 		}
 	}
-	
-	
-	/**
-	 * sends a message to the passed routing key, the routing key is the name of the queue a receiver needs to listen
-	 * @param messageBytes 			message bytes to send
-	 */
-	public void publishMessage(byte[] messageBytes) {
-		try {
-			// name of the exchange is empty (first param), which denotes the default or nameless exchange: 
-			// messages are routed to the queue with the name specified by routingKey (here queueName), if it exists.
-			channel.basicPublish("", queueName, null, messageBytes);
 
-		} catch (Exception e) {
-			logger.error("error sending message to queue " + queueName + ": ", e);
-		}
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 }

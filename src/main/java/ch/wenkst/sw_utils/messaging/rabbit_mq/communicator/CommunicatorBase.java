@@ -16,7 +16,13 @@ public class CommunicatorBase {
 
 	private Connection connection = null; 		// holds the connection to the rabbitMQ server
 	protected Channel channel = null; 			// channel of the rabbitMQ server on which new queues can be declared
-
+	
+	
+	// define the properties for the channels
+	protected boolean durable = false; 			// if true the queue survives a server restart 
+	protected boolean exclusive = false; 		// if true this queue is restricted to this connection
+	protected boolean autoDelete = true; 		// if true the queue is deleted if no longer used
+	
 
 	/**
 	 * base to create publishers and consumers to interact with the rabbitMQ server

@@ -1,16 +1,12 @@
 package ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.broadcaster;
 
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.BuiltinExchangeType;
-import com.rabbitmq.client.MessageProperties;
-
 import ch.wenkst.sw_utils.messaging.rabbit_mq.RabbitMQHander;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.CommunicatorBase;
+import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.MessageRMQ;
 
 public class BroadcastPublisherRMQ extends CommunicatorBase {
 	private static final Logger logger = LoggerFactory.getLogger(BroadcastPublisherRMQ.class);  
@@ -41,45 +37,25 @@ public class BroadcastPublisherRMQ extends CommunicatorBase {
 	private void declareExchange() {
 		try {
 			// declare the new exchange, fanout means it is sent to all queues that are bound to this exchange
-			channel.exchangeDeclare(exchangeName, BuiltinExchangeType.FANOUT, false, true, null);
+			channel.exchangeDeclare(exchangeName, BuiltinExchangeType.FANOUT, durable, autoDelete, null);
 			
 			logger.info("successfully declared a new exchange " + exchangeName);
 
 		} catch (Exception e) {
 			logger.error("error declaring the new exchange " + exchangeName + ": ", e);
 		}
-	}
-	
-	
-	
-	/**
-	 * broadcasts a message to all listening consumers on a defines exchange
-	 * @param messageBytes 			message bytes to send
-	 * @param headerProperties 		the message header properties
-	 */
-	public void publishMessage(byte[] messageBytes, Map<String, Object> headerProperties) {
-		try {
-			// publish the message on the exchange, the temporary queue is used
-			AMQP.BasicProperties msgProperties = MessageProperties.TEXT_PLAIN;
-			msgProperties = msgProperties.builder().headers(headerProperties).build();
-			channel.basicPublish(exchangeName, "", msgProperties, messageBytes);
-
-		} catch (Exception e) {
-			logger.error("error broadcastiing message on exchangeName " + exchangeName + ": ", e);
-		}
-	}
-	
+	}	
 	
 	
 	/**
 	 * broadcasts a message to all listening consumers on a defines exchange
-	 * @param messageBytes 		message bytes to send
+	 * @param message 			the message to send
 	 * @return 					true if the message was successfully published, false if an error occurred
 	 */
-	public boolean publishMessage(byte[] messageBytes) {
+	public boolean publishMessage(MessageRMQ message) {
 		try {
 			// publish the message on the exchange, the temporary queue is used
-			channel.basicPublish(exchangeName, "", null, messageBytes);
+			channel.basicPublish(exchangeName, "", message.getProperties(), message.getBody());
 			return true;
 			
 		} catch (Exception e) {
@@ -87,18 +63,4 @@ public class BroadcastPublisherRMQ extends CommunicatorBase {
 			return false;
 		}
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 }

@@ -16,6 +16,7 @@ import com.rabbitmq.client.Envelope;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.RabbitMQHander;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.CommunicatorBase;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.IMessageReceiver;
+import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.MessageRMQ;
 
 public class RoutingConsumerRMQ extends CommunicatorBase {
 	private static final Logger logger = LoggerFactory.getLogger(RoutingConsumerRMQ.class);
@@ -62,7 +63,7 @@ public class RoutingConsumerRMQ extends CommunicatorBase {
 		try {
 			// declare the new exchange, direct: a message goes to the queues whose binding key exactly matches
 			// the routing key of the message.
-			channel.exchangeDeclare(exchangeName, BuiltinExchangeType.DIRECT, false, true, null);
+			channel.exchangeDeclare(exchangeName, BuiltinExchangeType.DIRECT, durable, autoDelete, null);
 
 			// create a temporary queue that is removed after the client disconnects
 			String queueName = channel.queueDeclare().getQueue();
@@ -115,8 +116,9 @@ public class RoutingConsumerRMQ extends CommunicatorBase {
 		public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
 			// call the user defined method to handle the message, no acknowledge needed, since many receivers can 
 			// listen for the same exchange
-			try {		
-				messageReceiver.handleMessage(body, properties.getHeaders());
+			try {	
+				MessageRMQ message = new MessageRMQ(body, envelope, properties);
+				messageReceiver.handleMessage(message);
 
 			} catch (Exception e) {
 				logger.error("error handling worker message: ", e);
@@ -167,9 +169,6 @@ public class RoutingConsumerRMQ extends CommunicatorBase {
 			}
 		}
 	}
-
-
-
 
 }
 

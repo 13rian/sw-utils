@@ -12,6 +12,7 @@ import com.rabbitmq.client.Envelope;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.RabbitMQHander;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.CommunicatorBase;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.IMessageReceiver;
+import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.MessageRMQ;
 
 public class BroadcastConsumerRMQ extends CommunicatorBase {
 	private static final Logger logger = LoggerFactory.getLogger(BroadcastConsumerRMQ.class);   
@@ -50,7 +51,7 @@ public class BroadcastConsumerRMQ extends CommunicatorBase {
 	private void declareExchange() {
 		try {
 			// declare the new exchange, fanout means it is sent to all queues that are bound to this exchange
-			channel.exchangeDeclare(exchangeName, BuiltinExchangeType.FANOUT, false, true, null); 
+			channel.exchangeDeclare(exchangeName, BuiltinExchangeType.FANOUT, durable, autoDelete, null); 
 			
 			// create a temporary queue that is removed after the client disconnects
 			String queueName = channel.queueDeclare().getQueue();
@@ -88,7 +89,6 @@ public class BroadcastConsumerRMQ extends CommunicatorBase {
 
 
 
-
 	/**
 	 * defines a listener that listens for incoming messages
 	 */
@@ -103,7 +103,8 @@ public class BroadcastConsumerRMQ extends CommunicatorBase {
 			// call the user defined method to handle the message, no acknowledge needed, since many receivers can 
 			// listen for the same exchange
 			try {		
-				messageReceiver.handleMessage(body, properties.getHeaders());
+				MessageRMQ message = new MessageRMQ(body, envelope, properties);
+				messageReceiver.handleMessage(message);
 
 			} catch (Exception e) {
 				logger.error("error handling worker message: ", e);
@@ -111,9 +112,6 @@ public class BroadcastConsumerRMQ extends CommunicatorBase {
 		}
 
 	}
-
-
-
 
 }
 
