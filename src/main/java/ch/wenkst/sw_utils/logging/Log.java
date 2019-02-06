@@ -17,12 +17,18 @@ import ch.wenkst.sw_utils.Utils;
  * if the logger is initialized without a configuration file the, the relative path to the working
  * directory needs to be set as system property called swutils.logger.config.file.path
  * <p>
+ * sometimes the locale is not defined and the new SimpleDateFormat() call will log something on the 
+ * PlatformLogger. If this is the case a StackOverflowError error will occur. To avoid this set the default locale:
+ * <ul>
+ * <li> Locale locale = new Locale("de", "DE");
+ * <li> Locale.setDefault(locale);
+ * <p>
  * the following properties can be defined in the properties config file:
  * <ul> 
  * <li> console.log.level 		console log level, needs to be a valid java.util.level 
  * <li> console.log.logline 	true if the line number should be logged to the console, false if not
  * <li> file.log.path 			relative path to the working dir for the log-file
- * <li> file.log.level 			file log leve, needs to be a valid java.util.level
+ * <li> file.log.level 			file log level, needs to be a valid java.util.level
  * <li> file.log.logline 		true if the line number should be logged in the file, false if not
  * <li> file.log.max.size 		the maximal size in bytes one log-file should have
  * <li> file.log.max.count 		the maximal number of log file that are writtens
