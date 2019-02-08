@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils.db.async.subscriber;
+package ch.wenkst.sw_utils.db.subscriber;
 
 import java.util.List;
 

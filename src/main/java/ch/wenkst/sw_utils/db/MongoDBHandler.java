@@ -1,12 +1,10 @@
-package ch.wenkst.sw_utils.db.async;
+package ch.wenkst.sw_utils.db;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -14,6 +12,8 @@ import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.conversions.Bson;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
@@ -27,13 +27,13 @@ import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 import com.mongodb.reactivestreams.client.Success;
 
-import ch.wenkst.sw_utils.db.async.base.BaseEntity;
-import ch.wenkst.sw_utils.db.async.base.EntityInfo;
+import ch.wenkst.sw_utils.db.base.BaseEntity;
+import ch.wenkst.sw_utils.db.base.EntityInfo;
 
-public class MongoDBHandlerAsync {
-	final static Logger logger = LogManager.getLogger(MongoDBHandlerAsync.class);
+public class MongoDBHandler {
+	private static final Logger logger = LoggerFactory.getLogger(MongoDBHandler.class);
 	
-	private static MongoDBHandlerAsync instance = null; 	// instance for the singleton access
+	private static MongoDBHandler instance = null; 	// instance for the singleton access
 	
 	private MongoClient mongoClient = null;					// the client to the mongo db
 	private MongoDatabase database = null; 					// name of the database to use
@@ -45,7 +45,7 @@ public class MongoDBHandlerAsync {
 	/**
 	 * handles the interface to the mongodb
 	 */
-	protected MongoDBHandlerAsync() {
+	protected MongoDBHandler() {
 		dbMap = new HashMap<>();
 	}
 	
@@ -54,9 +54,9 @@ public class MongoDBHandlerAsync {
 	 * returns the instance of the dbHandler
 	 * @return
 	 */
-	public static MongoDBHandlerAsync getInstance() {
+	public static MongoDBHandler getInstance() {
 		if(instance == null) {
-			instance = new MongoDBHandlerAsync();
+			instance = new MongoDBHandler();
 		}	      
 		return instance;
 	}
@@ -353,10 +353,14 @@ public class MongoDBHandlerAsync {
 	/**
 	 * deletes entities in the db
 	 * @param classObj 		the class of the entity to delete
-	 * @param query 		the query for the delete
+	 * @param query 		the query for the deletion, can be null
 	 * @param subscriber 	subscriber to the delete publisher
 	 */
 	public void delete(Class<?> classObj, Bson query, Subscriber<DeleteResult> subscriber) {
+		if (query == null) {
+			query = new Document();
+		}
+		
 		// get the collection
 		MongoCollection<BaseEntity> collection = getCollection(classObj);
 		

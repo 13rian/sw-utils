@@ -3,11 +3,11 @@ package ch.wenkst.sw_utils;
 
 import java.util.Arrays;
 import java.util.List;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -25,21 +25,21 @@ import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.Success;
 
 import ch.wenkst.sw_utils.Utils;
-import ch.wenkst.sw_utils.db.async.MongoDBHandlerAsync;
-import ch.wenkst.sw_utils.db.async.base.BaseEntity;
-import ch.wenkst.sw_utils.db.async.subscriber.CallbackSubscriber;
-import ch.wenkst.sw_utils.db.async.subscriber.PrintSubscriber;
+import ch.wenkst.sw_utils.db.MongoDBHandler;
+import ch.wenkst.sw_utils.db.base.BaseEntity;
+import ch.wenkst.sw_utils.db.subscriber.CallbackSubscriber;
+import ch.wenkst.sw_utils.db.subscriber.PrintSubscriber;
 
 public class MainAsyncMongoDB {
 	static {
 		System.setProperty("log4j.configurationFile", "config/log4j2.xml");
 	}
 	
-	final static Logger logger = LogManager.getLogger(MainAsyncMongoDB.class);    // initialize the logger
+	final static Logger logger = LoggerFactory.getLogger(Main_ZMQ_Messaging.class);
 
 	public static void main(String[] args) throws Exception {
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		MongoDBHandlerAsync dbHandler = MongoDBHandlerAsync.getInstance();
+		MongoDBHandler dbHandler = MongoDBHandler.getInstance();
 		
 		// connect to the db
 		boolean isConnected = dbHandler.connecToDB("192.168.152.128", 27017, 10, "AsyncTest");

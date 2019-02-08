@@ -1,15 +1,11 @@
-package ch.wenkst.sw_utils.db.async.subscriber;
+package ch.wenkst.sw_utils.db.subscriber;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
-public class BaseSubscriber<T> implements Subscriber<T> {
-	final static Logger logger = LogManager.getLogger(BaseSubscriber.class);    // initialize the logger
-	
+public class BaseSubscriber<T> implements Subscriber<T> {	
 	protected final List<T> result;					// result list of the db
 	protected Exception error = null; 				// the first error that occurred
 	protected volatile boolean completed; 			// true if the stream is completed, false otherwise
@@ -33,7 +29,6 @@ public class BaseSubscriber<T> implements Subscriber<T> {
 
 	@Override
 	public void onError(final Throwable t) {
-		// logger.error("db operation error: ", t);
 		if (error == null) {
 			error = new Exception(t);
 		}

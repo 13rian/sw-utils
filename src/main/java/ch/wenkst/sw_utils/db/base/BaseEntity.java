@@ -1,17 +1,17 @@
-package ch.wenkst.sw_utils.db.async.base;
+package ch.wenkst.sw_utils.db.base;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.bson.types.ObjectId;
 import org.reactivestreams.Subscriber;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.mongodb.reactivestreams.client.Success;
 
-import ch.wenkst.sw_utils.db.async.MongoDBHandlerAsync;
-import ch.wenkst.sw_utils.db.async.subscriber.CallbackSubscriber;
+import ch.wenkst.sw_utils.db.MongoDBHandler;
+import ch.wenkst.sw_utils.db.subscriber.CallbackSubscriber;
 
 public class BaseEntity {
-	final static Logger logger = LogManager.getLogger(BaseEntity.class);    // initialize the logger
+	private static final Logger logger = LoggerFactory.getLogger(BaseEntity.class);
 	
     private String id;
 
@@ -36,7 +36,7 @@ public class BaseEntity {
      * asynchronously saves this entity to the db the 
      */
     public void saveToDB() {
-    	MongoDBHandlerAsync dbHandler = MongoDBHandlerAsync.getInstance();
+    	MongoDBHandler dbHandler = MongoDBHandler.getInstance();
 		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
 			if (error == null) {
 				logger.error("failed to save the entity " + getClass().getSimpleName() + " to the db: ", error);
@@ -52,7 +52,7 @@ public class BaseEntity {
      * @param subscriber 	 the subscriber to the insert one publisher
      */
     public void saveToDB(Subscriber<Success> subscriber) {
-    	MongoDBHandlerAsync dbHandler = MongoDBHandlerAsync.getInstance();
+    	MongoDBHandler dbHandler = MongoDBHandler.getInstance();
     	dbHandler.insertOne(this, subscriber);
     	
     }

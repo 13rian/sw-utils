@@ -1,16 +1,16 @@
-package ch.wenkst.sw_utils.db.async.subscriber;
+package ch.wenkst.sw_utils.db.subscriber;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Subscriber that only prints out an error if one occurs
  * @param <T>
  */
 public class PrintSubscriber<T> implements Subscriber<T> {
-	final static Logger logger = LogManager.getLogger(PrintSubscriber.class);    // initialize the logger
+	private static final Logger logger = LoggerFactory.getLogger(PrintSubscriber.class);
 	
 	protected String name;						// the name to identify this request
 	protected Exception error = null; 			// the first error that occurred

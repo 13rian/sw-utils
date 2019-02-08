@@ -1,9 +1,9 @@
-package ch.wenkst.sw_utils.db.async;
+package ch.wenkst.sw_utils.db;
 
 import java.util.concurrent.CompletableFuture;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.mongodb.event.ServerClosedEvent;
 import com.mongodb.event.ServerDescriptionChangedEvent;
@@ -11,7 +11,7 @@ import com.mongodb.event.ServerListener;
 import com.mongodb.event.ServerOpeningEvent;
 
 public class MongoStatusListener implements ServerListener {
-	final static Logger logger = LogManager.getLogger(MongoStatusListener.class);
+	private static final Logger logger = LoggerFactory.getLogger(MongoStatusListener.class);
 	
 	private CompletableFuture<Boolean> connectionFuture = null;
 	

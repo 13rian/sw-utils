@@ -3,8 +3,8 @@ package ch.wenkst.sw_utils;
 
 import org.bson.types.ObjectId;
 
-import ch.wenkst.sw_utils.db.async.base.BaseEntity;
-import ch.wenkst.sw_utils.db.async.base.EntityInfo;
+import ch.wenkst.sw_utils.db.base.BaseEntity;
+import ch.wenkst.sw_utils.db.base.EntityInfo;
 
 @EntityInfo(collection="Person")
 public final class Person extends BaseEntity {

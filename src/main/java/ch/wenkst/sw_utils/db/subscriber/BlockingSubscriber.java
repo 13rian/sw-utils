@@ -1,17 +1,13 @@
-package ch.wenkst.sw_utils.db.async.subscriber;
+package ch.wenkst.sw_utils.db.subscriber;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import com.mongodb.MongoTimeoutException;
 
 
 public class BlockingSubscriber<T> extends BaseSubscriber<T> {
-	final static Logger logger = LogManager.getLogger(BlockingSubscriber.class);    // initialize the logger
-	
 	private final CountDownLatch latch; 			// count down that is needed for the blocking operation
 
 

@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils.db.async.base;
+package ch.wenkst.sw_utils.db.base;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
