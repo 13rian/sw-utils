@@ -7,8 +7,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
+import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -37,6 +40,11 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
+import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
 import org.bouncycastle.cms.CMSAlgorithm;
 import org.bouncycastle.cms.CMSEnvelopedData;
 import org.bouncycastle.cms.CMSEnvelopedDataGenerator;
@@ -50,6 +58,9 @@ import org.bouncycastle.cms.jcajce.JceKeyAgreeRecipientId;
 import org.bouncycastle.cms.jcajce.JceKeyAgreeRecipientInfoGenerator;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.operator.OutputEncryptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,9 +72,27 @@ import ch.wenkst.sw_utils.file.FileUtils;
 public class CryptoUtils {
 	private static final Logger logger = LoggerFactory.getLogger(CryptoUtils.class);
 	
-	// define two constants for the certificate and key format
-	public static final int FORMAT_DER = 1;
-	public static final int FORMAT_PEM = 2;
+	public static enum KeyType {
+		RSA, 		// rsa keys
+		EC 			// elliptic keys
+	}
+	
+	/**
+	 * file formats of the private key
+	 */
+	public static enum FileFormat {
+		PEM,
+		DER
+	}
+	
+	/**
+	 * cryptographic standards how the key is stored in the file
+	 */
+	public static enum KeyFormat {
+		PKCS1, 		// legacy format from openssl for rsa private keys
+		PKCS8, 		// new standard that should be used whenever possible, only standard supported by java
+		SEC1, 		// legacy format from openssl for ec private keys
+	}
 	
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -72,7 +101,7 @@ public class CryptoUtils {
 	/**
 	 * registers the bouncy castle provider as security provider, if it was not registered before
 	 */
-	public static void registerBC() {
+	public static void registerBC() {	
 		// Register the bouncy castle security provider, if not registered yet
 		if(Security.getProvider("BC") == null) {
 			Security.addProvider(new BouncyCastleProvider());
@@ -491,28 +520,29 @@ public class CryptoUtils {
 	
 	
 	/**
-	 * loads the base64 encoded certificate form the passed certificate file
+	 * loads a byte array containing the binary der data representing the cert of the passed cert file
 	 * @param path 		path to the certificate file
-	 * @param format 	der or pem use CryptoUtils.FORMAT_DER or CryptoUtils.FORMAT_PEM
-	 * @return 			certificate as b64 encoded der
+	 * @param format 	format of the file
+	 * @return 			certificate der byte array
 	 */
-	public static String derFromCertFile(String path, int format) {
-		if (format == FORMAT_DER) {
+	public static byte[] derFromCertFile(String path, FileFormat fileFormat) {
+		if (fileFormat.equals(FileFormat.DER)) {
 			byte[] b64CertBytes = FileUtils.readByteArrFromFile(path);
-			String b64Cert = Conversion.byteArrayToBase64(b64CertBytes);
-			return b64Cert;
+			return b64CertBytes;
 			
-		} else if (format == FORMAT_PEM) {
+		} else if (fileFormat.equals(FileFormat.PEM)) {
 			List<String> pemObjs = loadPem(path);
 			if (pemObjs != null && pemObjs.size() > 0) {
-				return pemObjs.get(0);
+				String b64CertStr =  pemObjs.get(0);
+				byte[] b64CertBytes = Conversion.base64StrToByteArray(b64CertStr);
+				return b64CertBytes;
 			} else {
 				logger.error("no pem objects found in the passed pem file");
 				return null;
 			}
 			
 		} else {
-			logger.error("passed file format " + format + " is not implemented");
+			logger.error("passed file format " + fileFormat + " is not implemented");
 			return null;
 		}
 	}
@@ -577,44 +607,202 @@ public class CryptoUtils {
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/**
 	 * loads a key from a pem or a der file
-	 * @param path 		the path to the key file
-	 * @param format 	der or pem use CryptoUtils.FORMAT_DER or CryptoUtils.FORMAT_PEM
-	 * @return 			the private key
+	 * @param path 			the path to the key file
+	 * @param keyType 		type of the key
+	 * @param fileFormat 	format of the file
+	 * @param keyFormat 	format of the key
+	 * @return 				the private key
 	 */
-	public static PrivateKey keyFromFile(String path, int format) {
-		// load the b64 encoded der key
-		String b64Key;
-		if (format == FORMAT_DER) {
-			b64Key = derFromKeyFile(path, FORMAT_DER);
-						
-		} else if (format == FORMAT_PEM) {
-			b64Key = derFromKeyFile(path, FORMAT_PEM);
-			
-		} else {
-			logger.error("passed file format " + format + " is not implemented");
-			return null;
-		}		
+	public static PrivateKey keyFromFile(String path, KeyType keyType, FileFormat fileFormat, KeyFormat keyFormat) {
+		// load the pkcs8 encoded key bytes
+		byte[] pkcs8KeyBytes = derFromKeyFile(path, keyType, fileFormat, keyFormat);	
 		
 		// create the private key from the der bytes
-		PrivateKey pk = keyFromDer(Conversion.base64StrToByteArray(b64Key));
+		PrivateKey pk = keyFromDer(pkcs8KeyBytes, keyType);
 		return pk;
 	}
 	
 	
 	/**
-	 * loads a private key from the byte array in the DER format
-	 * @param keyBytes 		byte array containing the key information	
-	 * @return 				the Java object that contains the private key
+	 * loads a byte array containing the binary der data representing the key of the passed key file
+	 * @param path 			the path to the key file
+	 * @param keyType 		type of the key
+	 * @param fileFormat 	format of the file
+	 * @param keyFormat 	format of the key
+	 * @return 				byte array containing the der key in pkcs8 format
 	 */
-	public static PrivateKey keyFromDer(byte[] keyBytes) {
+	public static byte[] derFromKeyFile(String path, KeyType keyType, FileFormat fileFormat, KeyFormat keyFormat) {
+		try {
+			if (keyType.equals(KeyType.RSA)) {
+				return derFromRsaKeyFile(path, fileFormat, keyFormat);
+			
+			} else if (keyType.equals(KeyType.EC)) {
+				return derFromEcKeyFile(path, fileFormat, keyFormat);
+			
+			} else {
+				logger.error("unsupported key type: " + keyType);
+			}
+
+		} catch (Exception e) {
+			logger.error("failed to read the key-file: ", e);
+		}
+
+		return null;
+	}
+	
+	
+	/**
+	 * reads the pkcs8 encoded key bytes from the passed rsa key file
+	 * @param path 			path of the key file
+	 * @param fileFormat 	format of the file
+	 * @param keyFormat 	format of the key
+	 * @return 				pkcs8 encoded key bytes of the passed key file
+	 * @throws IOException
+	 */
+	private static byte[] derFromRsaKeyFile(String path, FileFormat fileFormat, KeyFormat keyFormat) throws IOException {
+		byte[] pkcs8KeyBytes = null;
+		
+		// pem and pkcs8
+		if (fileFormat.equals(FileFormat.PEM) && keyFormat.equals(KeyFormat.PKCS8)) {
+			List<String> pemObjs = loadPem(path);
+			if (pemObjs != null && pemObjs.size() > 0) {
+				String b64Key = pemObjs.get(0);
+				pkcs8KeyBytes = Conversion.base64StrToByteArray(b64Key);
+			
+			} else {
+				logger.error("no pem objects found in the passed pem file");
+				pkcs8KeyBytes =  null;
+			}
+		} 
+		
+		// pem and sec1
+		else if (fileFormat.equals(FileFormat.PEM) && keyFormat.equals(KeyFormat.PKCS1)) {
+			String b64Key = FileUtils.readStrFromFile(path);
+			Reader reader = new StringReader(b64Key);
+			PEMParser pemParser = new PEMParser(reader);
+		    Object keyPair = pemParser.readObject();
+		    KeyPair pair = new JcaPEMKeyConverter().getKeyPair((PEMKeyPair) keyPair);
+		    pkcs8KeyBytes = pair.getPrivate().getEncoded();
+		    pemParser.close();
+		    reader.close();
+		} 
+		
+		// der and pkcs8 
+		else if (fileFormat.equals(FileFormat.DER) && keyFormat.equals(KeyFormat.PKCS8)) {
+			pkcs8KeyBytes = FileUtils.readByteArrFromFile(path);
+		} 
+		
+		// der and sec1
+		else if (fileFormat.equals(FileFormat.DER) && keyFormat.equals(KeyFormat.PKCS1)) {
+			byte[] pkcs1KeyBytes = FileUtils.readByteArrFromFile(path);    
+		    ASN1Sequence aseq = ASN1Sequence.getInstance(pkcs1KeyBytes);
+		    org.bouncycastle.asn1.pkcs.RSAPrivateKey rsaPrivateKey = org.bouncycastle.asn1.pkcs.RSAPrivateKey.getInstance(aseq);
+		    AlgorithmIdentifier algId = new AlgorithmIdentifier(PKCSObjectIdentifiers.rsaEncryption);
+		    pkcs8KeyBytes = new PrivateKeyInfo(algId, rsaPrivateKey).getEncoded();
+		} 
+		
+		// combination cannot occur
+		else {
+			logger.error("failed to read der ec key, unsupported combination of file format: " + fileFormat + " and keyFormat " + keyFormat);
+			pkcs8KeyBytes =  null;
+		}
+		
+		return pkcs8KeyBytes;
+	}
+	
+	
+	/**
+	 * reads the pkcs8 encoded key bytes from the passed ec key file
+	 * @param path 			path of the key file
+	 * @param fileFormat 	format of the file
+	 * @param keyFormat 	format of the key
+	 * @return 				pkcs8 encoded key bytes of the passed key file
+	 * @throws IOException
+	 */
+	private static byte[] derFromEcKeyFile(String path, FileFormat fileFormat, KeyFormat keyFormat) throws IOException {
+		byte[] pkcs8KeyBytes = null;
+		
+		// pem and pkcs8
+		if (fileFormat.equals(FileFormat.PEM) && keyFormat.equals(KeyFormat.PKCS8)) {
+			List<String> pemObjs = loadPem(path);
+			if (pemObjs != null && pemObjs.size() > 0) {
+				String b64Key = pemObjs.get(0);
+				pkcs8KeyBytes = Conversion.base64StrToByteArray(b64Key);
+			
+			} else {
+				logger.error("no pem objects found in the passed pem file");
+				pkcs8KeyBytes =  null;
+			}
+		} 
+		
+		// pem and sec1
+		else if (fileFormat.equals(FileFormat.PEM) && keyFormat.equals(KeyFormat.SEC1)) {
+			String b64Key = FileUtils.readStrFromFile(path);
+			Reader reader = new StringReader(b64Key);
+			PEMParser pemParser = new PEMParser(reader);
+		    Object keyPair = pemParser.readObject();
+		    KeyPair pair = new JcaPEMKeyConverter().getKeyPair((PEMKeyPair) keyPair);
+		    pkcs8KeyBytes = pair.getPrivate().getEncoded();
+		    pemParser.close();
+		    reader.close();
+		} 
+		
+		// der and pkcs8 
+		else if (fileFormat.equals(FileFormat.DER) && keyFormat.equals(KeyFormat.PKCS8)) {
+			pkcs8KeyBytes = FileUtils.readByteArrFromFile(path);
+		} 
+		
+		// der and sec1
+		else if (fileFormat.equals(FileFormat.DER) && keyFormat.equals(KeyFormat.SEC1)) {
+		    byte[] sec1KeyBytes = FileUtils.readByteArrFromFile(path);
+		    ASN1Sequence seq = ASN1Sequence.getInstance(sec1KeyBytes);
+		    org.bouncycastle.asn1.sec.ECPrivateKey pKey = org.bouncycastle.asn1.sec.ECPrivateKey.getInstance(seq);
+		    AlgorithmIdentifier algId = new AlgorithmIdentifier(X9ObjectIdentifiers.id_ecPublicKey, pKey.getParameters());
+		    pkcs8KeyBytes = new PrivateKeyInfo(algId, pKey).getEncoded();
+		} 
+		
+		// combination cannot occur
+		else {
+			logger.error("failed to read der ec key, unsupported combination of file format: " + fileFormat + " and keyFormat " + keyFormat);
+			pkcs8KeyBytes =  null;
+		}
+		
+		return pkcs8KeyBytes;
+	}
+	
+	
+	/**
+	 * loads a private key from the byte array in the pkcs8 encoded der format
+	 * @param keyBytes 		byte array containing the key information	
+	 * @param keyType 		the type of the key
+	 * @return 				the java object that contains the private key
+	 */
+	public static PrivateKey keyFromDer(byte[] keyBytes, KeyType keyType) {
 		try {
 			PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
-			
-			KeyFactory keyFactory;
-			if (Security.getProvider("BC") == null) {
-				keyFactory = KeyFactory.getInstance("EC");
-			} else {
-				keyFactory = KeyFactory.getInstance("EC", "BC");
+						
+			// key factory for rsa curves
+			KeyFactory keyFactory = null;
+			if (keyType.equals(KeyType.RSA)) {
+				if (Security.getProvider("BC") == null) {
+					keyFactory = KeyFactory.getInstance("RSA");
+				} else {
+					keyFactory = KeyFactory.getInstance("RSA", "BC");
+				}
+			}
+
+			// key factory for ec curves
+			else if (keyType.equals(KeyType.EC)) {
+				if (Security.getProvider("BC") == null) {
+					keyFactory = KeyFactory.getInstance("EC");
+				} else {
+					keyFactory = KeyFactory.getInstance("EC", "BC");
+				}
+			}
+
+			else {
+				logger.error("unsupported key type " + keyType);
+				return null;
 			}
 			
 			PrivateKey pk = keyFactory.generatePrivate(keySpec);			
@@ -622,34 +810,6 @@ public class CryptoUtils {
 
 		} catch (Exception e) {
 			logger.error("error creating a private key from the passed bytes: ", e);
-			return null;
-		}
-	}
-	
-	
-	/**
-	 * loads the base64 encoded key form the passed key file
-	 * @param path 		path to the key file
-	 * @param format 	der or pem use CryptoUtils.FORMAT_DER or CryptoUtils.FORMAT_PEM
-	 * @return 			key as b64 encoded der
-	 */
-	public static String derFromKeyFile(String path, int format) {
-		if (format == FORMAT_DER) {
-			byte[] b64KeyBytes = FileUtils.readByteArrFromFile(path);
-			String b64Key = Conversion.byteArrayToBase64(b64KeyBytes);
-			return b64Key;
-			
-		} else if (format == FORMAT_PEM) {
-			List<String> pemObjs = loadPem(path);
-			if (pemObjs != null && pemObjs.size() > 0) {
-				return pemObjs.get(0);
-			} else {
-				logger.error("no pem objects found in the passed pem file");
-				return null;
-			}
-			
-		} else {
-			logger.error("passed file format " + format + " is not implemented");
 			return null;
 		}
 	}
