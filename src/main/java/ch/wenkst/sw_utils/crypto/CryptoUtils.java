@@ -22,6 +22,7 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.security.Signature;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -103,7 +104,7 @@ public class CryptoUtils {
 	 */
 	public static void registerBC() {	
 		// Register the bouncy castle security provider, if not registered yet
-		if(Security.getProvider("BC") == null) {
+		if (Security.getProvider("BC") == null) {
 			Security.addProvider(new BouncyCastleProvider());
 			setSourceOfRandom();
 			logger.info("Successfully registered Bouncy Castle as crypto provider.");
@@ -116,7 +117,7 @@ public class CryptoUtils {
 	 */
 	public static void unregisterBC() {
 		// unregister the bouncy castle provider if registered before
-		if(Security.getProvider("BC") != null) {
+		if (Security.getProvider("BC") != null) {
 			Security.removeProvider("BC");
 			logger.info("Successfully unregistered Bouncy Castle as crypto provider.");
 		}
@@ -151,7 +152,7 @@ public class CryptoUtils {
 	 */
 	public static void unregisterBCJSSE() {
 		// unregister the bouncy castle BCJSSE provider if registered before
-		if(Security.getProvider("BCJSSE") != null) {
+		if (Security.getProvider("BCJSSE") != null) {
 			Security.removeProvider("BCJSSE");
 			logger.info("Successfully unregistered Bouncy Castle BCJSSE as crypto provider.");
 		}
@@ -473,7 +474,7 @@ public class CryptoUtils {
 	 * @param path 	the path to the certificate file
 	 * @return 		the certificate
 	 */
-	public static X509Certificate certFromFile(String path) {
+	public static Certificate certFromFile(String path) {
 		try {
 			File certFile = new File(path);
 			FileInputStream certInput = new FileInputStream(certFile);
@@ -499,7 +500,7 @@ public class CryptoUtils {
 	 * @param certBytes 	byte array containing the certificate information	
 	 * @return 				the Java object that contains the security certificate
 	 */
-	public static X509Certificate certFromDer(byte[] certBytes) {
+	public static Certificate certFromDer(byte[] certBytes) {
 		try {
 			CertificateFactory certFactory;
 			if (Security.getProvider("BC") == null) {

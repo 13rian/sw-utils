@@ -50,14 +50,14 @@ public class CryptoUtilsTest {
 
 		// encryption crypto material
 		receiverEncKey = CryptoUtils.keyFromP12(receiverEncDir + "key.p12", "celsi-pw");
-		receiverEncCert = CryptoUtils.certFromFile(receiverEncDir + "certificate.pem");  
+		receiverEncCert = (X509Certificate) CryptoUtils.certFromFile(receiverEncDir + "certificate.pem");  
 
 		senderEncKey = CryptoUtils.keyFromP12(senderEncDir + "key.p12", "celsi-pw");   		
-		senderEncCert = CryptoUtils.certFromFile(senderEncDir + "certificate.pem"); 		
+		senderEncCert = (X509Certificate) CryptoUtils.certFromFile(senderEncDir + "certificate.pem"); 		
 
 		//  signature crypto material
 		senderSigKey = CryptoUtils.keyFromP12(senderSigDir + "key.p12", "celsi-pw");   		
-		senderSigCert = CryptoUtils.certFromFile(senderSigDir + "certificate.pem"); 		
+		senderSigCert = (X509Certificate) CryptoUtils.certFromFile(senderSigDir + "certificate.pem"); 		
 	}
 
 

@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ch.wenkst.sw_utils.Utils;
-import ch.wenkst.sw_utils.crypto.tls.ec.SSLContextGenerator;
+import ch.wenkst.sw_utils.crypto.tls.SSLContextGenerator;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.RabbitMQHander;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.MessageRMQ;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.broadcaster.BroadcastConsumerRMQ;

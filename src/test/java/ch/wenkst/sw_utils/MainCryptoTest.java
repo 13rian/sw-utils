@@ -54,15 +54,15 @@ public class MainCryptoTest {
 		String derCertPath = certDir + "server.cert.cer";
 		
 		// load the object from the file
-		X509Certificate cert1 = CryptoUtils.certFromFile(pemCertPath);
-		X509Certificate cert2 = CryptoUtils.certFromFile(derCertPath);
+		X509Certificate cert1 = (X509Certificate) CryptoUtils.certFromFile(pemCertPath);
+		X509Certificate cert2 = (X509Certificate) CryptoUtils.certFromFile(derCertPath);
 		
 		// load the b64 encoded der certificate
 		byte[] cert1Bytes = CryptoUtils.derFromCertFile(pemCertPath, FileFormat.PEM);
 		byte[] cert2Bytes = CryptoUtils.derFromCertFile(derCertPath, FileFormat.DER);
 		
-		X509Certificate cert11 = CryptoUtils.certFromDer(cert1Bytes);
-		X509Certificate cert22 = CryptoUtils.certFromDer(cert2Bytes);
+		X509Certificate cert11 = (X509Certificate) CryptoUtils.certFromDer(cert1Bytes);
+		X509Certificate cert22 = (X509Certificate) CryptoUtils.certFromDer(cert2Bytes);
 		
 		
 		
