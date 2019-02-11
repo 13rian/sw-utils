@@ -3,9 +3,6 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import ch.wenkst.sw_utils.Utils;
 import ch.wenkst.sw_utils.crypto.CryptoUtils;
 import ch.wenkst.sw_utils.file.FileUtils;
@@ -19,8 +16,7 @@ public class Main_SWUtils {
 	static {
 		System.setProperty("log4j.configurationFile", "config/log4j2.xml");
 	}
-	
-	private static final Logger logger = LoggerFactory.getLogger(Main_SWUtils.class);
+
 
 	public static void main(String[] args) {		
 		/////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,13 +40,14 @@ public class Main_SWUtils {
 		// 										test Security Utils									   //
 		/////////////////////////////////////////////////////////////////////////////////////////////////
 	
-		
+		Test test = new Test();
+		test.print();
 		
 		// print all registered providers
-		logger.info(CryptoUtils.getRegisteredProviders());
+		log.info(CryptoUtils.getRegisteredProviders());
 		
 		// print the default providers
-		logger.info(CryptoUtils.getDefaultProviders());
+		log.info(CryptoUtils.getDefaultProviders());
 		
 		
 		
@@ -85,7 +82,7 @@ public class Main_SWUtils {
 
 
 		
-		logger.info("end of main test routine reached");
+		log.info("end of main test routine reached");
 	}
 	
 	

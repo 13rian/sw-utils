@@ -1,6 +1,8 @@
 package ch.wenkst.sw_utils.logging;
 
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 
@@ -25,8 +27,8 @@ public class FileFormatter extends Formatter {
     	StringBuffer sb = new StringBuffer();
     	
     	// the date
-		SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSS");
-		sb.append(sdf.format(rec.getMillis()));
+    	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss.SSS").withZone(ZoneId.systemDefault());
+    	sb.append(formatter.format(Instant.ofEpochMilli(rec.getMillis())));
 		
 		// the level
     	sb.append(" ");
