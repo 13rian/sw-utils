@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ch.wenkst.sw_utils.Utils;
-import ch.wenkst.sw_utils.crypto.CryptoUtils;
+import ch.wenkst.sw_utils.crypto.SecurityUtils;
 import ch.wenkst.sw_utils.file.FileUtils;
 import ch.wenkst.sw_utils.logging.Log;
 import ch.wenkst.sw_utils.map.MapUtils;
@@ -44,10 +44,10 @@ public class Main_SWUtils {
 		test.print();
 		
 		// print all registered providers
-		log.info(CryptoUtils.getRegisteredProviders());
+		log.info(SecurityUtils.getRegisteredProviders());
 		
 		// print the default providers
-		log.info(CryptoUtils.getDefaultProviders());
+		log.info(SecurityUtils.getDefaultProviders());
 		
 		
 		

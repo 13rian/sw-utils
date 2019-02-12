@@ -3,6 +3,7 @@ package ch.wenkst.sw_utils.file;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -246,7 +247,8 @@ public class FileUtilsTest {
 	@DisplayName("find files by pattern")
 	public void findFilesByPatternTest() {
 		// find all csv files
-		String[] filePaths = FileUtils.findFilesByPattern(fileUtilsDir, "test", "csv");
+		List<String> fileList = FileUtils.findFilesByPattern(fileUtilsDir, "test", "csv");
+		String[] filePaths = fileList.toArray(new String[fileList.size()]);
 		String[] expectedPaths = {fileUtilsDir + "test1.csv", fileUtilsDir + "test2.csv"};
 		
 		Assertions.assertEquals(2, filePaths.length, "find existing file");
@@ -254,11 +256,13 @@ public class FileUtilsTest {
 
 				
 		// find a file with an ending that does not exist in the directory
-		filePaths = FileUtils.findFilesByPattern(fileUtilsDir, "test", "der");
+		fileList = FileUtils.findFilesByPattern(fileUtilsDir, "test", "der");
+		filePaths = fileList.toArray(new String[fileList.size()]);
 		Assertions.assertEquals(0, filePaths.length, "find non-existing file-end");
 
 		// find a file with a pattern that does not exist in the directory
-		filePaths = FileUtils.findFilesByPattern(fileUtilsDir, "noFile", "csv");
+		fileList = FileUtils.findFilesByPattern(fileUtilsDir, "noFile", "csv");
+		filePaths = fileList.toArray(new String[fileList.size()]);
 		Assertions.assertEquals(0, filePaths.length, "find non-existing file-pattern");	
 	}
 	

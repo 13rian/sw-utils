@@ -38,7 +38,7 @@ public class CryptoUtilsTest {
 	 */
 	@BeforeAll
 	public static void loadCryptoMaterial() {
-		CryptoUtils.registerBC();
+		SecurityUtils.registerBC();
 		
 		// load the keys and certificates
 		// define the certificate directories
@@ -49,15 +49,15 @@ public class CryptoUtilsTest {
 		String senderSigDir = cryptoUtilsDir + "cmsCerts" + sep + "signature" + sep + "sender" + sep;
 
 		// encryption crypto material
-		receiverEncKey = CryptoUtils.keyFromP12(receiverEncDir + "key.p12", "celsi-pw");
-		receiverEncCert = (X509Certificate) CryptoUtils.certFromFile(receiverEncDir + "certificate.pem");  
+		receiverEncKey = SecurityUtils.keyFromP12(receiverEncDir + "key.p12", "celsi-pw");
+		receiverEncCert = (X509Certificate) SecurityUtils.certFromFile(receiverEncDir + "certificate.pem");  
 
-		senderEncKey = CryptoUtils.keyFromP12(senderEncDir + "key.p12", "celsi-pw");   		
-		senderEncCert = (X509Certificate) CryptoUtils.certFromFile(senderEncDir + "certificate.pem"); 		
+		senderEncKey = SecurityUtils.keyFromP12(senderEncDir + "key.p12", "celsi-pw");   		
+		senderEncCert = (X509Certificate) SecurityUtils.certFromFile(senderEncDir + "certificate.pem"); 		
 
 		//  signature crypto material
-		senderSigKey = CryptoUtils.keyFromP12(senderSigDir + "key.p12", "celsi-pw");   		
-		senderSigCert = (X509Certificate) CryptoUtils.certFromFile(senderSigDir + "certificate.pem"); 		
+		senderSigKey = SecurityUtils.keyFromP12(senderSigDir + "key.p12", "celsi-pw");   		
+		senderSigCert = (X509Certificate) SecurityUtils.certFromFile(senderSigDir + "certificate.pem"); 		
 	}
 
 
@@ -159,16 +159,16 @@ public class CryptoUtilsTest {
 		
 		
 		// hash the password
-		String pwHash1 = CryptoUtils.hashPassword(password1);
-		String pwHash2 = CryptoUtils.hashPassword(password2);
+		String pwHash1 = SecurityUtils.hashPassword(password1);
+		String pwHash2 = SecurityUtils.hashPassword(password2);
 		
 		// test the correct hash
-		Assertions.assertTrue(CryptoUtils.validatePassword(password1, pwHash1), "correct password hash");
-		Assertions.assertTrue(CryptoUtils.validatePassword(password2, pwHash2), "correct password hash");
+		Assertions.assertTrue(SecurityUtils.validatePassword(password1, pwHash1), "correct password hash");
+		Assertions.assertTrue(SecurityUtils.validatePassword(password2, pwHash2), "correct password hash");
 		
 		// test the wrong hash
-		Assertions.assertFalse(CryptoUtils.validatePassword(password1, pwHash2), "wrong password hash");
-		Assertions.assertFalse(CryptoUtils.validatePassword(password2, pwHash1), "wrong password hash");
+		Assertions.assertFalse(SecurityUtils.validatePassword(password1, pwHash2), "wrong password hash");
+		Assertions.assertFalse(SecurityUtils.validatePassword(password2, pwHash1), "wrong password hash");
 	}
 	
 	
@@ -189,6 +189,6 @@ public class CryptoUtilsTest {
 	 */
 	@AfterAll
 	public static void unregisterProviders() {
-		CryptoUtils.unregisterBC();
+		SecurityUtils.unregisterBC();
 	}
 }

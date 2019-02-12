@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ch.wenkst.sw_utils.Utils;
-import ch.wenkst.sw_utils.crypto.CryptoUtils;
+import ch.wenkst.sw_utils.crypto.SecurityUtils;
 import ch.wenkst.sw_utils.crypto.tls.SSLContextGenerator;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.RabbitMQHander;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.MessageRMQ;
@@ -39,7 +39,7 @@ public class MainRabbitMQ {
 		// tls-encrypted connections to the rabbitMQ server
 		String p12FilePath = System.getProperty("user.dir") + File.separator + "rabbit_mq" + File.separator + "client" + File.separator + "client.cert.p12";
 		String caCertPath = System.getProperty("user.dir") + File.separator + "rabbit_mq" + File.separator + "server" + File.separator + "server.cert.pem";		
-		Certificate caCert = CryptoUtils.certFromFile(caCertPath);
+		Certificate caCert = SecurityUtils.certFromFile(caCertPath);
 		List<Certificate> trustedCerts = new ArrayList<>();
 		trustedCerts.add(caCert);
 		SSLContext sslContext = SSLContextGenerator.createSSLContext(p12FilePath, "pwcelsi", trustedCerts, "TLSv1.2");

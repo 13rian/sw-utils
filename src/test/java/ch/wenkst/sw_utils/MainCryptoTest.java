@@ -28,10 +28,10 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 
 import ch.wenkst.sw_utils.Utils;
 import ch.wenkst.sw_utils.conversion.Conversion;
-import ch.wenkst.sw_utils.crypto.CryptoUtils;
-import ch.wenkst.sw_utils.crypto.CryptoUtils.FileFormat;
-import ch.wenkst.sw_utils.crypto.CryptoUtils.KeyFormat;
-import ch.wenkst.sw_utils.crypto.CryptoUtils.KeyType;
+import ch.wenkst.sw_utils.crypto.SecurityUtils;
+import ch.wenkst.sw_utils.crypto.SecurityUtils.FileFormat;
+import ch.wenkst.sw_utils.crypto.SecurityUtils.KeyFormat;
+import ch.wenkst.sw_utils.crypto.SecurityUtils.KeyType;
 import ch.wenkst.sw_utils.file.FileUtils;
 
 public class MainCryptoTest {
@@ -41,7 +41,7 @@ public class MainCryptoTest {
 		
 		
 		// register the bouncy castle provider
-		CryptoUtils.registerBC();
+		SecurityUtils.registerBC();
 		
 		///////////////////////////////////////////////////////////////////////////////////////////////////
 		// 										CERTS 													 //
@@ -54,15 +54,15 @@ public class MainCryptoTest {
 		String derCertPath = certDir + "server.cert.cer";
 		
 		// load the object from the file
-		X509Certificate cert1 = (X509Certificate) CryptoUtils.certFromFile(pemCertPath);
-		X509Certificate cert2 = (X509Certificate) CryptoUtils.certFromFile(derCertPath);
+		X509Certificate cert1 = (X509Certificate) SecurityUtils.certFromFile(pemCertPath);
+		X509Certificate cert2 = (X509Certificate) SecurityUtils.certFromFile(derCertPath);
 		
 		// load the b64 encoded der certificate
-		byte[] cert1Bytes = CryptoUtils.derFromCertFile(pemCertPath, FileFormat.PEM);
-		byte[] cert2Bytes = CryptoUtils.derFromCertFile(derCertPath, FileFormat.DER);
+		byte[] cert1Bytes = SecurityUtils.derFromCertFile(pemCertPath, FileFormat.PEM);
+		byte[] cert2Bytes = SecurityUtils.derFromCertFile(derCertPath, FileFormat.DER);
 		
-		X509Certificate cert11 = (X509Certificate) CryptoUtils.certFromDer(cert1Bytes);
-		X509Certificate cert22 = (X509Certificate) CryptoUtils.certFromDer(cert2Bytes);
+		X509Certificate cert11 = (X509Certificate) SecurityUtils.certFromDer(cert1Bytes);
+		X509Certificate cert22 = (X509Certificate) SecurityUtils.certFromDer(cert2Bytes);
 		
 		
 		
@@ -80,13 +80,13 @@ public class MainCryptoTest {
 		//////////////////////////////
 		// legacy sec1
 		String filePath = keyDir + "eckey_sec1.pem";
-		PrivateKey pk = CryptoUtils.keyFromFile(filePath, KeyType.EC, FileFormat.PEM, KeyFormat.SEC1);
+		PrivateKey pk = SecurityUtils.keyFromFile(filePath, KeyType.EC, FileFormat.PEM, KeyFormat.SEC1);
 		System.out.println(pk.getAlgorithm());
 		
 		
 		// pkcs8
 		filePath = keyDir + "eckey_pkcs8.pem";
-		pk = CryptoUtils.keyFromFile(filePath, KeyType.EC, FileFormat.PEM, KeyFormat.PKCS8);
+		pk = SecurityUtils.keyFromFile(filePath, KeyType.EC, FileFormat.PEM, KeyFormat.PKCS8);
 	    System.out.println (pk.getAlgorithm());
 		
 		
@@ -94,13 +94,13 @@ public class MainCryptoTest {
 		//////////////////////////////
 		// legacy sec1
 		filePath = keyDir + "eckey_sec1.der";
-		pk = CryptoUtils.keyFromFile(filePath, KeyType.EC, FileFormat.DER, KeyFormat.SEC1);
+		pk = SecurityUtils.keyFromFile(filePath, KeyType.EC, FileFormat.DER, KeyFormat.SEC1);
 	    System.out.println (pk.getAlgorithm());
 	    
 	    
 		// pkcs8
 		filePath = keyDir + "eckey_pkcs8.der";
-		pk = CryptoUtils.keyFromFile(filePath, KeyType.EC, FileFormat.DER, KeyFormat.PKCS8);
+		pk = SecurityUtils.keyFromFile(filePath, KeyType.EC, FileFormat.DER, KeyFormat.PKCS8);
 	    System.out.println (pk.getAlgorithm());
 	    
 
@@ -113,13 +113,13 @@ public class MainCryptoTest {
 		//////////////////////////////
 	    // legacy pkcs1
 		filePath = keyDir + "rsakey_pkcs1.pem";
-		pk = CryptoUtils.keyFromFile(filePath, KeyType.RSA, FileFormat.PEM, KeyFormat.PKCS1);
+		pk = SecurityUtils.keyFromFile(filePath, KeyType.RSA, FileFormat.PEM, KeyFormat.PKCS1);
 	    System.out.println (pk.getAlgorithm());
 	    
 	    
 	    // pkcs8
 		filePath = keyDir + "rsakey_pkcs8.pem";
-		pk = CryptoUtils.keyFromFile(filePath, KeyType.RSA, FileFormat.PEM, KeyFormat.PKCS8);
+		pk = SecurityUtils.keyFromFile(filePath, KeyType.RSA, FileFormat.PEM, KeyFormat.PKCS8);
 	    System.out.println (pk.getAlgorithm());
 	    
 	    
@@ -127,13 +127,13 @@ public class MainCryptoTest {
 		//////////////////////////////
 	    // legacy pkcs1
 		filePath = keyDir + "rsakey_pkcs1.der";
-		pk = CryptoUtils.keyFromFile(filePath, KeyType.RSA, FileFormat.DER, KeyFormat.PKCS1);
+		pk = SecurityUtils.keyFromFile(filePath, KeyType.RSA, FileFormat.DER, KeyFormat.PKCS1);
 	    System.out.println (pk.getAlgorithm());
 	    
 	    
 	    // pkcs8
 		filePath = keyDir + "rsakey_pkcs8.der";
-		pk = CryptoUtils.keyFromFile(filePath, KeyType.RSA, FileFormat.DER, KeyFormat.PKCS8);
+		pk = SecurityUtils.keyFromFile(filePath, KeyType.RSA, FileFormat.DER, KeyFormat.PKCS8);
 	    System.out.println (pk.getAlgorithm());
 	    
 	    

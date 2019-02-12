@@ -132,7 +132,7 @@ public class SSLContextGenerator {
 			keyStore.load(null); 
 
 			// add the certificate and entries
-			Certificate[] chain = new Certificate[] { ownCert, ownCert };
+			Certificate[] chain = new Certificate[] { ownCert, ownCaCert };
 //			Certificate[] chain = new Certificate[] { ownCert };  				// does not work        
 			keyStore.setKeyEntry("own-private-key", privateKey, keyStorePassword.toCharArray(), chain);	// store the private key
 
@@ -145,9 +145,6 @@ public class SSLContextGenerator {
 				kmf = KeyManagerFactory.getInstance("PKIX", "BCJSSE");
 			}
 			kmf.init(keyStore, keyStorePassword.toCharArray());
-			
-			
-			
 			
 
 			// if any connection should be trusted

@@ -17,6 +17,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Stream;
 
@@ -124,21 +125,21 @@ public class FileUtils {
 	 * @param searchDir 	the directory in which the file is searched
 	 * @param pattern 		some fraction of the file name, can be null
 	 * @param end 			the ending of the file
-	 * @return	 			an array of absolute file paths, an empty array if no files matching the pattern were found
+	 * @return	 			list of absolute file paths, an empty array if no files matching the pattern were found
 	 */
-	public static String[] findFilesByPattern(String searchDir, String pattern, String end) {
+	public static List<String> findFilesByPattern(String searchDir, String pattern, String end) {
 		File dir = new File(searchDir);
 		if (!dir.exists()) { 
-			return new String[0];
+			return new ArrayList<>();
 		}
 
 		File[] files = dir.listFiles((directory, fileName) -> {
 			return fileName.endsWith(end) && (pattern == null || fileName.contains(pattern));
 		});
 
-		String[] result = new String[files.length];
-		for (int i=0; i<files.length; i++) {
-			result[i] = files[i].getAbsolutePath();
+		List<String> result = new ArrayList<>();
+		for (File file : files) {
+			result.add(file.getAbsolutePath());
 		}
 
 		return result;

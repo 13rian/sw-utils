@@ -14,7 +14,7 @@ import javax.net.ssl.X509TrustManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ch.wenkst.sw_utils.crypto.CryptoUtils;
+import ch.wenkst.sw_utils.crypto.SecurityUtils;
 
 
 /**
@@ -54,7 +54,7 @@ public class TrustManagerTLS implements X509TrustManager {
 	public void addCertificate(String certpath, String alias) {
 		try {
 			// load certificate
-			Certificate cert = CryptoUtils.certFromFile(certpath);
+			Certificate cert = SecurityUtils.certFromFile(certpath);
 			addCertificate(cert, alias);
 
 		} catch (Exception e) {
