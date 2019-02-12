@@ -2,6 +2,7 @@ package ch.wenkst.sw_utils;
 
 
 import java.io.File;
+import java.security.cert.Certificate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ch.wenkst.sw_utils.Utils;
+import ch.wenkst.sw_utils.crypto.CryptoUtils;
 import ch.wenkst.sw_utils.crypto.tls.SSLContextGenerator;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.RabbitMQHander;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.MessageRMQ;
@@ -37,8 +39,9 @@ public class MainRabbitMQ {
 		// tls-encrypted connections to the rabbitMQ server
 		String p12FilePath = System.getProperty("user.dir") + File.separator + "rabbit_mq" + File.separator + "client" + File.separator + "client.cert.p12";
 		String caCertPath = System.getProperty("user.dir") + File.separator + "rabbit_mq" + File.separator + "server" + File.separator + "server.cert.pem";		
-		List<String> trustedCerts = new ArrayList<>();
-		trustedCerts.add(caCertPath);
+		Certificate caCert = CryptoUtils.certFromFile(caCertPath);
+		List<Certificate> trustedCerts = new ArrayList<>();
+		trustedCerts.add(caCert);
 		SSLContext sslContext = SSLContextGenerator.createSSLContext(p12FilePath, "pwcelsi", trustedCerts, "TLSv1.2");
 		RabbitMQHander messageHandler = RabbitMQHander.getInstance();
 		messageHandler.init("192.168.1.141", 5671, "efr", "efrserver", sslContext);

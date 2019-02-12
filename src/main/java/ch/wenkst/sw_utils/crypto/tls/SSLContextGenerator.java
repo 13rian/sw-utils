@@ -28,14 +28,14 @@ public class SSLContextGenerator {
 	 * sets up the sslScontext for a secure connection, can be used for the server and the client
 	 * @param keyFilePath 		the path to the p12-file containing the private key and the certificate
 	 * @param keyStorePassword	keyStore password (must be the same as chosen to create the certificate)
-	 * @param trustedCertPaths	a list of paths to crt-files of the trusted certificates, can be null to trust all
+	 * @param trustedCerts		a list of trusted certificates, can be null to trust all
 	 * @param protocol 			the used tls protocol
 	 * @return	 				the SSLContext that is used to create the SSL socket
 	 */
 	public static SSLContext createSSLContext(
 			String keyFilePath,
 			String keyStorePassword,
-			List<String> trustedCertPaths,
+			List<Certificate> trustedCerts,
 			String protocol) {
 		try {
 			SSLContext sslContext;
@@ -68,7 +68,7 @@ public class SSLContextGenerator {
 			kmf.init(keyStore, keyStorePassword.toCharArray());
 
 			// if any connection should be trusted
-			if (trustedCertPaths == null) {
+			if (trustedCerts == null) {
 				TrustManager[] trustAllCerts = { new TrustManagerTrustAny() };
 				sslContext.init(kmf.getKeyManagers(), trustAllCerts, new SecureRandom());
 
@@ -76,8 +76,8 @@ public class SSLContextGenerator {
 
 				// add trusted Certificates (only needed if client authentication is used)
 				TrustManagerTLS trustManager = new TrustManagerTLS();
-				for (String certPath : trustedCertPaths) {
-					trustManager.addCertificate(certPath, null);
+				for (Certificate cert : trustedCerts) {
+					trustManager.addCertificate(cert, null);
 				}
 
 				// initialize the SSLContext to work with our key managers.

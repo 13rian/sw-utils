@@ -25,8 +25,6 @@ public class ConsoleFormatter extends Formatter {
     public String format(LogRecord rec) {
     	StringBuffer sb = new StringBuffer();
     	
-    	
-    	
     	// the date
     	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS").withZone(ZoneId.systemDefault());
     	sb.append(formatter.format(Instant.ofEpochMilli(rec.getMillis())));
