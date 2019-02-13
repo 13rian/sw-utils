@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyStore;
@@ -17,13 +18,16 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.Provider;
+import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.RSAPublicKeySpec;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -39,6 +43,7 @@ import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
+import org.bouncycastle.jce.interfaces.ECPrivateKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
@@ -611,6 +616,90 @@ public class SecurityUtils {
 
 		} catch (Exception e) {
 			logger.error("error loading private key: ", e);
+			return null;
+		}
+	}
+	
+	
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// 								methods to get a public key from a private key 								 //
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/**
+	 * generates a corresponding public key from the passed private key
+	 * @param privateKey 	private key
+	 * @param keyType 		the type of the key
+	 * @return 				public key
+	 */
+	public static PublicKey pubKeyFromPrivKey(PrivateKey privateKey, KeyType keyType) {
+		// rsa keys
+		if (keyType.equals(KeyType.RSA)) {
+			return pubRsaKeyFromPrivKey(privateKey);
+		} 
+		
+		// ec keys
+		else if (keyType.equals(KeyType.EC)) {
+			return pubEcKeyFromPrivKey(privateKey);
+		}
+		
+		else {
+			logger.error("unsupported key type " + keyType);
+			return null;
+		}
+	}
+	
+	
+	/**
+	 * generates a corresponding rsa public key from the passed rsa private key
+	 * @param rsaPrivateKey 	rsa private key
+	 * @return 					rsa public key
+	 */
+	public static PublicKey pubRsaKeyFromPrivKey(PrivateKey rsaPrivateKey) {
+		try {
+			// get the key factory
+			KeyFactory keyFactory = null;
+			if (Security.getProvider("BC") == null) {
+				keyFactory = KeyFactory.getInstance("RSA");
+			} else {
+				keyFactory = KeyFactory.getInstance("RSA", "BC");
+			}
+			
+			RSAPrivateCrtKey privk = (RSAPrivateCrtKey) rsaPrivateKey;
+			RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(privk.getModulus(), privk.getPublicExponent());
+			PublicKey rsaPublicKey = keyFactory.generatePublic(publicKeySpec);
+			return rsaPublicKey;
+			
+		} catch (Exception e) {
+			logger.error("error retrieving the public rsa key from the private rsa key: ", e);
+			return null;
+		}
+	}
+	
+	
+	/**
+	 * generates a corresponding ec public key from the passed ec private key
+	 * @param ecPrivateKey 		ec private key
+	 * @return 					ec public key
+	 */
+	public static PublicKey pubEcKeyFromPrivKey(PrivateKey ecPrivateKey) {
+		try {
+			// get the key factory
+			KeyFactory keyFactory = null;
+			if (Security.getProvider("BC") == null) {
+				keyFactory = KeyFactory.getInstance("EC");
+			} else {
+				keyFactory = KeyFactory.getInstance("EC", "BC");
+			}	
+
+			ECPrivateKey pkEcKey = (ECPrivateKey) ecPrivateKey;
+			BigInteger d = pkEcKey.getD();
+			org.bouncycastle.jce.spec.ECParameterSpec ecSpec = pkEcKey.getParameters();
+			org.bouncycastle.math.ec.ECPoint Q = pkEcKey.getParameters().getG().multiply(d);
+			org.bouncycastle.jce.spec.ECPublicKeySpec pubSpec = new org.bouncycastle.jce.spec.ECPublicKeySpec(Q, ecSpec);
+			PublicKey publicEcKey = keyFactory.generatePublic(pubSpec);
+			return publicEcKey;
+			
+		} catch (Exception e) {
+			logger.error("error retrieving the public ec key from the private ec key: ", e);
 			return null;
 		}
 	}
