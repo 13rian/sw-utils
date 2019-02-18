@@ -55,7 +55,7 @@ public class MongoDBHandler {
 	 * @return
 	 */
 	public static MongoDBHandler getInstance() {
-		if(instance == null) {
+		if (instance == null) {
 			instance = new MongoDBHandler();
 		}	      
 		return instance;

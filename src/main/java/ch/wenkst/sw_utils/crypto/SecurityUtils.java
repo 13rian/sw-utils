@@ -90,7 +90,7 @@ public class SecurityUtils {
 	public static void registerBC() {	
 		// Register the bouncy castle security provider, if not registered yet
 		if (Security.getProvider("BC") == null) {
-			Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+			Security.addProvider(new BouncyCastleProvider());
 			setSourceOfRandom();
 			logger.info("Successfully registered Bouncy Castle as crypto provider.");
 		}
@@ -244,7 +244,7 @@ public class SecurityUtils {
 
 			CertificateFactory certFactory;
 			if (Security.getProvider("BC") == null) {
-				certFactory = CertificateFactory.getInstance("X.509");
+				certFactory = CertificateFactory.getInstance("X.509", new BouncyCastleProvider());
 			} else {
 				certFactory = CertificateFactory.getInstance("X.509", "BC");
 			}
@@ -267,7 +267,7 @@ public class SecurityUtils {
 		try {
 			CertificateFactory certFactory;
 			if (Security.getProvider("BC") == null) {
-				certFactory = CertificateFactory.getInstance("X.509");
+				certFactory = CertificateFactory.getInstance("X.509", new BouncyCastleProvider());
 			} else {
 				certFactory = CertificateFactory.getInstance("X.509", "BC");
 			}
@@ -549,7 +549,7 @@ public class SecurityUtils {
 			KeyFactory keyFactory = null;
 			if (keyType.equals(KeyType.RSA)) {
 				if (Security.getProvider("BC") == null) {
-					keyFactory = KeyFactory.getInstance("RSA");
+					keyFactory = KeyFactory.getInstance("RSA", new BouncyCastleProvider());
 				} else {
 					keyFactory = KeyFactory.getInstance("RSA", "BC");
 				}
@@ -558,7 +558,7 @@ public class SecurityUtils {
 			// key factory for ec curves
 			else if (keyType.equals(KeyType.EC)) {
 				if (Security.getProvider("BC") == null) {
-					keyFactory = KeyFactory.getInstance("EC");
+					keyFactory = KeyFactory.getInstance("EC", new BouncyCastleProvider());
 				} else {
 					keyFactory = KeyFactory.getInstance("EC", "BC");
 				}
@@ -658,7 +658,7 @@ public class SecurityUtils {
 			// get the key factory
 			KeyFactory keyFactory = null;
 			if (Security.getProvider("BC") == null) {
-				keyFactory = KeyFactory.getInstance("RSA");
+				keyFactory = KeyFactory.getInstance("RSA", new BouncyCastleProvider());
 			} else {
 				keyFactory = KeyFactory.getInstance("RSA", "BC");
 			}
@@ -685,7 +685,7 @@ public class SecurityUtils {
 			// get the key factory
 			KeyFactory keyFactory = null;
 			if (Security.getProvider("BC") == null) {
-				keyFactory = KeyFactory.getInstance("EC");
+				keyFactory = KeyFactory.getInstance("EC", new BouncyCastleProvider());
 			} else {
 				keyFactory = KeyFactory.getInstance("EC", "BC");
 			}	
@@ -724,7 +724,7 @@ public class SecurityUtils {
 	public static KeyStore keyStoreFromP12(String path, String password) throws KeyStoreException, NoSuchProviderException, NoSuchAlgorithmException, CertificateException, IOException {
 		KeyStore keyStore;
 		if (Security.getProvider("BC") == null) {
-			keyStore = KeyStore.getInstance("PKCS12");
+			keyStore = KeyStore.getInstance("PKCS12", new BouncyCastleProvider());
 		} else {
 			keyStore = KeyStore.getInstance("PKCS12", "BC");
 		}
