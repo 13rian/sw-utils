@@ -225,8 +225,10 @@ public class MongoDBHandler {
 	 * disconnects from the database
 	 */
 	public void disconnectFromDB() {
-		mongoClient.close(); 						// close the connection to the mongoDB
-		logger.info("disconnected from mongoDB");
+		if (mongoClient != null) {
+			mongoClient.close(); 						// close the connection to the mongoDB
+			logger.info("disconnected from mongoDB");
+		}
 	}
 	
 	
