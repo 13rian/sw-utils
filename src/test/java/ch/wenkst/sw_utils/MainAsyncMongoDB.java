@@ -42,7 +42,8 @@ public class MainAsyncMongoDB {
 		MongoDBHandler dbHandler = MongoDBHandler.getInstance();
 		
 		// connect to the db
-		boolean isConnected = dbHandler.connecToDB("192.168.152.128", 27017, 10, "AsyncTest");
+		String[] packageNames = {Person.class.getPackage().getName()};
+		boolean isConnected = dbHandler.connecToDB("192.168.152.128", 27017, 10, "AsyncTest", packageNames);
 		
 //		// send the ping
 //		boolean isPingSent = dbHandler.testConnection();

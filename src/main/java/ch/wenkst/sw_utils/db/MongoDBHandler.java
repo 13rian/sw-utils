@@ -6,6 +6,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
+import org.bson.codecs.configuration.CodecProvider;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
@@ -68,34 +69,36 @@ public class MongoDBHandler {
 	
 	/**
 	 * establishes a connection to the mongodb
-	 * @param host 		the host to connect to
-	 * @param port 		the port of the mongo db
-	 * @param timeout 	the time in seconds how long to wait for the connection establishment (more than 30secs makes no sense)
-	 * 					as the timeout of the mongo client is 30 seconds
-	 * @param dbName 	the name of the db to use
-	 * @return 			true if the connection was successfully established, false otherwise
+	 * @param host 				the host to connect to
+	 * @param port 				the port of the mongo db
+	 * @param timeout 			the time in seconds how long to wait for the connection establishment (more than 30secs makes
+	 * 							no sense as the timeout of the mongo client is 30 seconds)
+	 * @param dbName 			the name of the db to use
+	 * @param packageNames 		package names that contain the db entities
+	 * @return 					true if the connection was successfully established, false otherwise
 	 */
-	public boolean connecToDB(String host, int port, int timeout, String dbName) {
-		return connecToDB(host, port, timeout, null, null, dbName);
+	public boolean connecToDB(String host, int port, int timeout, String dbName, String[] packageNames) {
+		return connecToDB(host, port, timeout, null, null, dbName, packageNames);
 	}
 	
 	
 	/**
 	 * establishes a connection to the mongodb
-	 * @param host 		the host to connect to
-	 * @param port 		the port of the mongo db
-	 * @param timeout 	the time in seconds how long to wait for the connection establishment (more than 30secs makes no sense)
-	 * 					as the timeout of the mongo client is 30 seconds
-	 * @param username	the user name if the db is authenticated, null otherwise
-	 * @param password  the password if the db is authenticated, null otherwise
-	 * @param dbName 	the name of the db to use
+	 * @param host 				the host to connect to
+	 * @param port 				the port of the mongo db
+	 * @param timeout 			the time in seconds how long to wait for the connection establishment (more than 30secs makes
+	 * 							no sense as the timeout of the mongo client is 30 seconds)
+	 * @param username			the user name if the db is authenticated, null otherwise
+	 * @param password  		the password if the db is authenticated, null otherwise
+	 * @param dbName 			the name of the db to use
+	 * @param packageNames 		package names that contain the db entities
 	 * @return 			true if the connection was successfully established, false otherwise
 	 */
-	public boolean connecToDB(String host, int port, int timeout, String username, String password, String dbName) {
+	public boolean connecToDB(String host, int port, int timeout, String username, String password, String dbName, String[] packageNames) {
 		String connString = createConnectString(host, port, username, password);
 		logger.info("connect to db " + dbName + ", connection string: " + connString);
 		
-		boolean isConnected = connecToDB(connString, timeout);
+		boolean isConnected = connecToDB(connString, timeout, packageNames);
 		if (isConnected) {
 			database = mongoClient.getDatabase(dbName);
 		}
@@ -108,16 +111,27 @@ public class MongoDBHandler {
 	 * @param connectString 	mongodb connection string to connect to the db
 	 * @param timeout 			the time in seconds how long to wait for the connection establishment (more than 30secs makes no sense)
 	 * 							as the timeout of the mongo client is 30 seconds
+	 * @param packageNames 		package names that contain the db entities
 	 * @return 					true if the connection was successfully established, false otherwise
 	 */
-	public boolean connecToDB(String connectString, int timeout) {
+	public boolean connecToDB(String connectString, int timeout, String... packageNames) {
 		// before using the driver with java objects a CodecRegistry needs to be configured. This includes codecs that
 		// handle the translation to and form bson for the java objects. 
 		// This combines the default codec registry, with the PojoCodecProvider configured to automatically create PojoCodecs
+		CodecProvider provider;
+		if (packageNames == null || packageNames.length == 0) {
+			// use the default codec provider
+			provider = PojoCodecProvider.builder().automatic(true).build();
+			
+		} else {
+			// use the registered db models of the passed packages. initially the codec uses reflection but later
+			// the setter and getters are used if the exist
+			provider = PojoCodecProvider.builder().register(packageNames).build();
+		}
+		
 		CodecRegistry pojoCodecRegistry = CodecRegistries.fromRegistries(
-				MongoClients.getDefaultCodecRegistry(),
-				CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build())
-		);
+				CodecRegistries.fromProviders(provider),
+				MongoClients.getDefaultCodecRegistry());
 		
 		// create the listener for the mongo server description
 		CompletableFuture<Boolean> connectionFuture = new CompletableFuture<>();
