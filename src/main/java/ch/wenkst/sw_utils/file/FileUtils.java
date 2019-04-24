@@ -28,12 +28,13 @@ public class FileUtils {
 	private static final Logger logger = LoggerFactory.getLogger(FileUtils.class);
 
 	// define the constants to recursively copy a directory
-	public static final int COMPLETE_REPLACE = 0; 	// the directory is completely replaced
-	public static final int NO_REPLACE = 1; 		// if the directory already exists it will not be replaced
-	public static final int MERGE_REPLACE = 2; 		// the directories will be merged, files that already exist will be replace 
-	public static final int MERGE_NO_REPLACE = 3; 	// the directories will be merged, files that already exist will not be replace 
-
-
+	public static enum CopyDirMode {
+		COMPLETE_REPLACE, 			// the directory is completely replaced
+		NO_REPLACE, 				// if the directory already exists it will not be replaced
+		MERGE_REPLACE, 				// the directories will be merged, files that already exist will be replace
+		MERGE_NO_REPLACE 			// the directories will be merged, files that already exist will not be replace
+	}
+	
 
 	/**
 	 * opens a file and returns its content as String
@@ -263,25 +264,25 @@ public class FileUtils {
 	 * recursively copies a directory 
 	 * @param srcDir 		the path of the source directory to copy
 	 * @param destDir 		the path of the destination directory
-	 * @param option		FileUtils.COMPLETE_REPLACE: 	if the directory already exists it will be deleted first
-	 * 						FileUtils.NO_REPLACE:			if the directory already exists nothing happens
-	 *  					FileUtils.MERGE_REPLACE: 		if the directory already exists existing files will be overwritten
-	 *  					FileUtils.MERGE_NO_REPLACE: 	if the directory already exists existing files will not be overwritten
+	 * @param copyDirMode	COMPLETE_REPLACE: 	if the directory already exists it will be deleted first
+	 * 						NO_REPLACE:			if the directory already exists nothing happens
+	 *  					MERGE_REPLACE: 		if the directory already exists existing files will be overwritten
+	 *  					MERGE_NO_REPLACE: 	if the directory already exists existing files will not be overwritten
 	 * @return 				true if the directory was copied successfully, false if an error occurred	
 	 */
-	public static boolean copyDir(String srcDir, String destDir, int option) {
+	public static boolean copyDir(String srcDir, String destDir, CopyDirMode copyDirMode) {
 		try {
 			// check if the destination directory already exists, do not follow symbolic links
 			boolean dirExists = Files.exists(Paths.get(destDir), new LinkOption[] {LinkOption.NOFOLLOW_LINKS});
 
 			// if the directory should not be replaced, check if it exists
-			if (option == NO_REPLACE && dirExists) {
+			if (copyDirMode.equals(CopyDirMode.NO_REPLACE) && dirExists) {
 				logger.error("error copying dir " + srcDir + " to " + destDir + " destination directory already exists");
 				return false;
 			}
 
 			// if the directory should be replaced delete it first
-			if (option == COMPLETE_REPLACE  && dirExists) {
+			if (copyDirMode.equals(CopyDirMode.COMPLETE_REPLACE)  && dirExists) {
 				boolean deleted = deleteDir(destDir);
 				if (!deleted) {
 					logger.error("error copying dir " + srcDir + " to " + destDir + " destination directory could not be deleted first");
@@ -291,7 +292,7 @@ public class FileUtils {
 
 			// create the instance of the copy visitor
 			MergeFileVisitor copyVisitor = null;
-			if (option == MERGE_NO_REPLACE) {
+			if (copyDirMode.equals(CopyDirMode.MERGE_NO_REPLACE)) {
 				copyVisitor = new MergeFileVisitor(false);
 			} else {
 				copyVisitor = new MergeFileVisitor(true);

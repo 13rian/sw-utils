@@ -13,6 +13,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import ch.wenkst.sw_utils.file.FileUtils.CopyDirMode;
+
 
 public class FileUtilsTest {
 	private static String fileUtilsDir = null; 		// the directory containing the file handler test files
@@ -154,7 +156,7 @@ public class FileUtilsTest {
 	@DisplayName("copy a directory")
 	public void copyDirTest() {
 		String destDir = copyDir + File.separator + "copiedDir";
-		boolean isCopied = FileUtils.copyDir(dirToCopy, destDir, FileUtils.COMPLETE_REPLACE);
+		boolean isCopied = FileUtils.copyDir(dirToCopy, destDir, CopyDirMode.COMPLETE_REPLACE);
 		
 		Assertions.assertEquals(true, isCopied, "dir copied");
 		Assertions.assertEquals(true, new File(destDir).exists(), "dir does exist");
