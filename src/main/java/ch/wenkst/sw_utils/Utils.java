@@ -4,6 +4,7 @@ import java.io.FileReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
+import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -175,4 +176,21 @@ public class Utils {
 		return allPresent;
 	}
 	
+	
+	/**
+	 * checks if the passed ip is reachable
+	 * @param ip 	ip to test
+	 * @return 		true if the ip is reachable, false if not
+	 */
+	public static boolean ipReachable(String ip) {
+		try {
+			InetAddress address = InetAddress.getByName(ip);
+			boolean reachable = address.isReachable(10000);
+			return reachable;
+
+		} catch (Exception e) {
+			logger.error("error testing for the ip " + ip, e);
+			return false;
+		}
+	}
 }
