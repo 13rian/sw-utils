@@ -179,13 +179,14 @@ public class Utils {
 	
 	/**
 	 * checks if the passed ip is reachable
-	 * @param ip 	ip to test
-	 * @return 		true if the ip is reachable, false if not
+	 * @param ip 		ip to test
+	 * @param timeout	the timeout in ms to wait for the server to respond
+	 * @return 			true if the ip is reachable, false if not
 	 */
-	public static boolean ipReachable(String ip) {
+	public static boolean ipReachable(String ip, int timeout) {
 		try {
 			InetAddress address = InetAddress.getByName(ip);
-			boolean reachable = address.isReachable(10000);
+			boolean reachable = address.isReachable(timeout);
 			return reachable;
 
 		} catch (Exception e) {
