@@ -1,7 +1,6 @@
 package ch.wenkst.sw_utils.messaging.zero_mq.pub_sub;
 
-import org.zeromq.ZMQ;
-
+import org.zeromq.SocketType;
 import ch.wenkst.sw_utils.messaging.zero_mq.ClientZMQ;
 
 public class PublisherProducerZMQ extends ClientZMQ {
@@ -21,7 +20,7 @@ public class PublisherProducerZMQ extends ClientZMQ {
 	 * opens the connection for the communication
 	 */
 	public void connect() {
-		super.connect(ZMQ.PUB);
+		super.connect(SocketType.PUB);
 	}
 	
 	

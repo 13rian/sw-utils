@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils.db.base;
+package ch.wenkst.sw_utils.db.mongodb.base;
 
 import org.bson.types.ObjectId;
 import org.reactivestreams.Subscriber;
@@ -7,8 +7,8 @@ import org.slf4j.LoggerFactory;
 
 import com.mongodb.reactivestreams.client.Success;
 
-import ch.wenkst.sw_utils.db.MongoDBHandler;
-import ch.wenkst.sw_utils.db.subscriber.CallbackSubscriber;
+import ch.wenkst.sw_utils.db.mongodb.MongoDBHandler;
+import ch.wenkst.sw_utils.db.mongodb.subscriber.CallbackSubscriber;
 
 public class BaseEntity {
 	private static final Logger logger = LoggerFactory.getLogger(BaseEntity.class);

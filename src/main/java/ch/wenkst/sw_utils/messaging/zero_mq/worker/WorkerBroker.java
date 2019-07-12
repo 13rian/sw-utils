@@ -1,7 +1,6 @@
 package ch.wenkst.sw_utils.messaging.zero_mq.worker;
 
-import org.zeromq.ZMQ;
-
+import org.zeromq.SocketType;
 import ch.wenkst.sw_utils.messaging.zero_mq.BrokerZMQ;
 
 public class WorkerBroker extends BrokerZMQ {
@@ -28,7 +27,7 @@ public class WorkerBroker extends BrokerZMQ {
 	 * creates the two server sockets for the worker broker and starts the broker
 	 */
 	public void connect() {
-		super.openSockets(ZMQ.ROUTER, ZMQ.DEALER);
+		super.openSockets(SocketType.ROUTER, SocketType.DEALER);
 		this.start();
 	}
 	

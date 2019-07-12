@@ -2,8 +2,7 @@ package ch.wenkst.sw_utils.messaging.zero_mq.server_one_client;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeromq.ZMQ;
-
+import org.zeromq.SocketType;
 import ch.wenkst.sw_utils.messaging.zero_mq.ServerZMQ;
 
 public abstract class ServerConsumerZMQ extends ServerZMQ implements Runnable {
@@ -27,7 +26,7 @@ public abstract class ServerConsumerZMQ extends ServerZMQ implements Runnable {
 	 * opens the connection for the communication and starts the subscriber
 	 */
 	public void connect() {
-		super.connect(ZMQ.DEALER);
+		super.connect(SocketType.DEALER);
 		Thread workerThread = new Thread(this);
 		workerThread.setName("server-consumer");
 		workerThread.start();

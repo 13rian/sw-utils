@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.Context;
 import org.zeromq.ZMQ.Socket;
@@ -36,7 +37,7 @@ public class ClientZMQ {
 	 * opens the client socket for the communication
 	 * @param type 		the type of the client connection
 	 */
-	protected void connect(int type) {
+	protected void connect(SocketType type) {
 		try {
 			context = ZMQ.context(1);
 

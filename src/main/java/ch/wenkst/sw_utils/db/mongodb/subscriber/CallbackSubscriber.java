@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils.db.subscriber;
+package ch.wenkst.sw_utils.db.mongodb.subscriber;
 
 public class CallbackSubscriber<T> extends BaseSubscriber<T> {
 	private IResultCallback<T> callback;

@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils.db.subscriber;
+package ch.wenkst.sw_utils.db.mongodb.subscriber;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;

@@ -2,6 +2,7 @@ package ch.wenkst.sw_utils.messaging.zero_mq;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.Context;
 import org.zeromq.ZMQ.Poller;
@@ -53,7 +54,7 @@ public class BrokerZMQ extends BaseThread {
 	 * @param frontendType 	socket type of the frontend
 	 * @param backendType 	socket type of the backend
 	 */
-	protected void openSockets(int frontendType, int backendType) {
+	protected void openSockets(SocketType frontendType, SocketType backendType) {
 		try {
 			context = ZMQ.context(1);
 

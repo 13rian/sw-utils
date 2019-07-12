@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils.db.subscriber;
+package ch.wenkst.sw_utils.db.mongodb.subscriber;
 
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;

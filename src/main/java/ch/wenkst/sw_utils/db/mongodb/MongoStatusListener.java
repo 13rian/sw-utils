@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils.db;
+package ch.wenkst.sw_utils.db.mongodb;
 
 import java.util.concurrent.CompletableFuture;
 

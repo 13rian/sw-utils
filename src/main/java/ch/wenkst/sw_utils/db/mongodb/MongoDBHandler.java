@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils.db;
+package ch.wenkst.sw_utils.db.mongodb;
 
 import java.util.HashMap;
 import java.util.List;
@@ -28,8 +28,8 @@ import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 import com.mongodb.reactivestreams.client.Success;
 
-import ch.wenkst.sw_utils.db.base.BaseEntity;
-import ch.wenkst.sw_utils.db.base.EntityInfo;
+import ch.wenkst.sw_utils.db.mongodb.base.BaseEntity;
+import ch.wenkst.sw_utils.db.mongodb.base.EntityInfo;
 
 public class MongoDBHandler {
 	private static final Logger logger = LoggerFactory.getLogger(MongoDBHandler.class);

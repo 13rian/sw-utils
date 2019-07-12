@@ -25,10 +25,10 @@ import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.Success;
 
 import ch.wenkst.sw_utils.Utils;
-import ch.wenkst.sw_utils.db.MongoDBHandler;
-import ch.wenkst.sw_utils.db.base.BaseEntity;
-import ch.wenkst.sw_utils.db.subscriber.CallbackSubscriber;
-import ch.wenkst.sw_utils.db.subscriber.PrintSubscriber;
+import ch.wenkst.sw_utils.db.mongodb.MongoDBHandler;
+import ch.wenkst.sw_utils.db.mongodb.base.BaseEntity;
+import ch.wenkst.sw_utils.db.mongodb.subscriber.CallbackSubscriber;
+import ch.wenkst.sw_utils.db.mongodb.subscriber.PrintSubscriber;
 
 public class MainAsyncMongoDB {
 	static {

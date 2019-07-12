@@ -2,8 +2,7 @@ package ch.wenkst.sw_utils.messaging.zero_mq.worker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeromq.ZMQ;
-
+import org.zeromq.SocketType;
 import ch.wenkst.sw_utils.messaging.zero_mq.ClientZMQ;
 
 public class WorkerProducerZMQ extends ClientZMQ {
@@ -24,7 +23,7 @@ public class WorkerProducerZMQ extends ClientZMQ {
 	 * opens the connection for the communication
 	 */
 	public void connect() {
-		super.connect(ZMQ.REQ);
+		super.connect(SocketType.REQ);
 	}
 
 

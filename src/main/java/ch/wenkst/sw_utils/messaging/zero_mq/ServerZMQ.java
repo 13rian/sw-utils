@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.Context;
 import org.zeromq.ZMQ.Socket;
@@ -52,7 +53,7 @@ public class ServerZMQ {
 	 * opens the server socket for the communication
 	 * @param type 		the type of the client connection
 	 */
-	public void connect(int type) {
+	public void connect(SocketType type) {
 		// check if the length of the hosts, ports and protocols are the same
 		if (hosts.length != ports.length || hosts.length != protocols.length) {
 			logger.error("the number of ports/hosts/protocols do not match");

@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils.db.base;
+package ch.wenkst.sw_utils.db.mongodb.base;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -4,8 +4,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeromq.ZMQ;
-
+import org.zeromq.SocketType;
 import ch.wenkst.sw_utils.messaging.zero_mq.ClientZMQ;
 
 public abstract class SubscriberConsumerZMQ extends ClientZMQ implements Runnable {
@@ -29,7 +28,7 @@ public abstract class SubscriberConsumerZMQ extends ClientZMQ implements Runnabl
 	 * opens the connection for the communication and starts the subscriber
 	 */
 	public void connect() {
-		super.connect(ZMQ.SUB);
+		super.connect(SocketType.SUB);
 		Thread workerThread = new Thread(this);
 		workerThread.setName("subscriber-consumer");
 		workerThread.start();

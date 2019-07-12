@@ -1,7 +1,6 @@
 package ch.wenkst.sw_utils.messaging.zero_mq.worker;
 
-import org.zeromq.ZMQ;
-
+import org.zeromq.SocketType;
 import ch.wenkst.sw_utils.messaging.zero_mq.ClientZMQ;
 
 public abstract class WorkerConsumerZMQ extends ClientZMQ implements Runnable {
@@ -23,7 +22,7 @@ public abstract class WorkerConsumerZMQ extends ClientZMQ implements Runnable {
 	 * opens the connection for the communication and starts the worker
 	 */
 	public void connect() {
-		super.connect(ZMQ.REP);
+		super.connect(SocketType.REP);
 		Thread workerThread = new Thread(this);
 		workerThread.setName("worker-consumer");
 		workerThread.start();

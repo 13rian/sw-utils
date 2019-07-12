@@ -1,7 +1,6 @@
 package ch.wenkst.sw_utils.messaging.zero_mq.pub_sub;
 
-import org.zeromq.ZMQ;
-
+import org.zeromq.SocketType;
 import ch.wenkst.sw_utils.messaging.zero_mq.BrokerZMQ;
 
 public class PubSub_BrokerZMQ extends BrokerZMQ {
@@ -29,7 +28,7 @@ public class PubSub_BrokerZMQ extends BrokerZMQ {
 	 * creates the two server sockets for the worker broker and starts the broker
 	 */
 	public void connect() {
-		super.openSockets(ZMQ.XPUB, ZMQ.XSUB);
+		super.openSockets(SocketType.XPUB, SocketType.XSUB);
 		this.start();
 	}
 	
