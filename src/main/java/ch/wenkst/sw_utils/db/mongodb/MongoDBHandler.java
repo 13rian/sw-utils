@@ -34,7 +34,7 @@ import ch.wenkst.sw_utils.db.mongodb.base.EntityInfo;
 public class MongoDBHandler {
 	private static final Logger logger = LoggerFactory.getLogger(MongoDBHandler.class);
 	
-	private static MongoDBHandler instance = null; 	// instance for the singleton access
+	private static MongoDBHandler instance = null; 			// instance for the singleton access
 	
 	private MongoClient mongoClient = null;					// the client to the mongo db
 	private MongoDatabase database = null; 					// name of the database to use

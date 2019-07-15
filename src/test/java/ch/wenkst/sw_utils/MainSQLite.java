@@ -18,7 +18,7 @@ public class MainSQLite {
 		String tableName = "Company";
 		
 		// setup the handler
-		SQLiteDBHandler dbHandler = new SQLiteDBHandler();
+		SQLiteDBHandler dbHandler = SQLiteDBHandler.getInstance();
 		
 
 		// connect to the db, if the db does not exist a new db-file will be created

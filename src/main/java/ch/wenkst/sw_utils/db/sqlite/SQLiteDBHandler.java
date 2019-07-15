@@ -9,10 +9,32 @@ import org.slf4j.LoggerFactory;
  * handles the connections to all needed dbs
  */
 public class SQLiteDBHandler {
-	private static final Logger logger = LoggerFactory.getLogger(SQLiteDBHandler.class);  // initialize the logger
+	private static final Logger logger = LoggerFactory.getLogger(SQLiteDBHandler.class);
+	
+	private static SQLiteDBHandler instance = null; 	// instance for the singleton access
 	
 	// holds the sql-handlers with the connection to the db
-	private ConcurrentHashMap<String, SQLiteConnector> dbMap = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<String, SQLiteConnector> dbMap = null;
+	
+	
+	/**
+	 * handles the sql interface to the sqlite files
+	 */
+	protected SQLiteDBHandler() {
+		dbMap = new ConcurrentHashMap<>();
+	}
+	
+	
+	/**
+	 * returns the instance of the dbHandler
+	 * @return
+	 */
+	public static SQLiteDBHandler getInstance() {
+		if (instance == null) {
+			instance = new SQLiteDBHandler();
+		}	      
+		return instance;
+	}
 	
 	
 	/**
