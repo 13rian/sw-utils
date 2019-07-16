@@ -1,8 +1,14 @@
 package ch.wenkst.sw_utils.crypto;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 import javax.crypto.SecretKey;
@@ -35,9 +41,15 @@ public class CryptoUtilsTest {
 	/**
 	 * NOTE: The JCE unlimited strength file needs to be installed for the crypto to work
 	 * register the bouncy castle provider for the crypto operations
+	 * @throws IOException 
+	 * @throws CertificateException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws NoSuchProviderException 
+	 * @throws KeyStoreException 
+	 * @throws UnrecoverableKeyException 
 	 */
 	@BeforeAll
-	public static void loadCryptoMaterial() {
+	public static void loadCryptoMaterial() throws UnrecoverableKeyException, KeyStoreException, NoSuchProviderException, NoSuchAlgorithmException, CertificateException, IOException {
 		SecurityUtils.registerBC();
 		
 		// load the keys and certificates

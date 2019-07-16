@@ -40,20 +40,14 @@ public class FileUtils {
 	 * opens a file and returns its content as String
 	 * @param filePath	 	path to the file to read
 	 * @return	 			String content of the file
+	 * @throws FileNotFoundException 
 	 */
-	public static String readStrFromFile(String filePath) {
-		String result = null;
-		try {
-			File file = new File(filePath);
-			Scanner scanner = new Scanner(file);
-			result = scanner.useDelimiter("\\Z").next();
-			scanner.close();
-
-		} catch (Exception e) {
-			logger.error("error reading the String of the file: " + filePath, e);
-		}
-
-		return result;
+	public static String readStrFromFile(String filePath) throws FileNotFoundException {
+		File file = new File(filePath);
+		Scanner scanner = new Scanner(file);
+		String content = scanner.useDelimiter("\\Z").next();
+		scanner.close();
+		return content;
 	}
 
 
@@ -62,20 +56,14 @@ public class FileUtils {
 	 * @param filePath	 	path to the file to read
 	 * @param charset 		the encoding of the file (use the constants form StandardCharsets)
 	 * @return	 			String content of the file
+	 * @throws FileNotFoundException 
 	 */
-	public static String readStrFromFile(String filePath, Charset charset) {
-		String result = null;
-		try {
-			File file = new File(filePath);
-			Scanner scanner = new Scanner(file, charset.toString());
-			result = scanner.useDelimiter("\\Z").next();
-			scanner.close();
-
-		} catch (Exception e) {
-			logger.error("error reading the String of the file: " + filePath, e);
-		}
-
-		return result;
+	public static String readStrFromFile(String filePath, Charset charset) throws FileNotFoundException {
+		File file = new File(filePath);
+		Scanner scanner = new Scanner(file, charset.toString());
+		String content = scanner.useDelimiter("\\Z").next();
+		scanner.close();
+		return content;
 	}
 
 
@@ -84,15 +72,10 @@ public class FileUtils {
 	 * opens a file and returns its content as byte array
 	 * @param filePath	 	path to the file to read
 	 * @return	 			byte array content of the file
+	 * @throws IOException 
 	 */
-	public static byte[] readByteArrFromFile(String filePath) {
-		try {
-			return Files.readAllBytes(Paths.get(filePath, new String[0]));
-
-		} catch (Exception e) {
-			logger.error("error reading the byte array or the file: " + filePath, e);
-			return null;
-		}		
+	public static byte[] readByteArrFromFile(String filePath) throws IOException {
+		return Files.readAllBytes(Paths.get(filePath, new String[0]));	
 	}
 
 
@@ -153,10 +136,9 @@ public class FileUtils {
 	 * it will be overwritten.
 	 * @param filePath	 	path of the file in which the String is written
 	 * @param content 		content of the file
-	 * @return	 			true if successfully written, false otherwise
+	 * @throws FileNotFoundException 
 	 */
-	public static boolean writeStrToFile(String filePath, String content) {
-
+	public static void writeStrToFile(String filePath, String content) throws FileNotFoundException {
 		// create the file and ensure that the parent directories exist
 		File file = new File(filePath);
 		if (file.getParentFile() != null) {
@@ -164,17 +146,9 @@ public class FileUtils {
 		}
 
 		// write the new file
-		try {
-			PrintWriter pw = new PrintWriter(filePath);
-			pw.println(content);
-			pw.close();
-
-			return true;
-
-		} catch (FileNotFoundException e) {
-			logger.error("error writing file: " + filePath, e);
-			return false;
-		}		
+		PrintWriter pw = new PrintWriter(filePath);
+		pw.println(content);
+		pw.close();	
 	}
 
 
@@ -184,25 +158,19 @@ public class FileUtils {
 	 * @param destFilePath 		the path of the destination file
 	 * @param replaceExisting 	true if the file should be replaced if it already exists
 	 * @return 					true if the file was successfully copied, false if an error occurred
+	 * @throws IOException 
 	 */
-	public static boolean copyFile(String srcFilePath, String destFilePath, boolean replaceExisting) {
-		try {
-			Path sourcePath = Paths.get(srcFilePath);
-			Path destinationPath = Paths.get(destFilePath);
+	public static void copyFile(String srcFilePath, String destFilePath, boolean replaceExisting) throws IOException {
+		Path sourcePath = Paths.get(srcFilePath);
+		Path destinationPath = Paths.get(destFilePath);
 
-			// create the parent directory if it does not already exist
-			Files.createDirectories(destinationPath.getParent());
+		// create the parent directory if it does not already exist
+		Files.createDirectories(destinationPath.getParent());
 
-			if (replaceExisting) {
-				Files.copy(sourcePath, destinationPath, StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
-			} else {
-				Files.copy(sourcePath, destinationPath, StandardCopyOption.COPY_ATTRIBUTES);
-			}
-			return true;
-
-		} catch (Exception e) {
-			logger.error("error copying file form " + srcFilePath + " to " + destFilePath, e);
-			return false;
+		if (replaceExisting) {
+			Files.copy(sourcePath, destinationPath, StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
+		} else {
+			Files.copy(sourcePath, destinationPath, StandardCopyOption.COPY_ATTRIBUTES);
 		}
 	}
 
@@ -213,26 +181,19 @@ public class FileUtils {
 	 * @param destFilePath 		the path of the destination file
 	 * @param replaceExisting 	true if the file should be replaced if it already exists
 	 * @return 					true if the file was successfully moved, false if an error occurred
+	 * @throws IOException 
 	 */
-	public static boolean moveFile(String srcFilePath, String destFilePath, boolean replaceExisting) {
-		try {
-			Path sourcePath = Paths.get(srcFilePath);
-			Path destinationPath = Paths.get(destFilePath);
+	public static void moveFile(String srcFilePath, String destFilePath, boolean replaceExisting) throws IOException {
+		Path sourcePath = Paths.get(srcFilePath);
+		Path destinationPath = Paths.get(destFilePath);
 
+		// create the parent directory if it does not already exist
+		Files.createDirectories(destinationPath.getParent());
 
-			// create the parent directory if it does not already exist
-			Files.createDirectories(destinationPath.getParent());
-
-			if (replaceExisting) {
-				Files.move(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
-			} else {
-				Files.move(sourcePath, destinationPath);
-			}
-			return true;
-
-		} catch (Exception e) {
-			logger.error("error moving file form " + srcFilePath + " to " + destFilePath, e);
-			return false;
+		if (replaceExisting) {
+			Files.move(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
+		} else {
+			Files.move(sourcePath, destinationPath);
 		}
 	}
 
@@ -241,22 +202,16 @@ public class FileUtils {
 	 * deletes a file, if the file does not exist nothing happens
 	 * @param filePath	path of the file to delete
 	 * @return 			true if the file was successfully deleted, false if an error occurred
+	 * @throws IOException 
 	 */
-	public static boolean deleteFile(String filePath) {
-		try {
-			// check if the file exists
-			if (!Files.exists(Paths.get(filePath))) {
-				return true;
-			}
-
-			Path path = Paths.get(filePath);
-			Files.delete(path);
-			return true;
-
-		} catch (Exception e) {
-			logger.error("error deleting the file " + filePath, e);
-			return false;
+	public static void deleteFile(String filePath) throws IOException {
+		// check if the file exists
+		if (!Files.exists(Paths.get(filePath))) {
+			return;
 		}
+
+		Path path = Paths.get(filePath);
+		Files.delete(path);
 	}
 
 
@@ -269,43 +224,33 @@ public class FileUtils {
 	 *  					MERGE_REPLACE: 		if the directory already exists existing files will be overwritten
 	 *  					MERGE_NO_REPLACE: 	if the directory already exists existing files will not be overwritten
 	 * @return 				true if the directory was copied successfully, false if an error occurred	
+	 * @throws IOException 
 	 */
-	public static boolean copyDir(String srcDir, String destDir, CopyDirMode copyDirMode) {
-		try {
-			// check if the destination directory already exists, do not follow symbolic links
-			boolean dirExists = Files.exists(Paths.get(destDir), new LinkOption[] {LinkOption.NOFOLLOW_LINKS});
+	public static void copyDir(String srcDir, String destDir, CopyDirMode copyDirMode) throws IOException {
+		// check if the destination directory already exists, do not follow symbolic links
+		boolean dirExists = Files.exists(Paths.get(destDir), new LinkOption[] {LinkOption.NOFOLLOW_LINKS});
 
-			// if the directory should not be replaced, check if it exists
-			if (copyDirMode.equals(CopyDirMode.NO_REPLACE) && dirExists) {
-				logger.error("error copying dir " + srcDir + " to " + destDir + " destination directory already exists");
-				return false;
-			}
-
-			// if the directory should be replaced delete it first
-			if (copyDirMode.equals(CopyDirMode.COMPLETE_REPLACE)  && dirExists) {
-				boolean deleted = deleteDir(destDir);
-				if (!deleted) {
-					logger.error("error copying dir " + srcDir + " to " + destDir + " destination directory could not be deleted first");
-					return false;
-				}
-			}
-
-			// create the instance of the copy visitor
-			MergeFileVisitor copyVisitor = null;
-			if (copyDirMode.equals(CopyDirMode.MERGE_NO_REPLACE)) {
-				copyVisitor = new MergeFileVisitor(false);
-			} else {
-				copyVisitor = new MergeFileVisitor(true);
-			}			
-
-			copyVisitor.cursor = Paths.get(destDir);
-			Files.walkFileTree(Paths.get(srcDir), copyVisitor);
-			return true;
-
-		} catch (Exception e) {
-			logger.error("error copying the directory " + srcDir + " to " + destDir, e);
-			return false;
+		// if the directory should not be replaced, check if it exists
+		if (copyDirMode.equals(CopyDirMode.NO_REPLACE) && dirExists) {
+			logger.error("error copying dir " + srcDir + " to " + destDir + " destination directory already exists");
+			return;
 		}
+
+		// if the directory should be replaced delete it first
+		if (copyDirMode.equals(CopyDirMode.COMPLETE_REPLACE)  && dirExists) {
+			deleteDir(destDir);
+		}
+
+		// create the instance of the copy visitor
+		MergeFileVisitor copyVisitor = null;
+		if (copyDirMode.equals(CopyDirMode.MERGE_NO_REPLACE)) {
+			copyVisitor = new MergeFileVisitor(false);
+		} else {
+			copyVisitor = new MergeFileVisitor(true);
+		}			
+
+		copyVisitor.cursor = Paths.get(destDir);
+		Files.walkFileTree(Paths.get(srcDir), copyVisitor);
 	}
 
 
@@ -313,18 +258,11 @@ public class FileUtils {
 	 * recursively deletes a directory
 	 * @param dir 	the directory to delete
 	 * @return 		true if the directory was deleted, false if an error occurred
+	 * @throws IOException 
 	 */
-	public static boolean deleteDir(String dir) {
+	public static void deleteDir(String dir) throws IOException {
 		Path rootPath = Paths.get(dir);
-
-		try {
-			Files.walkFileTree(rootPath, new DeleteFileVisitor());
-			return true;
-
-		} catch(Exception e) {
-			logger.error("error deleting the directory " + dir, e);
-			return false;
-		}
+		Files.walkFileTree(rootPath, new DeleteFileVisitor());
 	}
 
 
@@ -332,23 +270,11 @@ public class FileUtils {
 	 * deletes the content of the passed directory
 	 * @param dir 	the path of the directory of which the content should e deleted
 	 * @return 		true if the directory was emptied, false if an error occurred
+	 * @throws IOException 
 	 */
-	public static boolean deleteDirContent(String dir) {
-		try {
-			// delete the directory
-			boolean dirDeleted = deleteDir(dir);
-			if (!dirDeleted) {
-				return false;
-			}
-
-			// recreate the directory
-			new File(dir).mkdirs();
-			return true;
-
-		} catch(Exception e) {
-			logger.error("error emptying the directory " + dir, e);
-			return false;
-		}
+	public static void deleteDirContent(String dir) throws IOException {
+		deleteDir(dir); 			// delete the directory
+		new File(dir).mkdirs(); 	// recreate the directory
 	}
 
 
@@ -360,58 +286,52 @@ public class FileUtils {
 	 * @param filePath 		the path of the file from which the lines should be extracted
 	 * @param lineCount 	the number of lines to extract, newlines are not ignored
 	 * @return 				array list that contains the last lines of the passed file or null if an error occurred
+	 * @throws IOException 
 	 */
-	public static ArrayList<String> readLastLines(String filePath, int lineCount) {
-		try {
+	public static ArrayList<String> readLastLines(String filePath, int lineCount) throws IOException {
+		ArrayList<String> lines = new ArrayList<>();
 
-			ArrayList<String> lines = new ArrayList<>();
+		// create a new random access file instance
+		RandomAccessFile raFile = new RandomAccessFile(filePath, "r");
 
-			// create a new random access file instance
-			RandomAccessFile raFile = new RandomAccessFile(filePath, "r");
+		ByteArrayOutputStream baOutputStream = new ByteArrayOutputStream(); 	// bytes in reversed order that hold one line
+		long length = raFile.length();
+		long bytePointer = length - 1; 		// points to the last byte in the file
 
-			ByteArrayOutputStream baOutputStream = new ByteArrayOutputStream(); 	// bytes in reversed order that hold one line
-			long length = raFile.length();
-			long bytePointer = length - 1; 		// points to the last byte in the file
+		while (lines.size() < lineCount && bytePointer >=0) {
+			// set the pointer of the raFile to the passed position 
+			raFile.seek(bytePointer); 	// seek sets only a pointer and does not read in the whole file
+			int b = raFile.read(); 		// read the byte at the current pointer position
 
-			while (lines.size() < lineCount && bytePointer >=0) {
-				// set the pointer of the raFile to the passed position 
-				raFile.seek(bytePointer); 	// seek sets only a pointer and does not read in the whole file
-				int b = raFile.read(); 		// read the byte at the current pointer position
-
-				// check if the byte is a line feed
-				if (b == 10) {
-					// extract the line and add it to the array list of lines
-					String line = getLine(baOutputStream);
-					lines.add(0, line);
-					baOutputStream.reset(); 	// reset the buffer
-
-					// do not write carriage returns to the byte array output stream
-				} else if (b != 13) {
-					baOutputStream.write(b);
-				}
-
-				// decrease the pointer by one in order to set it to the next last byte
-				bytePointer--;
-			}
-
-
-			// get the first line of the file that has no new line character in front of it
-			if (lines.size() < lineCount) {
+			// check if the byte is a line feed
+			if (b == 10) {
 				// extract the line and add it to the array list of lines
 				String line = getLine(baOutputStream);
 				lines.add(0, line);
+				baOutputStream.reset(); 	// reset the buffer
+
+				// do not write carriage returns to the byte array output stream
+			} else if (b != 13) {
+				baOutputStream.write(b);
 			}
 
-			// close the used buffers
-			baOutputStream.close();
-			raFile.close();
-
-			return lines;
-
-		} catch (Exception e) {
-			logger.error("error reading the last lines of the passed file: ", e);
-			return null;
+			// decrease the pointer by one in order to set it to the next last byte
+			bytePointer--;
 		}
+
+
+		// get the first line of the file that has no new line character in front of it
+		if (lines.size() < lineCount) {
+			// extract the line and add it to the array list of lines
+			String line = getLine(baOutputStream);
+			lines.add(0, line);
+		}
+
+		// close the used buffers
+		baOutputStream.close();
+		raFile.close();
+
+		return lines;
 	}
 
 
@@ -438,8 +358,9 @@ public class FileUtils {
 	 * reads the first line of a file
 	 * @param filePath 	the path to the file
 	 * @return 			the first line of the file or null if the file is empty or an error occurred 
+	 * @throws IOException 
 	 */
-	public static String readFirstLine(String filePath) {
+	public static String readFirstLine(String filePath) throws IOException {
 		return readNthLine(filePath, 1);
 	}
 
@@ -449,19 +370,12 @@ public class FileUtils {
 	 * @param filePath 		the path of the file
 	 * @param lineNumber 	the line number that should be read (starting form 1)
 	 * @return 				the nth line or null if an error occurred
+	 * @throws IOException 
 	 */
-	public static String readNthLine(String filePath, long lineNumber) {
-		String result = null;
-
-		try {
-			Stream<String> lines = Files.lines(Paths.get(filePath)); 
-			result = lines.skip(lineNumber-1).findFirst().get();
-			lines.close();
-
-		} catch (Exception e) {
-			logger.error("nth line number of the file " + filePath + "could not be read: ", e);
-		}
-
+	public static String readNthLine(String filePath, long lineNumber) throws IOException {
+		Stream<String> lines = Files.lines(Paths.get(filePath)); 
+		String result = lines.skip(lineNumber-1).findFirst().get();
+		lines.close();
 		return result;
 	}
 
@@ -471,8 +385,9 @@ public class FileUtils {
 	 * @param filePath 		the path of the file
 	 * @param text 			the string that is appended at the end of the file
 	 * @param charset 		the encoding of the file (use the constants form StandardCharsets)
+	 * @throws IOException 
 	 */
-	public static void append(String filePath, String text, Charset charset) {
+	public static void append(String filePath, String text, Charset charset) throws IOException {
 		byte[] bytes = text.getBytes(charset);
 		append(filePath, bytes);
 	}
@@ -482,19 +397,15 @@ public class FileUtils {
 	 * appends bytes to a file with random access file, the method does not get slower with increasing file size
 	 * @param filePath 	the path of the file
 	 * @param bytes 	the bytes that are appended
+	 * @throws IOException 
 	 */
-	public static void append(String filePath, byte[] bytes) {
-		try {
-			File f = new File(filePath);
-			long fileLength = f.length();
-			RandomAccessFile raf = new RandomAccessFile(f, "rw");
-			raf.seek(fileLength);
-			raf.write(bytes);
-			raf.close();
-
-		} catch (Exception e) {
-			logger.error("error appending to the file " + filePath + ": ", e);
-		}
+	public static void append(String filePath, byte[] bytes) throws IOException {
+		File f = new File(filePath);
+		long fileLength = f.length();
+		RandomAccessFile raf = new RandomAccessFile(f, "rw");
+		raf.seek(fileLength);
+		raf.write(bytes);
+		raf.close();
 	}
 
 
@@ -614,8 +525,4 @@ public class FileUtils {
 			return FileVisitResult.CONTINUE;
 		}
 	}
-
-
-
-
 }

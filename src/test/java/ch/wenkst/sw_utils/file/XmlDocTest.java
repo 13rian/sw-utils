@@ -1,6 +1,7 @@
 package ch.wenkst.sw_utils.file;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -15,9 +16,10 @@ public class XmlDocTest {
 	
 	/**
 	 * loads the resources that are needed for the test
+	 * @throws FileNotFoundException 
 	 */
 	@BeforeAll
-	public static void initializeExternalResources() {
+	public static void initializeExternalResources() throws FileNotFoundException {
 		// define the directory for the xml files
 		String xmlDir = System.getProperty("user.dir") + File.separator +
 				"resource" + File.separator + 

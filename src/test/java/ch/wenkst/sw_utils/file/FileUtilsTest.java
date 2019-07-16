@@ -1,6 +1,8 @@
 package ch.wenkst.sw_utils.file;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,9 +29,10 @@ public class FileUtilsTest {
 	
 	/**
 	 * loads the resources that are needed for the test
+	 * @throws IOException 
 	 */
 	@BeforeAll
-	public static void initializeExternalResources() {
+	public static void initializeExternalResources() throws IOException {
 		// define the directory of the file handler tests
 		fileUtilsDir = System.getProperty("user.dir") + File.separator +
 				"resource" + File.separator + 
@@ -57,10 +60,11 @@ public class FileUtilsTest {
 	
 	/**
 	 * read the last lines of a file
+	 * @throws IOException 
 	 */
 	@Test
 	@DisplayName("last lines of a file")
-	public void lastLinesReadTest() {
+	public void lastLinesReadTest() throws IOException {
 		// read the last four lines of the test file
 		ArrayList<String> lines = FileUtils.readLastLines(manyLinesFile, 4);
 		
@@ -80,10 +84,11 @@ public class FileUtilsTest {
 	 * read the content of a file to a string
 	 * in this test a file with only one line is used in order to avoid the problems of
 	 * carriage returns and line feeds that are different on windows and linux systems
+	 * @throws FileNotFoundException 
 	 */
 	@Test
 	@DisplayName("get the file content as string")
-	public void readFileToStringTest() {
+	public void readFileToStringTest() throws FileNotFoundException {
 		// get the content of a file as String
 		String fileContent = FileUtils.readStrFromFile(oneLineFile);
 		Assertions.assertEquals("First line of the text file.", fileContent, "read the content of a file");
@@ -92,25 +97,26 @@ public class FileUtilsTest {
 	
 	/**
 	 * copy a file
+	 * @throws IOException 
 	 */
 	@Test
 	@DisplayName("copy a file")
-	public void copyFileTest() {
+	public void copyFileTest() throws IOException {
 		// copy a file
 		String dest = copyDir + File.separator + "copiedFile.txt";
-		boolean fileCopied = FileUtils.copyFile(oneLineFile, dest, true);
+		FileUtils.copyFile(oneLineFile, dest, true);
 		
-		Assertions.assertEquals(true, fileCopied, "file copied");
 		Assertions.assertEquals(true, new File(dest).exists(), "copied file exists");
 	}
 	
 	
 	/**
 	 * move a file
+	 * @throws IOException 
 	 */
 	@Test
 	@DisplayName("move a file")
-	public void moveFileTest() {
+	public void moveFileTest() throws IOException {
 		// create a new file to move
 		String fileToMove = fileUtilsDir + "fileToMove.txt";
 		
@@ -120,9 +126,8 @@ public class FileUtilsTest {
 		
 		// move the file
 		String destFile = copyDir + File.separator + "fileToMove.txt";
-		boolean isMoved = FileUtils.moveFile(fileToMove, destFile, true);
+		FileUtils.moveFile(fileToMove, destFile, true);
 		
-		Assertions.assertEquals(true, isMoved, "file moved");
 		Assertions.assertEquals(true, new File(destFile).exists(), "file does exist");
 	}
 	
@@ -130,10 +135,11 @@ public class FileUtilsTest {
 	
 	/**
 	 * delete a file
+	 * @throws IOException 
 	 */
 	@Test
 	@DisplayName("delete a file")
-	public void deleteFileTest() {
+	public void deleteFileTest() throws IOException {
 		// create a new file to delete
 		String fileToDelete = fileUtilsDir + "fileToDelete.txt";
 		
@@ -142,23 +148,22 @@ public class FileUtilsTest {
 		}, "create a new file to delete");
 		
 		// delete the file
-		boolean isDeleted = FileUtils.deleteFile(fileToDelete);
+		FileUtils.deleteFile(fileToDelete);
 		
-		Assertions.assertEquals(true, isDeleted, "file deleted");
 		Assertions.assertEquals(false, new File(fileToDelete).exists(), "file does not exist");
 	}
 	
 	
 	/**
 	 * copy a directory
+	 * @throws IOException 
 	 */
 	@Test
 	@DisplayName("copy a directory")
-	public void copyDirTest() {
+	public void copyDirTest() throws IOException {
 		String destDir = copyDir + File.separator + "copiedDir";
-		boolean isCopied = FileUtils.copyDir(dirToCopy, destDir, CopyDirMode.COMPLETE_REPLACE);
+		FileUtils.copyDir(dirToCopy, destDir, CopyDirMode.COMPLETE_REPLACE);
 		
-		Assertions.assertEquals(true, isCopied, "dir copied");
 		Assertions.assertEquals(true, new File(destDir).exists(), "dir does exist");
 		
 		// check some file that should have been copied as well
@@ -173,10 +178,11 @@ public class FileUtilsTest {
 	
 	/**
 	 * delete a directory
+	 * @throws IOException 
 	 */
 	@Test
 	@DisplayName("delete a directory")
-	public void deleteDirTest() {
+	public void deleteDirTest() throws IOException {
 		// create a directory with some content to delete
 		String dirToDelete = fileUtilsDir + "dirToDelete";
 		
@@ -196,19 +202,19 @@ public class FileUtilsTest {
 		
 		
 		// delete the directory
-		boolean isDeleted = FileUtils.deleteDir(dirToDelete);
+		FileUtils.deleteDir(dirToDelete);
 		
-		Assertions.assertEquals(true, isDeleted, "directory deleted");
 		Assertions.assertEquals(false, new File(dirToDelete).exists(), "directory does not exist");
 	}
 	
 	
 	/**
 	 * read the nth line of a file
+	 * @throws IOException 
 	 */
 	@Test
 	@DisplayName("read the nth line of a file")
-	public void readNthLineTest() {
+	public void readNthLineTest() throws IOException {
 		String firstLine = FileUtils.readFirstLine(manyLinesFile);
 		Assertions.assertEquals("I bought a dead mans suit", firstLine, "first line matching");
 		
@@ -272,9 +278,10 @@ public class FileUtilsTest {
 	
 	/**
 	 * cleans up the test folders for the next test
+	 * @throws IOException 
 	 */
 	@AfterAll
-	public static void tearDown() {
+	public static void tearDown() throws IOException {
 		// ensure that the directory in which things are copied is empty
 		FileUtils.deleteDirContent(copyDir);
 	}

@@ -1,6 +1,7 @@
 package ch.wenkst.sw_utils.file;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -18,9 +19,10 @@ public class JsonDocTest {
 	
 	/**
 	 * loads the resources that are needed for the test
+	 * @throws FileNotFoundException 
 	 */
 	@BeforeAll
-	public static void initializeExternalResources() {
+	public static void initializeExternalResources() throws FileNotFoundException {
 		// define the directory for the json files
 		String jsonDir = System.getProperty("user.dir") + File.separator +
 				"resource" + File.separator + 

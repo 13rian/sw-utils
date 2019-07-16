@@ -21,11 +21,13 @@ import java.security.Provider;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Security;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateCrtKey;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.ArrayList;
@@ -288,8 +290,9 @@ public class SecurityUtils {
 	 * @param path 		path to the certificate file
 	 * @param format 	format of the file
 	 * @return 			certificate der byte array
+	 * @throws IOException 
 	 */
-	public static byte[] derFromCertFile(String path, FileFormat fileFormat) {
+	public static byte[] derFromCertFile(String path, FileFormat fileFormat) throws IOException {
 		if (fileFormat.equals(FileFormat.DER)) {
 			byte[] b64CertBytes = FileUtils.readByteArrFromFile(path);
 			return b64CertBytes;
@@ -370,20 +373,115 @@ public class SecurityUtils {
 	// 											methods to handle keys 									 		 //
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/**
-	 * loads a key from a pem or a der file
+	 * loads an unencrypted key from a pem or a der file, all combinations pem/der, sec1/pkcs8, rsa/ec are tried.
+	 * this method should be used if the key format is not known or the key file is changed frequently. 
+	 * it takes longer than the overloaded method where all key parameters are specified.
+	 * note to developer: derFromKeyFile sometimes works with the wrong formats as well, e.g ec, der, pkcs8 works for
+	 *  			      ec, der, sec1 as well the generation of the private key therefore needs to be in the catch as well
+	 *   				  if all combinations are tried
+	 * @param path 			the path to the key file
+	 * @return 				the private key
+	 */
+	public static PrivateKey keyFromFile(String path) {
+		try {
+			// try to load pkcs8 encoded ec keys
+			KeyInfo keyInfo = new KeyInfo();
+			try {
+				keyInfo.addKeyInfo(FileFormat.PEM, KeyType.EC, KeyFormat.SEC1);
+				derFromKeyFile(path, keyInfo);
+				return keyFromDer(keyInfo.pkcs8KeyBytes, keyInfo.keyType);
+			} catch (Exception e) { }
+			
+			try {
+				keyInfo.addKeyInfo(FileFormat.PEM, KeyType.EC, KeyFormat.PKCS8);
+				derFromKeyFile(path, keyInfo);
+				return keyFromDer(keyInfo.pkcs8KeyBytes, keyInfo.keyType);
+			} catch (Exception e) { }
+			
+			try {
+				keyInfo.addKeyInfo(FileFormat.DER, KeyType.EC, KeyFormat.SEC1);
+				derFromKeyFile(path, keyInfo);
+				return keyFromDer(keyInfo.pkcs8KeyBytes, keyInfo.keyType);
+			} catch (Exception e) { }
+			
+			try {
+				keyInfo.addKeyInfo(FileFormat.DER, KeyType.EC, KeyFormat.PKCS8);
+				derFromKeyFile(path, keyInfo);
+				return keyFromDer(keyInfo.pkcs8KeyBytes, keyInfo.keyType);
+			} catch (Exception e) { }
+			
+			
+			// try to load pkcs8 encoded rsa keys
+			try {
+				keyInfo.addKeyInfo(FileFormat.PEM, KeyType.RSA, KeyFormat.PKCS1);
+				derFromKeyFile(path, keyInfo);
+				return keyFromDer(keyInfo.pkcs8KeyBytes, keyInfo.keyType);
+			} catch (Exception e) { }
+			
+			try {
+				keyInfo.addKeyInfo(FileFormat.PEM, KeyType.RSA, KeyFormat.PKCS8);
+				derFromKeyFile(path, keyInfo);
+				return keyFromDer(keyInfo.pkcs8KeyBytes, keyInfo.keyType);
+			} catch (Exception e) { }
+			
+			try {
+				keyInfo.addKeyInfo(FileFormat.DER, KeyType.RSA, KeyFormat.PKCS1);
+				derFromKeyFile(path, keyInfo);
+				return keyFromDer(keyInfo.pkcs8KeyBytes, keyInfo.keyType);
+			} catch (Exception e) { }
+			
+			try {
+				keyInfo.addKeyInfo(FileFormat.DER, KeyType.RSA, KeyFormat.PKCS8);
+				derFromKeyFile(path, keyInfo);
+				return keyFromDer(keyInfo.pkcs8KeyBytes, keyInfo.keyType);
+			} catch (Exception e) { }
+			
+			throw new KeyParsingException("key file from the path " + path + " could not be parsed, no supported file format");
+
+		} catch (Exception e) {
+			logger.error("failed to parse the key file form path " + path, e);
+			return null;
+		}
+	}
+	
+	
+	/**
+	 * loads an unencrypted key from a pem or a der file
 	 * @param path 			the path to the key file
 	 * @param keyType 		type of the key
 	 * @param fileFormat 	format of the file
 	 * @param keyFormat 	format of the key
-	 * @return 				the private key
+	 * @return 				the private key or null if an error occurred
 	 */
 	public static PrivateKey keyFromFile(String path, KeyType keyType, FileFormat fileFormat, KeyFormat keyFormat) {
-		// load the pkcs8 encoded key bytes
-		byte[] pkcs8KeyBytes = derFromKeyFile(path, keyType, fileFormat, keyFormat);	
+		try {
+			// load the pkcs8 encoded key bytes
+			byte[] pkcs8KeyBytes = derFromKeyFile(path, keyType, fileFormat, keyFormat);	
 		
-		// create the private key from the der bytes
-		PrivateKey pk = keyFromDer(pkcs8KeyBytes, keyType);
-		return pk;
+			// create the private key from the der bytes
+			PrivateKey pk = keyFromDer(pkcs8KeyBytes, keyType);
+			return pk;
+			
+		} catch (Exception e) {
+			logger.error("failed to parse the key file form path " + path, e);
+			return null;
+		}
+	}
+	
+	
+	
+	/**
+	 * loads a bytes array containing the binary der data representing the key of the passed key file
+	 * the key bytes are written into the keyInfo as well
+	 * @param path 		the path of the key file
+	 * @param keyInfo 	key information object
+	 * @return
+	 * @throws KeyParsingException 
+	 */
+	public static byte[] derFromKeyFile(String path, KeyInfo keyInfo) throws KeyParsingException {
+		byte[] pkcs8KeyBytes = derFromKeyFile(path, keyInfo.keyType, keyInfo.fileFormat, keyInfo.keyFormat);
+		keyInfo.pkcs8KeyBytes = pkcs8KeyBytes;
+		return pkcs8KeyBytes;
 	}
 	
 	
@@ -394,8 +492,9 @@ public class SecurityUtils {
 	 * @param fileFormat 	format of the file
 	 * @param keyFormat 	format of the key
 	 * @return 				byte array containing the der key in pkcs8 format
+	 * @throws KeyParsingException 
 	 */
-	public static byte[] derFromKeyFile(String path, KeyType keyType, FileFormat fileFormat, KeyFormat keyFormat) {
+	public static byte[] derFromKeyFile(String path, KeyType keyType, FileFormat fileFormat, KeyFormat keyFormat) throws KeyParsingException {
 		try {
 			if (keyType.equals(KeyType.RSA)) {
 				return derFromRsaKeyFile(path, fileFormat, keyFormat);
@@ -404,14 +503,12 @@ public class SecurityUtils {
 				return derFromEcKeyFile(path, fileFormat, keyFormat);
 			
 			} else {
-				logger.error("unsupported key type: " + keyType);
+				throw new KeyParsingException("unsupported key type: " + keyType);
 			}
 
 		} catch (Exception e) {
-			logger.error("failed to read the key-file: ", e);
+			throw new KeyParsingException("failed to read the key-file", e.getCause());
 		}
-
-		return null;
 	}
 	
 	
@@ -422,8 +519,9 @@ public class SecurityUtils {
 	 * @param keyFormat 	format of the key
 	 * @return 				pkcs8 encoded key bytes of the passed key file
 	 * @throws IOException
+	 * @throws KeyParsingException 
 	 */
-	private static byte[] derFromRsaKeyFile(String path, FileFormat fileFormat, KeyFormat keyFormat) throws IOException {
+	private static byte[] derFromRsaKeyFile(String path, FileFormat fileFormat, KeyFormat keyFormat) throws IOException, KeyParsingException {
 		byte[] pkcs8KeyBytes = null;
 		
 		// pem and pkcs8
@@ -434,8 +532,7 @@ public class SecurityUtils {
 				pkcs8KeyBytes = Conversion.base64StrToByteArray(b64Key);
 			
 			} else {
-				logger.error("no pem objects found in the passed pem file");
-				pkcs8KeyBytes =  null;
+				throw new KeyParsingException("no pem objects found in the passed pem file");
 			}
 		} 
 		
@@ -467,8 +564,7 @@ public class SecurityUtils {
 		
 		// combination cannot occur
 		else {
-			logger.error("failed to read der ec key, unsupported combination of file format: " + fileFormat + " and keyFormat " + keyFormat);
-			pkcs8KeyBytes =  null;
+			throw new KeyParsingException("failed to read der ec key, unsupported combination of file format: " + fileFormat + " and keyFormat " + keyFormat);
 		}
 		
 		return pkcs8KeyBytes;
@@ -482,8 +578,9 @@ public class SecurityUtils {
 	 * @param keyFormat 	format of the key
 	 * @return 				pkcs8 encoded key bytes of the passed key file
 	 * @throws IOException
+	 * @throws KeyParsingException 
 	 */
-	private static byte[] derFromEcKeyFile(String path, FileFormat fileFormat, KeyFormat keyFormat) throws IOException {
+	private static byte[] derFromEcKeyFile(String path, FileFormat fileFormat, KeyFormat keyFormat) throws IOException, KeyParsingException {
 		byte[] pkcs8KeyBytes = null;
 		
 		// pem and pkcs8
@@ -494,8 +591,7 @@ public class SecurityUtils {
 				pkcs8KeyBytes = Conversion.base64StrToByteArray(b64Key);
 			
 			} else {
-				logger.error("no pem objects found in the passed pem file");
-				pkcs8KeyBytes =  null;
+				throw new KeyParsingException("no pem objects found in the passed pem file");
 			}
 		} 
 		
@@ -527,8 +623,7 @@ public class SecurityUtils {
 		
 		// combination cannot occur
 		else {
-			logger.error("failed to read der ec key, unsupported combination of file format: " + fileFormat + " and keyFormat " + keyFormat);
-			pkcs8KeyBytes =  null;
+			throw new KeyParsingException("failed to read der ec key, unsupported combination of file format: " + fileFormat + " and keyFormat " + keyFormat);
 		}
 		
 		return pkcs8KeyBytes;
@@ -540,44 +635,41 @@ public class SecurityUtils {
 	 * @param keyBytes 		byte array containing the key information	
 	 * @param keyType 		the type of the key
 	 * @return 				the java object that contains the private key
+	 * @throws NoSuchAlgorithmException 
+	 * @throws NoSuchProviderException 
+	 * @throws InvalidKeySpecException 
+	 * @throws KeyParsingException 
 	 */
-	public static PrivateKey keyFromDer(byte[] keyBytes, KeyType keyType) {
-		try {
-			PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
-						
-			// key factory for rsa curves
-			KeyFactory keyFactory = null;
-			if (keyType.equals(KeyType.RSA)) {
-				if (Security.getProvider("BC") == null) {
-					keyFactory = KeyFactory.getInstance("RSA", new BouncyCastleProvider());
-				} else {
-					keyFactory = KeyFactory.getInstance("RSA", "BC");
-				}
-			}
+	public static PrivateKey keyFromDer(byte[] keyBytes, KeyType keyType) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, KeyParsingException {
+		PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
 
-			// key factory for ec curves
-			else if (keyType.equals(KeyType.EC)) {
-				if (Security.getProvider("BC") == null) {
-					keyFactory = KeyFactory.getInstance("EC", new BouncyCastleProvider());
-				} else {
-					keyFactory = KeyFactory.getInstance("EC", "BC");
-				}
+		// key factory for rsa curves
+		KeyFactory keyFactory = null;
+		if (keyType.equals(KeyType.RSA)) {
+			if (Security.getProvider("BC") == null) {
+				keyFactory = KeyFactory.getInstance("RSA", new BouncyCastleProvider());
+			} else {
+				keyFactory = KeyFactory.getInstance("RSA", "BC");
 			}
-
-			else {
-				logger.error("unsupported key type " + keyType);
-				return null;
-			}
-			
-			PrivateKey pk = keyFactory.generatePrivate(keySpec);			
-			return pk;
-
-		} catch (Exception e) {
-			logger.error("error creating a private key from the passed bytes: ", e);
-			return null;
 		}
+
+		// key factory for ec curves
+		else if (keyType.equals(KeyType.EC)) {
+			if (Security.getProvider("BC") == null) {
+				keyFactory = KeyFactory.getInstance("EC", new BouncyCastleProvider());
+			} else {
+				keyFactory = KeyFactory.getInstance("EC", "BC");
+			}
+		}
+
+		else {
+			throw new KeyParsingException("unsupported key type " + keyType);
+		}
+
+		PrivateKey pk = keyFactory.generatePrivate(keySpec);			
+		return pk;
 	}
-	
+
 	
 	/**
 	 * loads the private key from a p12-file from the entry with the passed alias
@@ -585,39 +677,38 @@ public class SecurityUtils {
 	 * @param password  export password of the private key
 	 * @param alias 	the alias of the key entry
 	 * @return	 		the private key
+	 * @throws NoSuchAlgorithmException 
+	 * @throws KeyStoreException 
+	 * @throws UnrecoverableKeyException 
+	 * @throws IOException 
+	 * @throws CertificateException 
+	 * @throws NoSuchProviderException 
 	 */
-	public static PrivateKey keyFromP12(String path, String password, String alias) {		
-		try {
-			KeyStore keyStore = keyStoreFromP12(path, password);
-
-			return (PrivateKey) keyStore.getKey(alias, password.toCharArray());
-
-		} catch (Exception e) {
-			logger.error("error loading private key: ", e);
-			return null;
-		}
+	public static PrivateKey keyFromP12(String path, String password, String alias) throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException, NoSuchProviderException, CertificateException, IOException {		
+		KeyStore keyStore = keyStoreFromP12(path, password);
+		return (PrivateKey) keyStore.getKey(alias, password.toCharArray());
 	}
-	
-	
+
+
 	/**
 	 * loads the private key from a p12-file from the first entry
 	 * @param path	 	path to the key, only .p12
 	 * @param password  export password of the private key
 	 * @param alias 	the alias of the key entry
 	 * @return	 		the private key
+	 * @throws IOException 
+	 * @throws CertificateException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws NoSuchProviderException 
+	 * @throws KeyStoreException 
+	 * @throws UnrecoverableKeyException 
 	 */
-	public static PrivateKey keyFromP12(String path, String password) {		
-		try {
-			KeyStore keyStore = keyStoreFromP12(path, password);
+	public static PrivateKey keyFromP12(String path, String password) throws KeyStoreException, NoSuchProviderException, NoSuchAlgorithmException, CertificateException, IOException, UnrecoverableKeyException {		
+		KeyStore keyStore = keyStoreFromP12(path, password);
 
-			Enumeration<String> aliases = keyStore.aliases();
-			String alias = aliases.nextElement();
-			return (PrivateKey) keyStore.getKey(alias, password.toCharArray());
-
-		} catch (Exception e) {
-			logger.error("error loading private key: ", e);
-			return null;
-		}
+		Enumeration<String> aliases = keyStore.aliases();
+		String alias = aliases.nextElement();
+		return (PrivateKey) keyStore.getKey(alias, password.toCharArray());
 	}
 	
 	
@@ -629,8 +720,11 @@ public class SecurityUtils {
 	 * @param privateKey 	private key
 	 * @param keyType 		the type of the key
 	 * @return 				public key
+	 * @throws InvalidKeySpecException 
+	 * @throws NoSuchProviderException 
+	 * @throws NoSuchAlgorithmException 
 	 */
-	public static PublicKey pubKeyFromPrivKey(PrivateKey privateKey, KeyType keyType) {
+	public static PublicKey pubKeyFromPrivKey(PrivateKey privateKey, KeyType keyType) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
 		// rsa keys
 		if (keyType.equals(KeyType.RSA)) {
 			return pubRsaKeyFromPrivKey(privateKey);
@@ -652,26 +746,23 @@ public class SecurityUtils {
 	 * generates a corresponding rsa public key from the passed rsa private key
 	 * @param rsaPrivateKey 	rsa private key
 	 * @return 					rsa public key
+	 * @throws NoSuchAlgorithmException 
+	 * @throws NoSuchProviderException 
+	 * @throws InvalidKeySpecException 
 	 */
-	public static PublicKey pubRsaKeyFromPrivKey(PrivateKey rsaPrivateKey) {
-		try {
-			// get the key factory
-			KeyFactory keyFactory = null;
-			if (Security.getProvider("BC") == null) {
-				keyFactory = KeyFactory.getInstance("RSA", new BouncyCastleProvider());
-			} else {
-				keyFactory = KeyFactory.getInstance("RSA", "BC");
-			}
-			
-			RSAPrivateCrtKey privk = (RSAPrivateCrtKey) rsaPrivateKey;
-			RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(privk.getModulus(), privk.getPublicExponent());
-			PublicKey rsaPublicKey = keyFactory.generatePublic(publicKeySpec);
-			return rsaPublicKey;
-			
-		} catch (Exception e) {
-			logger.error("error retrieving the public rsa key from the private rsa key: ", e);
-			return null;
+	public static PublicKey pubRsaKeyFromPrivKey(PrivateKey rsaPrivateKey) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
+		// get the key factory
+		KeyFactory keyFactory = null;
+		if (Security.getProvider("BC") == null) {
+			keyFactory = KeyFactory.getInstance("RSA", new BouncyCastleProvider());
+		} else {
+			keyFactory = KeyFactory.getInstance("RSA", "BC");
 		}
+
+		RSAPrivateCrtKey privk = (RSAPrivateCrtKey) rsaPrivateKey;
+		RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(privk.getModulus(), privk.getPublicExponent());
+		PublicKey rsaPublicKey = keyFactory.generatePublic(publicKeySpec);
+		return rsaPublicKey;
 	}
 	
 	
@@ -679,29 +770,26 @@ public class SecurityUtils {
 	 * generates a corresponding ec public key from the passed ec private key
 	 * @param ecPrivateKey 		ec private key
 	 * @return 					ec public key
+	 * @throws NoSuchAlgorithmException 
+	 * @throws NoSuchProviderException 
+	 * @throws InvalidKeySpecException 
 	 */
-	public static PublicKey pubEcKeyFromPrivKey(PrivateKey ecPrivateKey) {
-		try {
-			// get the key factory
-			KeyFactory keyFactory = null;
-			if (Security.getProvider("BC") == null) {
-				keyFactory = KeyFactory.getInstance("EC", new BouncyCastleProvider());
-			} else {
-				keyFactory = KeyFactory.getInstance("EC", "BC");
-			}	
+	public static PublicKey pubEcKeyFromPrivKey(PrivateKey ecPrivateKey) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
+		// get the key factory
+		KeyFactory keyFactory = null;
+		if (Security.getProvider("BC") == null) {
+			keyFactory = KeyFactory.getInstance("EC", new BouncyCastleProvider());
+		} else {
+			keyFactory = KeyFactory.getInstance("EC", "BC");
+		}	
 
-			ECPrivateKey pkEcKey = (ECPrivateKey) ecPrivateKey;
-			BigInteger d = pkEcKey.getD();
-			org.bouncycastle.jce.spec.ECParameterSpec ecSpec = pkEcKey.getParameters();
-			org.bouncycastle.math.ec.ECPoint Q = pkEcKey.getParameters().getG().multiply(d);
-			org.bouncycastle.jce.spec.ECPublicKeySpec pubSpec = new org.bouncycastle.jce.spec.ECPublicKeySpec(Q, ecSpec);
-			PublicKey publicEcKey = keyFactory.generatePublic(pubSpec);
-			return publicEcKey;
-			
-		} catch (Exception e) {
-			logger.error("error retrieving the public ec key from the private ec key: ", e);
-			return null;
-		}
+		ECPrivateKey pkEcKey = (ECPrivateKey) ecPrivateKey;
+		BigInteger d = pkEcKey.getD();
+		org.bouncycastle.jce.spec.ECParameterSpec ecSpec = pkEcKey.getParameters();
+		org.bouncycastle.math.ec.ECPoint Q = pkEcKey.getParameters().getG().multiply(d);
+		org.bouncycastle.jce.spec.ECPublicKeySpec pubSpec = new org.bouncycastle.jce.spec.ECPublicKeySpec(Q, ecSpec);
+		PublicKey publicEcKey = keyFactory.generatePublic(pubSpec);
+		return publicEcKey;
 	}
 	
 	
@@ -900,5 +988,16 @@ public class SecurityUtils {
 	}
 	
 	
-
+	public static class KeyInfo {
+		public byte[] pkcs8KeyBytes;
+		public FileFormat fileFormat;
+		public KeyType keyType;
+		public KeyFormat keyFormat;
+		
+		public void addKeyInfo(FileFormat fileFormat, KeyType keyType, KeyFormat keyFormat) {
+			this.fileFormat = fileFormat;
+			this.keyType = keyType;
+			this.keyFormat = keyFormat;
+		}
+	}
 }

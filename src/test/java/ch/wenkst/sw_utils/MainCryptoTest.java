@@ -15,6 +15,7 @@ import java.security.Security;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.time.Instant;
 
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
@@ -82,12 +83,16 @@ public class MainCryptoTest {
 		String filePath = keyDir + "eckey_sec1.pem";
 		PrivateKey pk = SecurityUtils.keyFromFile(filePath, KeyType.EC, FileFormat.PEM, KeyFormat.SEC1);
 		System.out.println(pk.getAlgorithm());
+		pk = SecurityUtils.keyFromFile(filePath);
+		System.out.println ("all in one method algo: " + pk.getAlgorithm());
 		
 		
 		// pkcs8
 		filePath = keyDir + "eckey_pkcs8.pem";
 		pk = SecurityUtils.keyFromFile(filePath, KeyType.EC, FileFormat.PEM, KeyFormat.PKCS8);
 	    System.out.println (pk.getAlgorithm());
+	    pk = SecurityUtils.keyFromFile(filePath);
+	    System.out.println ("all in one method algo: " + pk.getAlgorithm());
 		
 		
 		// 			der				//
@@ -96,12 +101,16 @@ public class MainCryptoTest {
 		filePath = keyDir + "eckey_sec1.der";
 		pk = SecurityUtils.keyFromFile(filePath, KeyType.EC, FileFormat.DER, KeyFormat.SEC1);
 	    System.out.println (pk.getAlgorithm());
+	    pk = SecurityUtils.keyFromFile(filePath);
+	    System.out.println ("all in one method algo: " + pk.getAlgorithm());
 	    
 	    
 		// pkcs8
 		filePath = keyDir + "eckey_pkcs8.der";
 		pk = SecurityUtils.keyFromFile(filePath, KeyType.EC, FileFormat.DER, KeyFormat.PKCS8);
 	    System.out.println (pk.getAlgorithm());
+	    pk = SecurityUtils.keyFromFile(filePath);
+	    System.out.println ("all in one method algo: " + pk.getAlgorithm());
 	    
 
 	    
@@ -115,12 +124,16 @@ public class MainCryptoTest {
 		filePath = keyDir + "rsakey_pkcs1.pem";
 		pk = SecurityUtils.keyFromFile(filePath, KeyType.RSA, FileFormat.PEM, KeyFormat.PKCS1);
 	    System.out.println (pk.getAlgorithm());
+	    pk = SecurityUtils.keyFromFile(filePath);
+	    System.out.println ("all in one method algo: " + pk.getAlgorithm());
 	    
 	    
 	    // pkcs8
 		filePath = keyDir + "rsakey_pkcs8.pem";
 		pk = SecurityUtils.keyFromFile(filePath, KeyType.RSA, FileFormat.PEM, KeyFormat.PKCS8);
 	    System.out.println (pk.getAlgorithm());
+	    pk = SecurityUtils.keyFromFile(filePath);
+	    System.out.println ("all in one method algo: " + pk.getAlgorithm());
 	    
 	    
 		// 			der				//
@@ -129,12 +142,27 @@ public class MainCryptoTest {
 		filePath = keyDir + "rsakey_pkcs1.der";
 		pk = SecurityUtils.keyFromFile(filePath, KeyType.RSA, FileFormat.DER, KeyFormat.PKCS1);
 	    System.out.println (pk.getAlgorithm());
+	    pk = SecurityUtils.keyFromFile(filePath);
+	    System.out.println ("all in one method algo: " + pk.getAlgorithm());
 	    
 	    
 	    // pkcs8
 		filePath = keyDir + "rsakey_pkcs8.der";
 		pk = SecurityUtils.keyFromFile(filePath, KeyType.RSA, FileFormat.DER, KeyFormat.PKCS8);
 	    System.out.println (pk.getAlgorithm());
+	    pk = SecurityUtils.keyFromFile(filePath);
+	    System.out.println ("all in one method algo: " + pk.getAlgorithm());
+	    
+	    
+	    // measure the longest possible parsing path if all options are tried out
+	    filePath = keyDir + "rsakey_pkcs8.der";
+	    long startTime = Instant.now().toEpochMilli();
+	    pk = SecurityUtils.keyFromFile(filePath);
+	    long endTime = Instant.now().toEpochMilli();
+	    long duration = endTime - startTime;
+	    System.out.println("longest time to parse a key in ms: " + duration);
+	  
+	    
 	    
 	    
    
