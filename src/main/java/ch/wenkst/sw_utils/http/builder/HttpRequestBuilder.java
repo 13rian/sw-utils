@@ -79,7 +79,7 @@ public class HttpRequestBuilder extends HttpBuilder {
 				hostProperty = host;
 			}
 
-			headerProperties.put("Host", hostProperty);
+			headerProperties.put("host", hostProperty);
 
 		} catch (Exception e) {
 			logger.error("error extracting the host of the passed url: " + url, e);

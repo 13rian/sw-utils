@@ -112,7 +112,7 @@ public class HttpParser {
 				} else {
 					// line is not empty, add it to the header fields list
 					String[] parts = line.split(":");
-					headerFields.put(parts[0].trim(), parts[1].trim());
+					headerFields.put(parts[0].trim().toLowerCase(), parts[1].trim());
 				}			
 
 				// clear the buffer
@@ -198,7 +198,7 @@ public class HttpParser {
 	 * extracts the content length from the header properties
 	 */
 	private void extractContentLength() {
-		String contentLengthStr = headerFields.get("Content-Length");
+		String contentLengthStr = headerFields.get("content-length");
 		try {
 			if (contentLengthStr != null) {
 				contentLength = Integer.parseInt(contentLengthStr);
@@ -225,7 +225,7 @@ public class HttpParser {
 	 * @return 		true id the transfer encoding is chunked, false otherwise
 	 */
 	private boolean isChunked() {
-		String transferEncoding = headerFields.get("Transfer-Encoding");
+		String transferEncoding = headerFields.get("transfer-encoding");
 		
 		if (transferEncoding != null && transferEncoding.equals("chunked")) {
 			return true;

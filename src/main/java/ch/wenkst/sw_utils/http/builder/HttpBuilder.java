@@ -18,9 +18,9 @@ public class HttpBuilder {
 	public HttpBuilder() {
 		// define the header properties that are always present
 		headerProperties = new HashMap<>();
-		headerProperties.put("Connection", "keep-alive");
-		headerProperties.put("Accept", "*/*");
-		headerProperties.put("Content-Type", "text/plain");
+		headerProperties.put("connection", "keep-alive");
+		headerProperties.put("accept", "*/*");
+		headerProperties.put("content-type", "text/plain");
 	}
 
 
@@ -32,6 +32,7 @@ public class HttpBuilder {
 	 * @return 			this object
 	 */
 	public HttpBuilder setHeaderProperty(String key, String value) {
+		key = key.toLowerCase();
 		headerProperties.put(key, value);
 
 		return this;
@@ -60,7 +61,7 @@ public class HttpBuilder {
 		
 		// set the content length property
 		String bodyLength = String.valueOf(bodyBytes.length);
-		headerProperties.put("Content-Length", bodyLength);
+		headerProperties.put("content-length", bodyLength);
 
 		return this;
 	}
