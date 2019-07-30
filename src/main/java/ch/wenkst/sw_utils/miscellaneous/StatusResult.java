@@ -29,6 +29,7 @@ public class StatusResult {
 	 */
 	public StatusResult(String errorMsg) {
 		this.errorMsg = errorMsg;
+		success = false;
 	}
 
 	
