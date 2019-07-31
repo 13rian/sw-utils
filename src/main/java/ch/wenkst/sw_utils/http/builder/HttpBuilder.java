@@ -7,7 +7,7 @@ import java.util.Map;
 public class HttpBuilder {
 	protected String firstLine = ""; 							    // defines the first line of the http message, either the request or the response line
 	protected HashMap<String,String> headerProperties = null; 		// header fields of the request
-	protected byte[] bodyBytes = null; 								// the body as bytes
+	protected byte[] bodyBytes = new byte[0]; 						// the body as bytes
 	private static final String CRLF = "\r\n";
 	
 
@@ -58,10 +58,12 @@ public class HttpBuilder {
 	 */
 	public HttpBuilder setBody(byte[] body) {
 		this.bodyBytes = body;
-		
+
 		// set the content length property
-		String bodyLength = String.valueOf(bodyBytes.length);
-		headerProperties.put("content-length", bodyLength);
+		if (bodyBytes.length > 0) {
+			String bodyLength = String.valueOf(bodyBytes.length);
+			headerProperties.put("content-length", bodyLength);
+		}
 
 		return this;
 	}
@@ -104,7 +106,6 @@ public class HttpBuilder {
         System.arraycopy(headerBytes, 0, httpMessageBytes, 0, headerBytes.length);
         System.arraycopy(bodyBytes, 0, httpMessageBytes, headerBytes.length, bodyBytes.length);
             
-        
         return httpMessageBytes;
 	}
 	

@@ -214,7 +214,8 @@ public class HttpParser {
 			// test if the message is chunked
 			isChunked = isChunked();
 			if (!isChunked) {
-				logger.error("http message has no content length and is not chunked");
+				logger.debug("http message has no content length and is not chunked, assume no body was sent");
+				contentLength = 0;
 			}
 		}
 	}
