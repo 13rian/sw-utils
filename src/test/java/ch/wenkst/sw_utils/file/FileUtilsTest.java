@@ -22,6 +22,7 @@ public class FileUtilsTest {
 	private static String fileUtilsDir = null; 		// the directory containing the file handler test files
 	private static String manyLinesFile = null;		// path to the file that holds many lines
 	private static String oneLineFile = null; 		// file that contains one line
+	private static String dumpObjectFile = null; 	// file to dump and read objects from 
 	
 	private static String copyDir = null; 			// the directory to which all the resources are copied
 	private static String dirToCopy = null; 		// the directory to copy
@@ -45,6 +46,9 @@ public class FileUtilsTest {
 		// file that contains just one line
 		oneLineFile = fileUtilsDir + "oneLineFile.txt";
 		
+		
+		// file path for the dump object test
+		dumpObjectFile = fileUtilsDir + "objectStorage";
 		
 		// directory for the copy tests
 		copyDir = fileUtilsDir + "copyDir";
@@ -92,6 +96,60 @@ public class FileUtilsTest {
 		// get the content of a file as String
 		String fileContent = FileUtils.readStrFromFile(oneLineFile);
 		Assertions.assertEquals("First line of the text file.", fileContent, "read the content of a file");
+	}
+	
+	
+	/**
+	 * dumps and reads one object from a file
+	 * @throws IOException 
+	 * @throws ClassNotFoundException 
+	 */
+	@Test
+	@DisplayName("dump and read object from file")
+	public void dumpObjToFileTest() throws IOException, ClassNotFoundException {
+		// create the test object
+		String name = "local-database";
+		int value = 456;
+		DataStorage dataStorage = new DataStorage(name, value);
+		
+		// dump the object to a file and read it again
+		FileUtils.objectToFile(dumpObjectFile, dataStorage);
+		DataStorage readDataStorage = (DataStorage) FileUtils.objectFromFile(dumpObjectFile);
+		
+		Assertions.assertEquals(name, readDataStorage.getName(), "object dump");
+		Assertions.assertEquals(value, readDataStorage.getValue(), "object dump");
+	}
+	
+	/**
+	 * dumps and reads multiple objects from a file
+	 * @throws IOException 
+	 * @throws ClassNotFoundException 
+	 */
+	@Test
+	@DisplayName("dump and read objects from file")
+	public void dumpObjsToFileTest() throws IOException, ClassNotFoundException {
+		// create a list of 2 test objects
+		String name1 = "local-database1";
+		int value1 = 456;
+		DataStorage dataStorage1 = new DataStorage(name1, value1);
+		
+		String name2 = "local-database2";
+		int value2 = 361;
+		DataStorage dataStorage2 = new DataStorage(name2, value2);
+		
+		List<DataStorage> dataStorageList = new ArrayList<>();
+		dataStorageList.add(dataStorage1);
+		dataStorageList.add(dataStorage2);
+		
+		
+		// dump the object to a file and read it again
+		FileUtils.objectsToFile(dumpObjectFile, dataStorageList);
+		List<DataStorage> readDataStorageList = FileUtils.objectsFromFile(dumpObjectFile);
+		
+		Assertions.assertEquals(name1, readDataStorageList.get(0).getName(), "objects dump");
+		Assertions.assertEquals(value1, readDataStorageList.get(0).getValue(), "objects dump");
+		Assertions.assertEquals(name2, readDataStorageList.get(1).getName(), "objects dump");
+		Assertions.assertEquals(value2, readDataStorageList.get(1).getValue(), "objects dump");
 	}
 	
 	

@@ -1,11 +1,17 @@
 package ch.wenkst.sw_utils.file;
 
 import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
+import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -149,6 +155,93 @@ public class FileUtils {
 		PrintWriter pw = new PrintWriter(filePath);
 		pw.println(content);
 		pw.close();	
+	}
+	
+	
+	/**
+	 * writes the passed object to a file
+	 * @param filePath 			file to which the objects are written to
+	 * @param serializable 		object to dump to file
+	 * @throws IOException
+	 */
+	public static void objectToFile(String filePath, Serializable serializable) throws IOException {
+		File file = new File(filePath);
+		FileOutputStream fos = new FileOutputStream(file);
+		ObjectOutputStream oos = new ObjectOutputStream(fos);
+		oos.writeObject(serializable);
+
+		oos.close();
+		fos.close();
+	}
+	
+	
+	/**
+	 * reads an object from the passed file
+	 * @param filePath 			file containing the objects
+	 * @return 					object that was read from the file
+	 * @throws IOException 
+	 * @throws ClassNotFoundException 
+	 */
+	public static Serializable objectFromFile(String filePath) throws IOException, ClassNotFoundException {
+		File file = new File(filePath);
+		FileInputStream fis = new FileInputStream(file);
+		ObjectInputStream ois = new ObjectInputStream(fis);
+		Serializable serializable = (Serializable) ois.readObject();
+
+		ois.close();
+		fis.close();
+		return serializable;
+	}	
+	
+	
+	/**
+	 * writes the passed objects to a file
+	 * @param filePath 			file to which the objects are written to
+	 * @param serializables 	list of object to dump to file
+	 * @throws IOException
+	 */
+	public static void objectsToFile(String filePath, List<? extends Serializable> serializables) throws IOException {
+		File file = new File(filePath);
+		FileOutputStream fos = new FileOutputStream(file);
+		ObjectOutputStream oos = new ObjectOutputStream(fos);
+		
+		for (Serializable serializable : serializables) {
+			oos.writeObject(serializable);
+		}
+
+		oos.close();
+		fos.close();
+	}
+	
+	
+	/**
+	 * reads a list of objects form the passed file
+	 * @param <T>
+	 * @param filePath 			file containing the objects
+	 * @return 					list of objects that were read from the file
+	 * @throws IOException
+	 * @throws ClassNotFoundException 
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> List<T> objectsFromFile(String filePath) throws IOException, ClassNotFoundException {
+		File file = new File(filePath);
+		FileInputStream fis = new FileInputStream(file);
+		ObjectInputStream ois = new ObjectInputStream(fis);
+	
+		List<T> serializables = new ArrayList<>();
+		boolean endOfFile = false;
+		while (!endOfFile) {
+			try {
+				T serializable = (T) ois.readObject();
+				serializables.add(serializable);
+			} catch (EOFException e) {
+				endOfFile = true;
+			}
+		}
+
+		ois.close();
+		fis.close();
+		return serializables;
 	}
 
 
