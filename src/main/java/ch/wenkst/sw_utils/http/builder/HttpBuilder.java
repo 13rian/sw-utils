@@ -60,10 +60,8 @@ public class HttpBuilder {
 		this.bodyBytes = body;
 
 		// set the content length property
-		if (bodyBytes.length > 0) {
-			String bodyLength = String.valueOf(bodyBytes.length);
-			headerProperties.put("content-length", bodyLength);
-		}
+		String bodyLength = String.valueOf(bodyBytes.length);
+		headerProperties.put("content-length", bodyLength);
 
 		return this;
 	}
