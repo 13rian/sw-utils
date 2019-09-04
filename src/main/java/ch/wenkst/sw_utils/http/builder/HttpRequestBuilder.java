@@ -64,9 +64,8 @@ public class HttpRequestBuilder extends HttpBuilder {
 		try {
 			// define the first line of the http request
 			URL hostURL = new URL(url);
-			String urlPath = hostURL.getPath();
-			String query = hostURL.getQuery();
-			firstLine = method + " " + urlPath + query + " HTTP/1.1";
+			String fileStr = hostURL.getFile(); 				// path + query
+			firstLine = method + " " + fileStr + " HTTP/1.1";
 			
 			// extract and set the host
 			String host = hostURL.getHost();
