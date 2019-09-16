@@ -9,4 +9,6 @@
 - http add possibilities to get the headers 
 - ssl context ev use only one class and check if the provider is registered to get the bc instance
 
-- assertAll if multiple asserts are called in order to execute all tests not just until one Assertion fails
+- assertAll if multiple asserts are called in order to execute all tests not just until one Assertion fail
+
+- test conversion inputstream to byte array

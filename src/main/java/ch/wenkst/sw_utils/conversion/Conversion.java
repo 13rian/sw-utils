@@ -1,5 +1,8 @@
 package ch.wenkst.sw_utils.conversion;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -416,5 +419,28 @@ public class Conversion {
 	 */
 	public static String strReverse(String str) {
 		return new StringBuilder(str).reverse().toString();
+	}
+	
+	
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// 									Input Readers / Input Writers 										   //
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/**
+	 * converts the passed input stream to a byte array
+	 * @param is		input stream
+	 * @return			byte array from the input stream
+	 * @throws IOException
+	 */
+	public static  byte[] inputStreamToByteArr(InputStream is) throws IOException {
+	    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+	    int nRead;
+	    byte[] data = new byte[1024];
+	    while ((nRead = is.read(data, 0, data.length)) != -1) {
+	        buffer.write(data, 0, nRead);
+	    }
+	 
+	    buffer.flush();
+	    byte[] byteArray = buffer.toByteArray();
+	    return byteArray;
 	}
 }
