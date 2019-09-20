@@ -137,7 +137,15 @@ public class Log {
 			return;
 		}
 		
-		
+		initLogger(props);
+	}
+	
+	
+	/**
+	 * initializes the logger from the passed properties
+	 * @param props		properties with the logger configuration
+	 */
+	public static void initLogger(Properties props) {
 		// ----------------------------- initialize the console logger
 		// get the console level
 		String consoleLevelStr = props.getProperty("console.log.level");
