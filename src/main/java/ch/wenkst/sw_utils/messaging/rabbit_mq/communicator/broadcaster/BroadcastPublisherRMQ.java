@@ -23,18 +23,27 @@ public class BroadcastPublisherRMQ extends CommunicatorBase {
 	 */
 	public BroadcastPublisherRMQ(RabbitMQHander mqHandler, String exchangeName) {
 		super(mqHandler);
-		
-		this.exchangeName = exchangeName;
-		
-		// declare a new exchange
-		declareExchange();		
+		this.exchangeName = exchangeName;	
 	}
 	
 	
 	/**
 	 * declares a new exchange and bind a temporary queue to it, that is removed after the client disconnected 
 	 */
-	private void declareExchange() {
+	public void declareExchange() {
+		declareExchange(durable, autoDelete);
+	}	
+	
+	
+	/**
+	 * declares a new exchange and bind a temporary queue to it, that is removed after the client disconnected 
+	 * @param durable 		true if we are declaring a durable queue (the queue will survive a server restart) 
+	 * @param autoDelete	true if we are declaring an autodelete queue (server will delete it when no longer in use)
+	 */
+	public void declareExchange(boolean durable, boolean autoDelete) {
+		this.durable = durable;
+		this.autoDelete = autoDelete;
+		
 		try {
 			// declare the new exchange, fanout means it is sent to all queues that are bound to this exchange
 			channel.exchangeDeclare(exchangeName, BuiltinExchangeType.FANOUT, durable, autoDelete, null);

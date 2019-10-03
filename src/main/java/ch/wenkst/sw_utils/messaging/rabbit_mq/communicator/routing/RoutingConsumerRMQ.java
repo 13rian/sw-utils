@@ -48,18 +48,26 @@ public class RoutingConsumerRMQ extends CommunicatorBase {
 		if (routingKeys == null) {
 			routingKeys = new ArrayList<>();
 		}
-
-
-		// declare a new queue
-		declareExchange();	
-		registerConsumer();
 	}
 
 
 	/**
 	 * declares a new queue 
 	 */
-	private void declareExchange() {
+	public void declareExchange() {
+		declareExchange(durable, autoDelete);
+	}
+	
+	
+	/**
+	 * declares a new queue 
+	 * @param durable 		true if we are declaring a durable queue (the queue will survive a server restart) 
+	 * @param autoDelete	true if we are declaring an autodelete queue (server will delete it when no longer in use)
+	 */
+	public void declareExchange(boolean durable, boolean autoDelete) {
+		this.durable = durable;
+		this.autoDelete = autoDelete;
+		
 		try {
 			// declare the new exchange, direct: a message goes to the queues whose binding key exactly matches
 			// the routing key of the message.
@@ -86,7 +94,7 @@ public class RoutingConsumerRMQ extends CommunicatorBase {
 	 * registers a worker, which means that only one worker that is not busy gets the message, if all are busy
 	 * the messages are queued
 	 */
-	private void registerConsumer() {
+	public void registerConsumer() {
 		try {
 			// define the consumer
 			BroadcastReceiver consumer = new BroadcastReceiver(channel);

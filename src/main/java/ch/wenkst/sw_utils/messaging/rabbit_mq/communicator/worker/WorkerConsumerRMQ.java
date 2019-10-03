@@ -34,19 +34,28 @@ public class WorkerConsumerRMQ extends CommunicatorBase {
 
 		this.queueName = queueName;
 		this.messageReceiver = messageReceiver;
-
-
-
-		// declare a new queue
-		declareQueue();	
-		registerConsumer();
 	}
 
 
 	/**
 	 * declares a new queue 
 	 */
-	private void declareQueue() {
+	public void declareQueue() {
+		declareQueue(durable, exclusive, autoDelete);
+	}
+	
+	
+	/**
+	 * declares a new queue 
+	 * @param durable 		true if we are declaring a durable queue (the queue will survive a server restart) 
+	 * @param exclusive		true if we are declaring an exclusive queue (restricted to this connection)
+	 * @param autoDelete	true if we are declaring an autodelete queue (server will delete it when no longer in use)
+	 */
+	public void declareQueue(boolean durable, boolean exclusive, boolean autoDelete) {
+		this.durable = durable;
+		this.exclusive = exclusive;
+		this.autoDelete = autoDelete;
+		
 		try {
 			// ensure that messages are sent to receivers that are not busy (not round robin principle)
 			int prefetchCount = 1;
@@ -67,7 +76,7 @@ public class WorkerConsumerRMQ extends CommunicatorBase {
 	 * registers a worker, which means that only one worker that is not busy gets the message, if all are busy
 	 * the messages are queued
 	 */
-	private void registerConsumer() {
+	public void registerConsumer() {
 		try {
 			// define the consumer
 			WorkerReceiver consumer = new WorkerReceiver(channel);

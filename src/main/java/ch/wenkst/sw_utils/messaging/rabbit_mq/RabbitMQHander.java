@@ -90,9 +90,9 @@ public class RabbitMQHander {
 	}
 	
 	
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// 									factory methods to create new rabbitMQ-communicators 							  //
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
+	// 											workers							  					    //
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
 	/**
 	 * returns a new instance of a worker publisher. A worker publisher sends messages to worker consumers
 	 * Each message is only processed by one worker consumer. The worker consumers need to acknowledge each
@@ -103,8 +103,30 @@ public class RabbitMQHander {
 	 * @return
 	 */
 	public WorkerPublisherRMQ getWorkerPublisher(String queueName) {
-		return new WorkerPublisherRMQ(this, queueName);
+		WorkerPublisherRMQ publisher = new WorkerPublisherRMQ(this, queueName);
+		publisher.declareQueue();
+		return publisher;
 	}
+	
+	
+	/**
+	 * returns a new instance of a worker publisher. A worker publisher sends messages to worker consumers
+	 * Each message is only processed by one worker consumer. The worker consumers need to acknowledge each
+	 * message after they are finished. If one worker consumer dies during processing , the message is not 
+	 * acknowledged and is sent to another worker after some time. If all worker consumers are busy the message
+	 * is queued.
+	 * @param queueName 	the name of the queue on which messages are published
+	 * @param durable 		true if we are declaring a durable queue (the queue will survive a server restart) 
+	 * @param exclusive		true if we are declaring an exclusive queue (restricted to this connection)
+	 * @param autoDelete	true if we are declaring an autodelete queue (server will delete it when no longer in use)
+	 * @return
+	 */
+	public WorkerPublisherRMQ getWorkerPublisher(String queueName, boolean durable, boolean exclusive, boolean autoDelete) {
+		WorkerPublisherRMQ publisher = new WorkerPublisherRMQ(this, queueName);
+		publisher.declareQueue(durable, exclusive, autoDelete);
+		return publisher;
+	}
+	
 	
 	
 	/**
@@ -118,10 +140,38 @@ public class RabbitMQHander {
 	 * @return
 	 */
 	public WorkerConsumerRMQ getWorkerConsumer(String queueName, IMessageReceiver messageReceiver) {
-		return new WorkerConsumerRMQ(this, queueName, messageReceiver);
+		WorkerConsumerRMQ consumer = new WorkerConsumerRMQ(this, queueName, messageReceiver);
+		consumer.declareQueue();
+		consumer.registerConsumer();
+		return consumer;
 	}
 	
 	
+	/**
+	 * returns a new instance of a worker consumer. A worker consumer receives messages from worker publisher.
+	 * Each message is only processed by one worker consumer. The worker consumers need to acknowledge each
+	 * message after they are finished. If one worker consumer dies during processing , the message is not 
+	 * acknowledged and is sent to another worker after some time. If all worker consumers are busy the message
+	 * is queued.
+	 * @param queueName 		the name of the queue on which messages are published
+	 * @param durable 		true if we are declaring a durable queue (the queue will survive a server restart) 
+	 * @param exclusive		true if we are declaring an exclusive queue (restricted to this connection)
+	 * @param autoDelete	true if we are declaring an autodelete queue (server will delete it when no longer in use)
+	 * @param messageReceiver	method that defines what happens with the received message
+	 * @return
+	 */
+	public WorkerConsumerRMQ getWorkerConsumer(String queueName, boolean durable, boolean exclusive, boolean autoDelete, IMessageReceiver messageReceiver) {
+		WorkerConsumerRMQ consumer = new WorkerConsumerRMQ(this, queueName, messageReceiver);
+		consumer.declareQueue(durable, exclusive, autoDelete);
+		consumer.registerConsumer();
+		return consumer;
+	}
+	
+	
+	
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
+	// 										broadcasters							  					//
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
 	/**
 	 * returns a new instance of a broadcast publisher. It sends messages on the declared exchange. More than
 	 * one broadcast publisher can send messages on the same exchange. Temporary queues are used, which means
@@ -130,7 +180,43 @@ public class RabbitMQHander {
 	 * @return
 	 */
 	public BroadcastPublisherRMQ getBroadcastPublisher(String exchangeName) {
-		return new BroadcastPublisherRMQ(this, exchangeName);
+		BroadcastPublisherRMQ publisher = new BroadcastPublisherRMQ(this, exchangeName);
+		publisher.declareExchange();
+		return publisher;
+	}
+	
+	
+	/**
+	 * returns a new instance of a broadcast publisher. It sends messages on the declared exchange. More than
+	 * one broadcast publisher can send messages on the same exchange. Temporary queues are used, which means
+	 * that the queue gets a random name and will be removed after the client disconnected.
+	 * @param exchangeName 		name of the exchange to publish message on
+	 * @param durable 		true if we are declaring a durable queue (the queue will survive a server restart) 
+	 * @param autoDelete	true if we are declaring an autodelete queue (server will delete it when no longer in use)
+	 * @return
+	 */
+	public BroadcastPublisherRMQ getBroadcastPublisher(String exchangeName, boolean durable, boolean autoDelete) {
+		BroadcastPublisherRMQ publisher = new BroadcastPublisherRMQ(this, exchangeName);
+		publisher.declareExchange(durable, autoDelete);
+		return publisher;
+	}
+	
+	
+	/**
+	 * returns a new instance of a broadcast consumer. It receives all messages on the declared exchange. All consumers
+	 * that listen for a certain exchange will receive all messages. Temporary queues are used, which means that the 
+	 * queue gets a random name and will be removed after the client disconnected.
+	 * @param exchangeName 		name of the exchange to publish message on
+	 * @param durable 		true if we are declaring a durable queue (the queue will survive a server restart) 
+	 * @param autoDelete	true if we are declaring an autodelete queue (server will delete it when no longer in use)
+	 * @param messageReceiver	method that defines what happens with the received message
+	 * @return
+	 */
+	public BroadcastConsumerRMQ getBroadcastConsumer(String exchangeName, boolean durable, boolean autoDelete, IMessageReceiver messageReceiver) {
+		BroadcastConsumerRMQ consumer = new BroadcastConsumerRMQ(this, exchangeName, messageReceiver);
+		consumer.declareExchange(durable, autoDelete);	
+		consumer.registerConsumer();
+		return consumer;
 	}
 	
 	
@@ -143,17 +229,41 @@ public class RabbitMQHander {
 	 * @return
 	 */
 	public BroadcastConsumerRMQ getBroadcastConsumer(String exchangeName, IMessageReceiver messageReceiver) {
-		return new BroadcastConsumerRMQ(this, exchangeName, messageReceiver);
+		BroadcastConsumerRMQ consumer = new BroadcastConsumerRMQ(this, exchangeName, messageReceiver);
+		consumer.declareExchange();	
+		consumer.registerConsumer();
+		return consumer;
 	}
 	
 	
+	
+	
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
+	// 											routers							  						//
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
 	/**
 	 * returns a new instance of a routing publisher. It sends messages on the declared exchange for a certain routing key.
 	 * @param exchangeName 		name of the exchange to publish message on
 	 * @return
 	 */
 	public RoutingPublisherRMQ getRoutingPublisher(String exchangeName) {
-		return new RoutingPublisherRMQ(this, exchangeName);
+		RoutingPublisherRMQ publisher = new RoutingPublisherRMQ(this, exchangeName);
+		publisher.declareExchange(); 
+		return publisher;
+	}
+	
+	
+	/**
+	 * returns a new instance of a routing publisher. It sends messages on the declared exchange for a certain routing key.
+	 * @param exchangeName 		name of the exchange to publish message on
+	 * @param durable 		true if we are declaring a durable queue (the queue will survive a server restart) 
+	 * @param autoDelete	true if we are declaring an autodelete queue (server will delete it when no longer in use)
+	 * @return
+	 */
+	public RoutingPublisherRMQ getRoutingPublisher(String exchangeName, boolean durable, boolean autoDelete) {
+		RoutingPublisherRMQ publisher = new RoutingPublisherRMQ(this, exchangeName);
+		publisher.declareExchange(durable, autoDelete); 
+		return publisher;
 	}
 	
 	
@@ -165,7 +275,27 @@ public class RabbitMQHander {
 	 * @return
 	 */
 	public RoutingConsumerRMQ getRoutingConsumer(String exchangeName, List<String> routingKeys, IMessageReceiver messageReceiver) {
-		return new RoutingConsumerRMQ(this, exchangeName, routingKeys, messageReceiver);
+		RoutingConsumerRMQ consumer = new RoutingConsumerRMQ(this, exchangeName, routingKeys, messageReceiver);
+		consumer.declareExchange();	
+		consumer.registerConsumer();
+		return consumer;
+	}
+	
+	
+	/**
+	 * returns a new instance of a routing consumer. It receives messages for all registered routing keys.
+	 * @param exchangeName 		name of the exchange to publish message on
+	 * @param routingKeys 		list of routing keys, only messages with routing keys in this list are received
+	 * @param durable 		true if we are declaring a durable queue (the queue will survive a server restart) 
+	 * @param autoDelete	true if we are declaring an autodelete queue (server will delete it when no longer in use)
+	 * @param messageReceiver	method that defines what happens with the received message
+	 * @return
+	 */
+	public RoutingConsumerRMQ getRoutingConsumer(String exchangeName, List<String> routingKeys, boolean durable, boolean autoDelete, IMessageReceiver messageReceiver) {
+		RoutingConsumerRMQ consumer = new RoutingConsumerRMQ(this, exchangeName, routingKeys, messageReceiver);
+		consumer.declareExchange(durable, autoDelete);	
+		consumer.registerConsumer();
+		return consumer;
 	}
 	
 

@@ -24,18 +24,27 @@ public class RoutingPublisherRMQ extends CommunicatorBase {
 	 */
 	public RoutingPublisherRMQ(RabbitMQHander mqHandler, String exchangeName) {
 		super(mqHandler);
-		
-		this.exchangeName = exchangeName;
-		
-		// declare a new exchange
-		declareExchange();		
+		this.exchangeName = exchangeName;	
 	}
 	
 	
 	/**
 	 * declares a new exchange
 	 */
-	private void declareExchange() {
+	public void declareExchange() {
+		declareExchange(durable, autoDelete);
+	}	
+	
+	
+	/**
+	 * declares a new exchange
+	 * @param durable 		true if we are declaring a durable queue (the queue will survive a server restart) 
+	 * @param autoDelete	true if we are declaring an autodelete queue (server will delete it when no longer in use)
+	 */
+	public void declareExchange(boolean durable, boolean autoDelete) {
+		this.durable = durable;
+		this.autoDelete = autoDelete;
+		
 		try {
 			// declare the new exchange, direct: a message goes to the queues whose binding key exactly matches
 			// the routing key of the message.
@@ -47,6 +56,7 @@ public class RoutingPublisherRMQ extends CommunicatorBase {
 			logger.error("error declaring the new exchange " + exchangeName + ": ", e);
 		}
 	}	
+	
 	
 	
 	/**
@@ -64,5 +74,4 @@ public class RoutingPublisherRMQ extends CommunicatorBase {
 			logger.error("error broadcasting message on exchangeName " + exchangeName + ", routing key " + routingKey + ": ", e);
 		}
 	}
-	
 }

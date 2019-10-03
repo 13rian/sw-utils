@@ -22,18 +22,29 @@ public class WorkerPublisherRMQ extends CommunicatorBase {
 	 */
 	public WorkerPublisherRMQ(RabbitMQHander mqHandler, String queueName) {
 		super(mqHandler);
-		
 		this.queueName = queueName;
-		
-		// declare a new queue
-		declareQueue();		
+	}
+	
+	
+	/**
+	 * declares a new queue
+	 */
+	public void declareQueue() {
+		declareQueue(durable, exclusive, autoDelete);
 	}
 	
 	
 	/**
 	 * declares a new queue 
+	 * @param durable 		true if we are declaring a durable queue (the queue will survive a server restart) 
+	 * @param exclusive		true if we are declaring an exclusive queue (restricted to this connection)
+	 * @param autoDelete	true if we are declaring an autodelete queue (server will delete it when no longer in use)
 	 */
-	private void declareQueue() {
+	public void declareQueue(boolean durable, boolean exclusive, boolean autoDelete) {
+		this.durable = durable;
+		this.exclusive = exclusive;
+		this.autoDelete = autoDelete;
+		
 		try {
 			// declare the new queue
 			channel.queueDeclare(queueName, durable, exclusive, autoDelete, null);
@@ -59,5 +70,4 @@ public class WorkerPublisherRMQ extends CommunicatorBase {
 			logger.error("error sending message to queue " + queueName + ": ", e);
 		}
 	}
-
 }

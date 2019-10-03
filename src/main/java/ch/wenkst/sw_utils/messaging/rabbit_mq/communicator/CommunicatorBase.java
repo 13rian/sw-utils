@@ -107,4 +107,28 @@ public class CommunicatorBase {
 		}
 	}
 
+
+	public boolean isDurable() {
+		return durable;
+	}
+
+	public void setDurable(boolean durable) {
+		this.durable = durable;
+	}
+
+	public boolean isExclusive() {
+		return exclusive;
+	}
+
+	public void setExclusive(boolean exclusive) {
+		this.exclusive = exclusive;
+	}
+
+	public boolean isAutoDelete() {
+		return autoDelete;
+	}
+
+	public void setAutoDelete(boolean autoDelete) {
+		this.autoDelete = autoDelete;
+	}
 }
