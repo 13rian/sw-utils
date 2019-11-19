@@ -40,7 +40,7 @@ public class Scheduler extends BaseThread {
 	
 	
 	/**
-	 * removes a task from the list of pending taks that are periodically checked if their start time is already expired
+	 * removes a task from the list of pending tasks that are periodically checked if their start time is already expired
 	 * @param task	 	task that is removed
 	 */
 	public void removeFromTasks(ScheduledTask task) {

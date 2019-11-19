@@ -62,4 +62,13 @@ public class TimeoutFuture<T> {
 		});
 	}
 
+
+	public CompletableFuture<T> getFuture() {
+		return future;
+	}
+
+
+	public long getTimeout() {
+		return timeout;
+	}
 }
