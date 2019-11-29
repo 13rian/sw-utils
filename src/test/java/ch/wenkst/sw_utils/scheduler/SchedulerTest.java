@@ -36,7 +36,8 @@ public class SchedulerTest {
 	@BeforeEach
 	public void initScheduler() {
 		// create the scheduler with a poll interval of 100ms
-		scheduler = new Scheduler(100, executor);
+		scheduler = new Scheduler();
+		scheduler.init(100, executor);
 		scheduler.start();
 	}
 	

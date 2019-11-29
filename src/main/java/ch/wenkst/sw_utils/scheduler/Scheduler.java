@@ -5,26 +5,29 @@ import java.util.concurrent.Executor;
 import ch.wenkst.sw_utils.threads.BaseThread;
 
 
-/**
- * One Thread that handles all tasks by periodically checking if the startTime is passed
- */
 public class Scheduler extends BaseThread {
 	private Executor executor = null; 									// executes the tasks asynchronously 
 	private ArrayList<ScheduledTask> scheduledTasks = new ArrayList<>(); 	// holds all scheduled tasks
 	
 	
 	/**
-	 * Allows to schedule tasks in the future
-	 * @param pollInterval	 	poll interval for the thread
+	 * one thread that handles all tasks by periodically checking if the startTime is passed
+	 */
+	public Scheduler() {
+		super();
+		setName("scheduler");
+	}
+	
+	
+	/**
+	 * initializes the scheduler
+	 * @param pollInterval 		poll interval for the thread
 	 * @param executor 			thread pool: call the onStartTask method asynchronously,
 	 * 							null: call the onStartTask method synchronously
 	 */
-	public Scheduler(int pollInterval, Executor executor) {
-		super();
+	public void init(int pollInterval, Executor executor) {
 		this.pollInterval = pollInterval;
 		this.executor = executor;
-		
-		setName("scheduler");
 	}
 
 	
