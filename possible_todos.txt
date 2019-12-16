@@ -12,3 +12,5 @@
 - assertAll if multiple asserts are called in order to execute all tests not just until one Assertion fail
 
 - test conversion inputstream to byte array
+
+- add test mqtt handler
