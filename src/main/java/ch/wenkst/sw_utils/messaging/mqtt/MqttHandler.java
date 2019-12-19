@@ -116,4 +116,17 @@ public class MqttHandler {
 	public void removeSubscription(String topic) throws MqttException {
 		mqttClient.unsubscribe(topic);
 	}
+
+
+	public String getBrokerUrl() {
+		return brokerUrl;
+	}
+
+	public MqttConnectOptions getOptions() {
+		return options;
+	}
+
+	public MqttClient getMqttClient() {
+		return mqttClient;
+	}
 }

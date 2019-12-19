@@ -99,12 +99,13 @@ public class SQLiteDBHandler {
 	 */
 	public void writeOperation(String dbPath, IDBOperation dbOperation) {
 		SQLiteConnector sqlHandler = dbMap.get(dbPath);
+		if (sqlHandler == null) {
+			logger.error("db with path: " + dbPath + " not found in the db-map");
+			return;
+		}
 		
 		// allow write operations only for one thread at a time
 		synchronized (sqlHandler) {
-			if (sqlHandler == null) {
-				logger.error("db with path: " + dbPath + " not found in the db-map");
-			}
 			dbOperation.executeDBOperation(sqlHandler);
 		}
 	}
