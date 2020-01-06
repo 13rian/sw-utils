@@ -93,6 +93,7 @@ public class MqttHandler {
 	 */
 	public void setupClient(String clientId) throws MqttSecurityException, MqttException {
 		mqttClient = new MqttClient(brokerUrl, clientId, null);
+		mqttClient.setTimeToWait(50);
 		mqttClient.connect(options);
 	}
 		
