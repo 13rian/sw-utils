@@ -11,25 +11,33 @@ public class StatusResult {
 	 */
 	public StatusResult() {
 		
-	}
+	}	
 	
 	
 	/**
-	 * constructor for a status result object that has status success and contains the passed result object
-	 * @param result 	result object
+	 * create a successful status result
+	 * @param result 	the result 
+	 * @return
 	 */
-	public StatusResult(Object result) {
-		this.result = result;
+	public static StatusResult fromResult(Object result) {
+		StatusResult statusResult = new StatusResult();
+		statusResult.setSuccess(true);
+		statusResult.setResult(result);
+		return statusResult;
 	}
 	
 	
+	
 	/**
-	 * constructor for a status result object that has status error and contains the passed error message
-	 * @param errorMsg
+	 * creates a failed status result
+	 * @param errorMsg 		the error message
+	 * @return
 	 */
-	public StatusResult(String errorMsg) {
-		this.errorMsg = errorMsg;
-		success = false;
+	public static StatusResult fromError(String errorMsg) {
+		StatusResult statusResult = new StatusResult();
+		statusResult.setSuccess(false);
+		statusResult.setErrorMsg(errorMsg);
+		return statusResult;
 	}
 
 	
