@@ -19,7 +19,7 @@ public class StatusResult {
 	 * @param result 	the result 
 	 * @return
 	 */
-	public static StatusResult fromResult(Object result) {
+	public static StatusResult success(Object result) {
 		StatusResult statusResult = new StatusResult();
 		statusResult.setSuccess(true);
 		statusResult.setResult(result);
@@ -33,9 +33,20 @@ public class StatusResult {
 	 * @param errorMsg 		the error message
 	 * @return
 	 */
-	public static StatusResult fromError(String errorMsg) {
+	public static StatusResult error(String errorMsg) {
+		return error(errorMsg, null);
+	}
+	
+	
+	/**
+	 * creates a failed status result
+	 * @param errorMsg 		the error message
+	 * @return
+	 */
+	public static StatusResult error(String errorMsg, Object result) {
 		StatusResult statusResult = new StatusResult();
 		statusResult.setSuccess(false);
+		statusResult.setResult(result);
 		statusResult.setErrorMsg(errorMsg);
 		return statusResult;
 	}
