@@ -95,8 +95,8 @@ public class MqttHandler {
 	 * @throws MqttSecurityException 
 	 */
 	public void setupClient(String clientId) throws MqttSecurityException, MqttException {
-		publisher = new MqttClient(brokerUrl, clientId, null);
-		subscriber = new MqttClient(brokerUrl, clientId, null);
+		publisher = new MqttClient(brokerUrl, clientId + "_sub", null);
+		subscriber = new MqttClient(brokerUrl, clientId + "_pub", null);
 		publisher.connect(options);
 		subscriber.connect(options);
 	}
