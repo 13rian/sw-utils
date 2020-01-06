@@ -9,7 +9,7 @@ public class StatusResult {
 	/**
 	 * constructor for an empty status result object
 	 */
-	public StatusResult() {
+	protected StatusResult() {
 		
 	}	
 	
