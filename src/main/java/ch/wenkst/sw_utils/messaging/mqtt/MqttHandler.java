@@ -18,7 +18,10 @@ public class MqttHandler {
 	
 	protected String brokerUrl; 				// the url to the mqtt broker
 	protected MqttConnectOptions options; 		// mqtt connection configuration
-	protected MqttClient mqttClient; 			// mqtt client
+	
+	// note: only one client could be used but is seems that it is not possible to publish a message in a listener with the same client
+	protected MqttClient publisher; 			// mqtt client to publish messages
+	protected MqttClient subscriber; 			// mqtt client to subscribe to messages
 	
 	
 	/**
@@ -92,9 +95,10 @@ public class MqttHandler {
 	 * @throws MqttSecurityException 
 	 */
 	public void setupClient(String clientId) throws MqttSecurityException, MqttException {
-		mqttClient = new MqttClient(brokerUrl, clientId, null);
-		mqttClient.setTimeToWait(50);
-		mqttClient.connect(options);
+		publisher = new MqttClient(brokerUrl, clientId, null);
+		subscriber = new MqttClient(brokerUrl, clientId, null);
+		publisher.connect(options);
+		subscriber.connect(options);
 	}
 		
 	
@@ -105,7 +109,7 @@ public class MqttHandler {
 	 * @throws MqttException
 	 */
 	public void addSubscription(String topic, IMqttMessageListener messageListener) throws MqttException {
-		mqttClient.subscribe(topic, messageListener);
+		subscriber.subscribe(topic, messageListener);
 	}
 	
 	
@@ -115,7 +119,7 @@ public class MqttHandler {
 	 * @throws MqttException 
 	 */
 	public void removeSubscription(String topic) throws MqttException {
-		mqttClient.unsubscribe(topic);
+		subscriber.unsubscribe(topic);
 	}
 
 
@@ -127,7 +131,11 @@ public class MqttHandler {
 		return options;
 	}
 
-	public MqttClient getMqttClient() {
-		return mqttClient;
+	public MqttClient getPublisher() {
+		return publisher;
+	}
+
+	public MqttClient getSubscriber() {
+		return subscriber;
 	}
 }
