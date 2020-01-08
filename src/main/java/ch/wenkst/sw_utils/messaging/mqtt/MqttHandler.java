@@ -100,6 +100,28 @@ public class MqttHandler {
 		publisher.connect(options);
 		subscriber.connect(options);
 	}
+	
+	
+	/**
+	 * closes all connections to the mqtt broker
+	 */
+	public void tearDownClient() {
+		try {
+			publisher.disconnect();
+			publisher.close();
+			
+		} catch (Exception e) {
+			logger.error("error closing the connection of the mqtt publisher: ", e);
+		}
+
+		try {
+			subscriber.disconnect();
+			subscriber.close();
+			
+		} catch (Exception e) {
+			logger.error("error closing the connection of the mqtt subscriber: ", e);
+		}
+	}
 		
 	
 	/**
