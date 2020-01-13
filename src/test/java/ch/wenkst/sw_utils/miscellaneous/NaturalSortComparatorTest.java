@@ -49,7 +49,7 @@ public class NaturalSortComparatorTest {
 				"roomNumber"
 		};
 				
-		Collections.sort(testWordList, new NaturaSortComparator(true));
+		Collections.sort(testWordList, new NaturalSortComparator(true));
 		String[] testWordArr = testWordList.toArray(new String[testWordList.size()]);
 		Assertions.assertArrayEquals(testWordArr, sortedWordArr, "sorted words, capital letters ignored");
 		
@@ -97,7 +97,7 @@ public class NaturalSortComparatorTest {
 		};
 		
 		
-		Collections.sort(testWordList, new NaturaSortComparator(false));
+		Collections.sort(testWordList, new NaturalSortComparator(false));
 		testWordArr = testWordList.toArray(new String[testWordList.size()]);
 		Assertions.assertArrayEquals(testWordArr, sortedWordArr, "sorted words, capital letters not ignored");		
 	}

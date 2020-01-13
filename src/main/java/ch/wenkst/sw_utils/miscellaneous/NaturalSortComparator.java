@@ -7,7 +7,7 @@ import java.util.Comparator;
  * comparator that orders strings that contain digits like humans would do:
  * digits before letters and smaller digits before larger digits
  */
-public class NaturaSortComparator implements Comparator<String> {
+public class NaturalSortComparator implements Comparator<String> {
 	private boolean isIgnoreCase = false;     	// true if the capital letters should not be before all other letters
 
 
@@ -15,7 +15,7 @@ public class NaturaSortComparator implements Comparator<String> {
 	 * comparator that orders strings like humans would do:
 	 * digits before letters and smaller digits before larger digits
 	 */
-	public NaturaSortComparator() {
+	public NaturalSortComparator() {
 		super();       
 	}
 
@@ -25,7 +25,7 @@ public class NaturaSortComparator implements Comparator<String> {
 	 * digits before letters and smaller digits before larger digits
 	 * @param isIgnoreCase         false if capital letters should be before lower case letters
 	 */
-	public NaturaSortComparator(boolean isIgnoreCase) {
+	public NaturalSortComparator(boolean isIgnoreCase) {
 		super();
 		this.isIgnoreCase = isIgnoreCase;
 	}
