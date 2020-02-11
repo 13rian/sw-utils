@@ -32,7 +32,7 @@ public class MongoStatusListener implements ServerListener {
         if (event.getNewDescription().isOk()) {
         	connectionFuture.complete(true);
         } else if (event.getNewDescription().getException() != null) {
-            logger.error("error in mongo server description: ", event.getNewDescription().getException());
+            logger.error("error in mongo server description: " + event.getNewDescription().getException().getMessage());
             connectionFuture.complete(false);
         }
     }
