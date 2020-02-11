@@ -3,7 +3,9 @@ package ch.wenkst.sw_utils.db.mongodb;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecProvider;
@@ -33,24 +35,24 @@ import ch.wenkst.sw_utils.db.mongodb.base.EntityInfo;
 
 public class MongoDBHandler {
 	private static final Logger logger = LoggerFactory.getLogger(MongoDBHandler.class);
-	
+
 	private static MongoDBHandler instance = null; 			// instance for the singleton access
-	
+
 	private MongoClient mongoClient = null;					// the client to the mongo db
 	private MongoDatabase database = null; 					// name of the database to use
-	
+
 	// map of the databases, key: name of the db, value: the db object
 	private HashMap<String, MongoDatabase> dbMap = null;
-	
-	
+
+
 	/**
 	 * handles the interface to the mongodb
 	 */
 	protected MongoDBHandler() {
 		dbMap = new HashMap<>();
 	}
-	
-	
+
+
 	/**
 	 * returns the instance of the dbHandler
 	 * @return
@@ -62,11 +64,11 @@ public class MongoDBHandler {
 		return instance;
 	}
 
-	
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 												Connection to the database 								   			  //
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
+
 	/**
 	 * establishes a connection to the mongodb
 	 * @param host 				the host to connect to
@@ -75,13 +77,15 @@ public class MongoDBHandler {
 	 * 							no sense as the timeout of the mongo client is 30 seconds)
 	 * @param dbName 			the name of the db to use
 	 * @param packageNames 		package names that contain the db entities
-	 * @return 					true if the connection was successfully established, false otherwise
+	 * @throws TimeoutException 
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
 	 */
-	public boolean connecToDB(String host, int port, int timeout, String dbName, String[] packageNames) {
-		return connecToDB(host, port, timeout, null, null, dbName, packageNames);
+	public void connecToDB(String host, int port, int timeout, String dbName, String[] packageNames) throws InterruptedException, ExecutionException, TimeoutException {
+		connecToDB(host, port, timeout, null, null, dbName, packageNames);
 	}
-	
-	
+
+
 	/**
 	 * establishes a connection to the mongodb
 	 * @param host 				the host to connect to
@@ -92,29 +96,30 @@ public class MongoDBHandler {
 	 * @param password  		the password if the db is authenticated, null otherwise
 	 * @param dbName 			the name of the db to use
 	 * @param packageNames 		package names that contain the db entities
-	 * @return 			true if the connection was successfully established, false otherwise
+	 * @throws TimeoutException 
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
 	 */
-	public boolean connecToDB(String host, int port, int timeout, String username, String password, String dbName, String[] packageNames) {
+	public void connecToDB(String host, int port, int timeout, String username, String password, String dbName, String[] packageNames) throws InterruptedException, ExecutionException, TimeoutException {
 		String connString = createConnectString(host, port, username, password);
 		logger.info("connect to db " + dbName + ", connection string: " + connString);
-		
-		boolean isConnected = connecToDB(connString, timeout, packageNames);
-		if (isConnected) {
-			database = mongoClient.getDatabase(dbName);
-		}
-		return isConnected;
+
+		connecToDB(connString, timeout, packageNames);
+		database = mongoClient.getDatabase(dbName);
 	}
-	
-	
+
+
 	/**
 	 * establishes a connection to the mongodb
 	 * @param connectString 	mongodb connection string to connect to the db
 	 * @param timeout 			the time in seconds how long to wait for the connection establishment (more than 30secs makes no sense)
 	 * 							as the timeout of the mongo client is 30 seconds
 	 * @param packageNames 		package names that contain the db entities
-	 * @return 					true if the connection was successfully established, false otherwise
+	 * @throws TimeoutException 
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
 	 */
-	public boolean connecToDB(String connectString, int timeout, String... packageNames) {
+	public void connecToDB(String connectString, int timeout, String... packageNames) throws InterruptedException, ExecutionException, TimeoutException {
 		// before using the driver with java objects a CodecRegistry needs to be configured. This includes codecs that
 		// handle the translation to and form bson for the java objects. 
 		// This combines the default codec registry, with the PojoCodecProvider configured to automatically create PojoCodecs
@@ -122,29 +127,29 @@ public class MongoDBHandler {
 		if (packageNames == null || packageNames.length == 0) {
 			// use the default codec provider
 			provider = PojoCodecProvider.builder().automatic(true).build();
-			
+
 		} else {
 			// use the registered db models of the passed packages. initially the codec uses reflection but later
 			// the setter and getters are used if the exist
 			provider = PojoCodecProvider.builder().register(packageNames).build();
 		}
-		
+
 		CodecRegistry pojoCodecRegistry = CodecRegistries.fromRegistries(
 				CodecRegistries.fromProviders(provider),
 				MongoClients.getDefaultCodecRegistry());
-		
+
 		// create the listener for the mongo server description
 		CompletableFuture<Boolean> connectionFuture = new CompletableFuture<>();
 		MongoStatusListener statusListener = new MongoStatusListener(connectionFuture);
-		
-		
+
+
 		// configure the mongo client	
 		MongoClientSettings settings = MongoClientSettings.builder()
 				.codecRegistry(pojoCodecRegistry)
 				.applyConnectionString(new ConnectionString(connectString))
-//                .applyToClusterSettings(builder -> {
-//	                builder.hosts(hosts); 		
-//	             })
+				//                .applyToClusterSettings(builder -> {
+				//	                builder.hosts(hosts); 		
+				//	             })
 				.applyToSocketSettings(builder -> {
 					builder.connectTimeout(timeout, TimeUnit.SECONDS);
 				})
@@ -152,27 +157,19 @@ public class MongoDBHandler {
 					builder.addServerListener(statusListener);
 				})
 				.build();
-		
+
 		mongoClient = MongoClients.create(settings);		
-		
+
 		// wait for the db to establish the connection
-		try {
-			boolean connEstablished = connectionFuture.get(timeout, TimeUnit.SECONDS);
-			if (connEstablished) {
-				logger.info("connection to mongo db successfully established");
-			} else {
-				logger.info("failed to establish a connection to mongo db");
-			}
-			
-			return connEstablished;
-			
-		} catch (Exception e) {
-			logger.error("failed to establish a connection to mongo db: ", e);
-			return false;
+		boolean connEstablished = connectionFuture.get(timeout, TimeUnit.SECONDS);
+		if (connEstablished) {
+			logger.info("connection to mongo db successfully established");
+		} else {
+			logger.info("failed to establish a connection to mongo db");
 		}
 	}
-	
-	
+
+
 	/**
 	 * creates the connect string to connect to mongodb
 	 * @param host 			the host of the db
@@ -192,49 +189,49 @@ public class MongoDBHandler {
 		sb.append(host).append(":").append(port);
 		return sb.toString();
 	}
-	
 
-// 	not necessary because the connect method will fail if the db is not reachable 
-//	/**
-//	 * sends a ping to the db in order to check the connection
-//	 * @param dbName 	the name of the db to use
-//	 * @return 			true if the connection is open, false otherwise
-//	 */
-//	public boolean testConnection(String dbName) {
-//		MongoDatabase db = getDatabase(dbName);
-//		return testConnection(db);
-//	}
-//	
-//	/**
-//	 * sends a ping to the db in order to check the connection
-//	 * @return 			true if the connection is open, false otherwise
-//	 */
-//	public boolean testConnection() {
-//		return testConnection(database);
-//	}
-//	
-//	
-//	/**
-//	 * sends a ping to the db in order to check the connection
-//	 * @param databse 	the db to use	
-//	 * @return 			true if the connection is open, false otherwise
-//	 */
-//	private boolean testConnection(MongoDatabase database) {
-//		Publisher<String> publisher = mongoClient.listDatabaseNames();
-//		BlockingSubscriber<String> strSubscriber = new BlockingSubscriber<>();
-//		publisher.subscribe(strSubscriber);
-//		
-//		try {
-//			List<String> strAnswer = strSubscriber.get(10, TimeUnit.SECONDS);
-//			logger.debug("successfully sent the ping to mongodb: " + strAnswer);
-//			return true;
-//		} catch (Exception e) {
-//			logger.error("failed to send the ping to mongdb: ", e);
-//			return false;
-//		}		
-//	}
-	
-	
+
+	// 	not necessary because the connect method will fail if the db is not reachable 
+	//	/**
+	//	 * sends a ping to the db in order to check the connection
+	//	 * @param dbName 	the name of the db to use
+	//	 * @return 			true if the connection is open, false otherwise
+	//	 */
+	//	public boolean testConnection(String dbName) {
+	//		MongoDatabase db = getDatabase(dbName);
+	//		return testConnection(db);
+	//	}
+	//	
+	//	/**
+	//	 * sends a ping to the db in order to check the connection
+	//	 * @return 			true if the connection is open, false otherwise
+	//	 */
+	//	public boolean testConnection() {
+	//		return testConnection(database);
+	//	}
+	//	
+	//	
+	//	/**
+	//	 * sends a ping to the db in order to check the connection
+	//	 * @param databse 	the db to use	
+	//	 * @return 			true if the connection is open, false otherwise
+	//	 */
+	//	private boolean testConnection(MongoDatabase database) {
+	//		Publisher<String> publisher = mongoClient.listDatabaseNames();
+	//		BlockingSubscriber<String> strSubscriber = new BlockingSubscriber<>();
+	//		publisher.subscribe(strSubscriber);
+	//		
+	//		try {
+	//			List<String> strAnswer = strSubscriber.get(10, TimeUnit.SECONDS);
+	//			logger.debug("successfully sent the ping to mongodb: " + strAnswer);
+	//			return true;
+	//		} catch (Exception e) {
+	//			logger.error("failed to send the ping to mongdb: ", e);
+	//			return false;
+	//		}		
+	//	}
+
+
 	/**
 	 * disconnects from the database
 	 */
@@ -244,17 +241,17 @@ public class MongoDBHandler {
 			logger.info("disconnected from mongoDB");
 		}
 	}
-	
-	
-	
-	
+
+
+
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 		 																											  //
 	// 												OPERATIONS WITH POJO	 	 										  //
 	// 											uses java objects to map the db  										  //
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	
+
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 													insert	 								   			  			  //
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -266,15 +263,15 @@ public class MongoDBHandler {
 	public void insertOne(BaseEntity entity, Subscriber<Success> subscriber) {
 		// get the collection
 		MongoCollection<BaseEntity> collection = getCollection(entity.getClass());
-		
+
 		// insert the document
 		Publisher<Success> publisher = collection.insertOne(entity);
 		publisher.subscribe(subscriber);
 	}
-	
-	
-	
-	
+
+
+
+
 	/**
 	 * asynchronously inserts many documents to the db
 	 * @param entities 		the list of entities to save to the db
@@ -284,18 +281,18 @@ public class MongoDBHandler {
 		if (entities.size() < 1) {
 			return;
 		}
-		
+
 		// get the collection
 		MongoCollection<BaseEntity> collection = getCollection(entities.get(0).getClass());
-		
+
 		// insert the documents
 		Publisher<Success> publisher = collection.insertMany(entities);
 		publisher.subscribe(subscriber);
 	}
-	
-	
-	
-	
+
+
+
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 													find	 								   			  			  //
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -307,12 +304,12 @@ public class MongoDBHandler {
 	@SuppressWarnings("unchecked")
 	public void find(Class<?> classObj, Subscriber<? extends BaseEntity> subscriber) {
 		MongoCollection<BaseEntity> collection = getCollection(classObj);
-		
+
 		FindPublisher<BaseEntity> publisher = collection.find();
 		publisher.subscribe((Subscriber<BaseEntity>) subscriber);	
 	}	
-	
-	
+
+
 	/**
 	 * queries entities in the db based on the passed query
 	 * @param classObj 		the entity to retrieve
@@ -328,17 +325,17 @@ public class MongoDBHandler {
 		if (sort == null) {
 			sort = new Document();
 		}
-		
+
 		// get the collection
 		MongoCollection<BaseEntity> collection = getCollection(classObj);
-		
+
 		// retrieve the entities from the db
 		FindPublisher<BaseEntity> publisher = collection.find(query).sort(sort);
 		publisher.subscribe((Subscriber<BaseEntity>) subscriber);		
 	}	
-	
-	
-	
+
+
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 													update	 								   			  			  //
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -353,16 +350,16 @@ public class MongoDBHandler {
 		if (query == null) {
 			query = new Document();
 		}
-		
+
 		// get the collection
 		MongoCollection<BaseEntity> collection = getCollection(classObj);
-		
+
 		// execute the update
 		Publisher<UpdateResult> publisher = collection.updateMany(query, update);
 		publisher.subscribe(subscriber);
 	}
-	
-	
+
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 													delete	 								   			  			  //
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -376,16 +373,16 @@ public class MongoDBHandler {
 		if (query == null) {
 			query = new Document();
 		}
-		
+
 		// get the collection
 		MongoCollection<BaseEntity> collection = getCollection(classObj);
-		
+
 		// execute the update
 		Publisher<DeleteResult> publisher = collection.deleteMany(query);
 		publisher.subscribe(subscriber);
 	}
-	
-	
+
+
 	/**
 	 * drops the collection in the db of the passed entity class
 	 * @param classObj 		the class of the entity to delete
@@ -396,9 +393,9 @@ public class MongoDBHandler {
 		Publisher<Success> publisher = collection.drop();
 		publisher.subscribe(subscriber);
 	}
-	
-	
-	
+
+
+
 	/**
 	 * drops the used database
 	 * @param subscriber 	subscriber to the drop database publisher
@@ -407,8 +404,8 @@ public class MongoDBHandler {
 		Publisher<Success> publisher = database.drop();
 		publisher.subscribe(subscriber);
 	}
-	
-	
+
+
 	/**
 	 * drops the db with the passed name
 	 * @param dbName 		the name of the db to drop
@@ -419,17 +416,17 @@ public class MongoDBHandler {
 		Publisher<Success> publisher = db.drop();
 		publisher.subscribe(subscriber);
 	}
-	
-	
 
-	
-	
+
+
+
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 		 																											  //
 	// 												OPERATIONS WITH JSON	 	 										  //
 	// 						directly loads json from the db, i.e. bson that is converted to json						  //
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 												json-find	 								   			  			  //
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -442,8 +439,8 @@ public class MongoDBHandler {
 		MongoCollection<Document> collection = getJsonCollection(collectionName);
 		findJson(collection, subscriber);
 	}
-	
-	
+
+
 	/**
 	 * queries all entities in the db
 	 * @param collectionName 	the name of the collection to query
@@ -454,8 +451,8 @@ public class MongoDBHandler {
 		MongoCollection<Document> collection = getJsonCollection(collectionName);
 		findJson(collection, subscriber);
 	}
-	
-	
+
+
 	/**
 	 * queries all entities in the db
 	 * @param collection 	the collection to perform the query
@@ -465,8 +462,8 @@ public class MongoDBHandler {
 		FindPublisher<Document> publisher = collection.find();
 		publisher.subscribe(subscriber);
 	}
-	
-	
+
+
 	/**
 	 * queries the entities in the db based on the passed query
 	 * @param collectionName 	the name of the collection to query
@@ -479,8 +476,8 @@ public class MongoDBHandler {
 		MongoCollection<Document> collection = getJsonCollection(collectionName);
 		findJson(collection, query, sort, projection, subscriber);
 	}
-	
-	
+
+
 	/**
 	 * queries the entities in the db based on the passed query
 	 * @param collectionName 	the name of the collection to query
@@ -494,9 +491,9 @@ public class MongoDBHandler {
 		MongoCollection<Document> collection = getJsonCollection(collectionName, dbName);
 		findJson(collection, query, sort, projection, subscriber);
 	}
-	
-	
-	
+
+
+
 	/**
 	 * queries entities in the db based on the passed query
 	 * @param collection 		the collection to perform the query
@@ -515,13 +512,13 @@ public class MongoDBHandler {
 		if (projection == null) {
 			projection = new Document();
 		}
-				
+
 		FindPublisher<Document> publisher = collection.find(query).sort(sort).projection(projection);
 		publisher.subscribe(subscriber);
 	}
-	
-	
-	
+
+
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 													delete	 								   			  			  //
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -537,7 +534,7 @@ public class MongoDBHandler {
 		Publisher<Success> publisher = collection.drop();
 		publisher.subscribe(subscriber);
 	}
-	
+
 	/**
 	 * drops the collection in the db
 	 * @param collectionName 	the name of the collection to drop
@@ -548,13 +545,13 @@ public class MongoDBHandler {
 		Publisher<Success> publisher = collection.drop();
 		publisher.subscribe(subscriber);
 	}
-	
-	
-	
+
+
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 													index	 								   			  			  //
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
+
 	/**
 	 * creates an index in the db to accelerate queries, the same index is only created once and never 
 	 * @param collectionName 	the name of the collection for which the index is created
@@ -568,8 +565,8 @@ public class MongoDBHandler {
 		MongoCollection<Document> collection = db.getCollection(collectionName);
 		createIndex(collection, index, indexOptions, subscriber);
 	}
-	
-	
+
+
 	/**
 	 * creates an index in the db to accelerate queries, the same index is only created once and never 
 	 * @param collectionName 	the name of the collection for which the index is created
@@ -581,8 +578,8 @@ public class MongoDBHandler {
 		MongoCollection<Document> collection = database.getCollection(collectionName);
 		createIndex(collection, index, indexOptions, subscriber);
 	}
-	
-	
+
+
 	/**
 	 * creates an index in the db to accelerate queries, the same index is only created once and never 
 	 * @param collection 		the collection for which the index is created
@@ -599,8 +596,8 @@ public class MongoDBHandler {
 		}
 		publisher.subscribe(subscriber);
 	}
-	
-	
+
+
 	/**
 	 * drops all indexes of this collection
 	 * @param collectionName 	the name of the collection for which all indexes are deleted
@@ -611,8 +608,8 @@ public class MongoDBHandler {
 		Publisher<Success> publisher = collection.dropIndexes();
 		publisher.subscribe(subscriber);
 	}
-	
-	
+
+
 	/**
 	 * drops all indexes of this collection
 	 * @param collectionName 	the name of the collection for which all indexes are deleted
@@ -625,10 +622,10 @@ public class MongoDBHandler {
 		Publisher<Success> publisher = collection.dropIndexes();
 		publisher.subscribe(subscriber);
 	}
-	
-	
-	
-	
+
+
+
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 													helper methods	 				 		   			  			  //
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -643,14 +640,14 @@ public class MongoDBHandler {
 			MongoDatabase db = mongoClient.getDatabase(dbName);
 			dbMap.put(dbName, db);
 			return db;
-		
+
 		} else {
 			return dbMap.get(dbName);
 		}
 	}
-	
-	
-	
+
+
+
 	/**
 	 * returns the collection that can be used to make queries
 	 * if the EntityInfo annotation is missing the db name from the connect method is used
@@ -660,31 +657,31 @@ public class MongoDBHandler {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public MongoCollection<BaseEntity> getCollection(Class classObj) {
 		EntityInfo entityInfo = (EntityInfo) classObj.getAnnotation(EntityInfo.class);
-    	String dbName = ""; 
-    	String collectionName = "";
+		String dbName = ""; 
+		String collectionName = "";
 		if (entityInfo != null) {
 			dbName = entityInfo.db();
-	    	collectionName = entityInfo.collection();
+			collectionName = entityInfo.collection();
 		}
-    	
-    	
-    	// if the collection name is not specified take the class name 
-    	if (collectionName.isEmpty()) {
-    		collectionName = classObj.getSimpleName();
-    	}
-    	
-    	// define the database to use
-    	MongoDatabase db = null;
-    	if (dbName.isEmpty()) {
-    		db = database;
-    	} else {
-    		db = getDatabase(dbName);
-    	}
-    	
-    	return getCollection(collectionName, classObj, db);
+
+
+		// if the collection name is not specified take the class name 
+		if (collectionName.isEmpty()) {
+			collectionName = classObj.getSimpleName();
+		}
+
+		// define the database to use
+		MongoDatabase db = null;
+		if (dbName.isEmpty()) {
+			db = database;
+		} else {
+			db = getDatabase(dbName);
+		}
+
+		return getCollection(collectionName, classObj, db);
 	}
-	
-	
+
+
 	/**
 	 * returns the collection that can be used to make queries
 	 * @param classObj 		the class of the db entity
@@ -692,11 +689,11 @@ public class MongoDBHandler {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public MongoCollection<BaseEntity> getCollection(String collectionName, Class classObj, MongoDatabase database) {
 		MongoCollection<BaseEntity> collection = database.getCollection(collectionName, classObj); 	
-		
+
 		return collection;
 	}
-	
-	
+
+
 	/**
 	 * returns the collection that can be used to access the driver directly without a mapping class
 	 * @param collectionName 	the name of the collection
@@ -704,9 +701,9 @@ public class MongoDBHandler {
 	public MongoCollection<Document> getJsonCollection(String collectionName) {
 		return database.getCollection(collectionName); 
 	}
-	
-	
-	
+
+
+
 	/**
 	 * returns the collection that can be used to access the driver directly without a mapping class
 	 * @param collectionName 	the name of the collection
@@ -716,5 +713,5 @@ public class MongoDBHandler {
 		MongoDatabase db = getDatabase(dbName);
 		return db.getCollection(collectionName); 
 	}
-	
+
 }
