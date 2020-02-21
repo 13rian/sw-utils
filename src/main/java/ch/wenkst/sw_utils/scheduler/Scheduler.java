@@ -15,6 +15,7 @@ public class Scheduler extends BaseThread {
 	 */
 	public Scheduler() {
 		super();
+		pollInterval = 1000;
 		setName("scheduler");
 	}
 	
