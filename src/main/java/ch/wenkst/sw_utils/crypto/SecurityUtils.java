@@ -219,7 +219,8 @@ public class SecurityUtils {
 	
 	
 	/**
-	 * loads a list of certificates form pem or der files
+	 * loads a list of certificates form pem or der files. if a certificate could not be loaded
+	 * it will not be added to the list
 	 * @param paths 	list of absolute file paths to the certificates
 	 * @return 			list of certificates
 	 */
@@ -227,7 +228,9 @@ public class SecurityUtils {
 		ArrayList<Certificate> result = new ArrayList<>();
 		for (String path: paths) {
 			Certificate cert = certFromFile(path);
-			result.add(cert);
+			if (cert != null) {
+				result.add(cert);
+			}
 		}
 		
 		return result;
