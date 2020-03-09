@@ -565,8 +565,26 @@ public class XmlDoc {
 	 * @return 			the value specified by the passed property string
 	 */
 	public String readAnyValue(String property) {
-		Element element = readAnyElement(property);
-		String value = stringFromElement(element);
+		Element rootElement = getRootElement();
+		return readAnyValue(rootElement, property);
+	}
+	
+	
+	/**
+	 * reads any value from an xml file, nested properties are separated by a .
+	 * example: tag1.tag2.tag3, the root element is not part of the property name
+	 * if there arrays are involved always the first element is used
+	 * @param element 	the element from which the property should be read
+	 * @param property 	the property to read out
+	 * @return 			the value specified by the passed property string
+	 */
+	public String readAnyValue(Element element, String property) {
+		Element propertyElement = readAnyElement(element, property);
+		if (propertyElement == null) {
+			return null;
+		}
+		
+		String value = stringFromElement(propertyElement);
 		return value;
 	}
 	
@@ -579,9 +597,24 @@ public class XmlDoc {
 	 * @return 			the element specified by the passed property string
 	 */
 	public Element readAnyElement(String property) {
+		Element rootElement = getRootElement();
+		return readAnyElement(rootElement, property);
+	}
+	
+	
+	
+	/**
+	 * reads any element from an xml file, nested properties are separated by a .
+	 * example: tag1.tag2.tag3, the root element is not part of the property name
+	 * if there arrays are involved always the first element is used
+	 * @param element 	the element from which the property should be read
+	 * @param property 	the property to read out
+	 * @return 			the element specified by the passed property string
+	 */
+	public Element readAnyElement(Element element, String property) {
 		String[] tags = property.split("\\.");
 		
-		Element parentElement = getRootElement();
+		Element parentElement = element;
 		Element childElement = null;
 		for (String tag : tags) {
 			// read the element by ignoring the name space

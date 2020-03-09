@@ -83,6 +83,9 @@ public class XmlDocTest {
 		Assertions.assertEquals("678", xmlReadDoc.readAnyValue("Location.Address.Number"), "read a nested value");
 		Assertions.assertEquals("Freddy", xmlReadDoc.readAnyValue("Employees.Employee.Name"), "read a nested array value");
 		Assertions.assertEquals("Crypto Magic AG", xmlReadDoc.readAnyValue("Name"), "read simple value");
+		
+		Element locationElement = xmlReadDoc.getChildElementByName(rootElement, "Location");
+		Assertions.assertEquals("Winterthur", xmlReadDoc.readAnyValue(locationElement, "Address.City"), "read nested value from element");
 	}
 	
 	
