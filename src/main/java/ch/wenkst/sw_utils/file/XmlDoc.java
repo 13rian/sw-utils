@@ -555,6 +555,52 @@ public class XmlDoc {
 	public String stringFromElement(Element element) {
 		return element.getChildNodes().item(0).getNodeValue();
 	}
+	
+	
+	/**
+	 * reads any value from an xml file, nested properties are separated by a .
+	 * example: tag1.tag2.tag3, the root element is not part of the property name
+	 * if there arrays are involved always the first element is used
+	 * @param property 	the property to read out
+	 * @return 			the value specified by the passed property string
+	 */
+	public String readAnyValue(String property) {
+		Element element = readAnyElement(property);
+		String value = stringFromElement(element);
+		return value;
+	}
+	
+	
+	/**
+	 * reads any element from an xml file, nested properties are separated by a .
+	 * example: tag1.tag2.tag3, the root element is not part of the property name
+	 * if there arrays are involved always the first element is used
+	 * @param property 	the property to read out
+	 * @return 			the element specified by the passed property string
+	 */
+	public Element readAnyElement(String property) {
+		String[] tags = property.split("\\.");
+		
+		Element parentElement = getRootElement();
+		Element childElement = null;
+		for (String tag : tags) {
+			// read the element by ignoring the name space
+			childElement = getChildElementByNameNS(parentElement, "*", tag, 0);
+			
+			// try to read the element without ignoring the namespace
+			if (childElement == null) {
+				childElement = getChildElementByName(parentElement, tag, 0);
+			}
+			
+			if (childElement == null) {
+				logger.error("no element found for property " + property);
+				return null;
+			}
+			
+			parentElement = childElement;
+		}
+		return childElement;
+	}
 
 
 	/**

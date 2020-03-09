@@ -52,31 +52,37 @@ public class XmlDocTest {
 	@DisplayName("xml read")
 	public void xmlReadTest() {
 		// get the root element
-		Element rootElement = xmlReadDoc.getRootElement();   
+		Element rootElement = xmlReadDoc.getRootElement();
+		Element employeesElement = xmlReadDoc.getChildElementByName(rootElement, "Employees");
 		
 		// read out a string
-		Element employee = xmlReadDoc.getChildElement(rootElement, 0);
+		Element employee = xmlReadDoc.getChildElement(employeesElement, 0);
 		Assertions.assertEquals("Freddy", xmlReadDoc.readString(employee, "Name", null), "read a string element");
 		Assertions.assertEquals(null, xmlReadDoc.readString(employee, "InvalidTag", null), "read a non-existing string element");
 		
 		// read out an integer
-		employee = xmlReadDoc.getChildElement(rootElement, 1);
+		employee = xmlReadDoc.getChildElement(employeesElement, 1);
 		Assertions.assertEquals(22, (int) xmlReadDoc.readInteger(employee, "Age", 0), "read an integer element");
 		Assertions.assertEquals(0, (int) xmlReadDoc.readInteger(employee, "InvalidTag", 0), "read an non-existing integer element");
 		
 		// read out a long
-		employee = xmlReadDoc.getChildElement(rootElement, 2);
+		employee = xmlReadDoc.getChildElement(employeesElement, 2);
 		Assertions.assertEquals(42000l, (long) xmlReadDoc.readLong(employee, "Salary", 0l), "read a long element");
 		Assertions.assertEquals(0l, (long) xmlReadDoc.readLong(employee, "InvalidTag", 0l), "read an non-existing long element");
 		
 		// read out a double
-		employee = xmlReadDoc.getChildElement(rootElement, 3);
+		employee = xmlReadDoc.getChildElement(employeesElement, 3);
 		Assertions.assertEquals(56.7d, (double) xmlReadDoc.readDouble(employee, "Weight", 0d), "read an double element");
 		Assertions.assertEquals(0d, (double) xmlReadDoc.readDouble(employee, "InvalidTag", 0d), "read an non-existing double element");
 		
 		// read an attribute
 		Assertions.assertEquals("4", xmlReadDoc.readAttribute(employee, "ID", "invalid"), "read existing attribute");
 		Assertions.assertEquals("invalid", xmlReadDoc.readAttribute(employee, "date", "invalid"), "read non-existing attribute");
+		
+		// read any nested value
+		Assertions.assertEquals("678", xmlReadDoc.readAnyValue("Location.Address.Number"), "read a nested value");
+		Assertions.assertEquals("Freddy", xmlReadDoc.readAnyValue("Employees.Employee.Name"), "read a nested array value");
+		Assertions.assertEquals("Crypto Magic AG", xmlReadDoc.readAnyValue("Name"), "read simple value");
 	}
 	
 	
