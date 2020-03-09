@@ -11,6 +11,7 @@ import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -444,15 +445,15 @@ public class XmlDoc {
 
 
 	/**
-	 * returns the nth child element of the passed parent element
+	 * returns all child elements of the passed parent element
 	 * @param parent	 	the parent element
 	 * @return 				an array list of child elements,  or an empty array if the parent has no children
 	 */
-	public ArrayList<Element> getChildElements(Element parent) {
+	public List<Element> getChildElements(Element parent) {
 		// a node does not have to be an element, only return the elements
 		// save all elements in a list
 		NodeList children = parent.getChildNodes();
-		ArrayList<Element> elements = new ArrayList<>();   // to save all elements
+		List<Element> elements = new ArrayList<>();   // to save all elements
 		for (int i=0; i<children.getLength(); i++) {
 			Node node = children.item(i);
 			// only add the elements to the array list
@@ -579,7 +580,7 @@ public class XmlDoc {
 	 * @return 			the value specified by the passed property string
 	 */
 	public String readAnyValue(Element element, String property) {
-		Element propertyElement = readAnyElement(element, property);
+		Element propertyElement = getAnyElement(element, property);
 		if (propertyElement == null) {
 			return null;
 		}
@@ -596,9 +597,9 @@ public class XmlDoc {
 	 * @param property 	the property to read out
 	 * @return 			the element specified by the passed property string
 	 */
-	public Element readAnyElement(String property) {
+	public Element getAnyElement(String property) {
 		Element rootElement = getRootElement();
-		return readAnyElement(rootElement, property);
+		return getAnyElement(rootElement, property);
 	}
 	
 	
@@ -611,7 +612,7 @@ public class XmlDoc {
 	 * @param property 	the property to read out
 	 * @return 			the element specified by the passed property string
 	 */
-	public Element readAnyElement(Element element, String property) {
+	public Element getAnyElement(Element element, String property) {
 		String[] tags = property.split("\\.");
 		
 		Element parentElement = element;
@@ -634,7 +635,33 @@ public class XmlDoc {
 		}
 		return childElement;
 	}
-
+	
+		
+	/**
+	 * reads all the child element of the passed property, nested properties are separated by a .
+	 * example: tag1.tag2.tag3, the root element is not part of the property name
+	 * @param property 		the property to read out
+	 * @return
+	 */
+	public List<Element> getAnyElements(String property) {
+		Element rootElement = getRootElement();
+		return getAnyElements(rootElement, property);
+	}
+	
+	
+	/**
+	 * reads all the child element of the passed property, nested properties are separated by a .
+	 * example: tag1.tag2.tag3, the root element is not part of the property name
+	 * @param element 	the element from which the property should be read
+	 * @param property 		the property to read out
+	 * @return
+	 */
+	public List<Element> getAnyElements(Element element, String property) {
+		Element childElement = getAnyElement(property);
+		List<Element> elements = getChildElements(childElement);
+		return elements;
+	}
+	
 
 	/**
 	 * reads the integer form an element

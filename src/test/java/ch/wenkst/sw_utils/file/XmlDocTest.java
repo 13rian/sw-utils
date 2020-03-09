@@ -3,6 +3,7 @@ package ch.wenkst.sw_utils.file;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -86,6 +87,9 @@ public class XmlDocTest {
 		
 		Element locationElement = xmlReadDoc.getChildElementByName(rootElement, "Location");
 		Assertions.assertEquals("Winterthur", xmlReadDoc.readAnyValue(locationElement, "Address.City"), "read nested value from element");
+		
+		List<Element> employees = xmlReadDoc.getAnyElements("Location.Buildings");
+		Assertions.assertEquals("A5", xmlReadDoc.stringFromElement(employees.get(1)), "read nested element array");
 	}
 	
 	

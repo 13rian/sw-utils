@@ -36,5 +36,11 @@
 			<City>Winterthur</City>
 			<Country>Switzerland</Country>
 		</Address>
+		
+		 <Buildings>
+		 	<Building>A3</Building>
+		 	<Building>A5</Building>
+		 	<Building>A7</Building>
+		 </Buildings>
 	</Location>
 </Company>
