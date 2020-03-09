@@ -1,13 +1,18 @@
 package ch.wenkst.sw_utils.file;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
 
 public class XmlDocTest {
 	private static XmlDoc xmlReadDoc = null;	// holds the xml file to read
@@ -16,10 +21,12 @@ public class XmlDocTest {
 	
 	/**
 	 * loads the resources that are needed for the test
-	 * @throws FileNotFoundException 
+	 * @throws ParserConfigurationException 
+	 * @throws IOException 
+	 * @throws SAXException 
 	 */
 	@BeforeAll
-	public static void initializeExternalResources() throws FileNotFoundException {
+	public static void initializeExternalResources() throws SAXException, IOException, ParserConfigurationException {
 		// define the directory for the xml files
 		String xmlDir = System.getProperty("user.dir") + File.separator +
 				"resource" + File.separator + 
@@ -29,7 +36,7 @@ public class XmlDocTest {
 		String xmlReadFile = xmlDir + "xmlRead.xml";
 		
 		xmlReadDoc = new XmlDoc();
-		xmlReadDoc.openXMLFromFile(xmlReadFile);
+		xmlReadDoc.openXmlFromFile(xmlReadFile);
 		
 		// define the correct xml to write
 		String xmlWriteFile = xmlDir + "xmlWrite.xml";
@@ -76,10 +83,12 @@ public class XmlDocTest {
 	
 	/**
 	 * write xml
+	 * @throws TransformerException 
+	 * @throws UnsupportedEncodingException 
 	 */
 	@Test
 	@DisplayName("xml write")
-	public void xmlWriteTest() {
+	public void xmlWriteTest() throws UnsupportedEncodingException, TransformerException {
 		// create a new document
 		XmlDoc xmlWriteDoc = new XmlDoc();
 		xmlWriteDoc.createNewDocument();

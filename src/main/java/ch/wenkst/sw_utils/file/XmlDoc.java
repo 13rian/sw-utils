@@ -4,22 +4,27 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.slf4j.Logger;
@@ -29,6 +34,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
+import org.xml.sax.SAXException;
 
 public class XmlDoc {
 	private static final Logger logger = LoggerFactory.getLogger(XmlDoc.class);
@@ -191,40 +197,28 @@ public class XmlDoc {
 	 * writes the document to a file
 	 * @param fileName 		the path of the file, in which the xml text is written
 	 * @param indentAmount 	number of spaces for the indent
-	 * @return	 			true: was successful, false: error occurred
+	 * @throws IOException 
+	 * @throws TransformerException 
 	 */
-	public boolean writeToFile(String fileName, int indentAmount) {			
-		try {
-			FileOutputStream fos = new FileOutputStream(fileName);
-			writeToStream(fos, indentAmount);
-			fos.close();
-
-			logger.info("xml file successfully written at: " + fileName);
-			return true;
-
-		} catch (Exception e) {
-			logger.error("error writing the document to a file: ", e);
-			return false;
-		}
+	public void writeToFile(String fileName, int indentAmount) throws IOException, TransformerException {			
+		FileOutputStream fos = new FileOutputStream(fileName);
+		writeToStream(fos, indentAmount);
+		fos.close();
+		logger.debug("xml file successfully written at: " + fileName);
 	}
 
 
 	/**
 	 * writes the document to a byte array
 	 * @param indentAmount 	 	number of spaces for the indent	
-	 * @return 					the byte array representing the document or an empty array if an error occured
+	 * @return 					the byte array representing the document
+	 * @throws TransformerException 
+	 * @throws UnsupportedEncodingException 
 	 */
-	public byte[] writeToByteArray(int indentAmount) {
-		byte[] result = new byte[0];
-
-		try {
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			writeToStream(baos, indentAmount);
-			result = baos.toByteArray();
-
-		} catch (Exception e) {
-			logger.error("error writing the document to a byte array: ", e);
-		}
+	public byte[] writeToByteArray(int indentAmount) throws UnsupportedEncodingException, TransformerException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		writeToStream(baos, indentAmount);
+		byte[] result = baos.toByteArray();
 
 		return result;
 	}
@@ -233,18 +227,15 @@ public class XmlDoc {
 	/**
 	 * writes the document to a String
 	 * @param indentAmount	the number of spaces for the indent of the xml document
-	 * @return	 			the xml-string or "" if an error occurred
+	 * @return	 			the xml-string
+	 * @throws UnsupportedEncodingException 
+	 * @throws TransformerException 
 	 */
-	public String writeToString(int indentAmount) {
-		String result = "";
-		try {
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			writeToStream(baos, indentAmount);
-			result = baos.toString("UTF8");
+	public String writeToString(int indentAmount) throws UnsupportedEncodingException, TransformerException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		writeToStream(baos, indentAmount);
+		String result = baos.toString("UTF8");
 
-		} catch (Exception e) {
-			logger.error("error writing the document to a string: ", e);
-		}
 		return result;
 	}
 
@@ -254,57 +245,47 @@ public class XmlDoc {
 	 * this method will not change it, use the removeIndent instead to get rid of it
 	 * @param os 	 			the output stream to which the document is written		
 	 * @param indentAmount 		number of spaces for the indent 
-	 * @return					true: was successful, false: error occurred
+	 * @throws TransformerException 
+	 * @throws UnsupportedEncodingException 
 	 */
-	public boolean writeToStream(OutputStream os, int indentAmount) {
-		try {
-			DOMSource source = new DOMSource(document);                  	// create a new input source
-			OutputStreamWriter fw = new OutputStreamWriter(os, "UTF8");
-			StreamResult result = new StreamResult(fw);        				// holder to save the output
+	public void writeToStream(OutputStream os, int indentAmount) throws TransformerException, UnsupportedEncodingException {
+		DOMSource source = new DOMSource(document);                  	// create a new input source
+		OutputStreamWriter fw = new OutputStreamWriter(os, "UTF8");
+		StreamResult result = new StreamResult(fw);        				// holder to save the output
 
-			// create the transformer
-			TransformerFactory transformerFactory = TransformerFactory.newInstance();
-			Transformer transformer = transformerFactory.newTransformer();
+		// create the transformer
+		TransformerFactory transformerFactory = TransformerFactory.newInstance();
+		Transformer transformer = transformerFactory.newTransformer();
 
-			if (indentAmount < 1) {
-				transformer.setOutputProperty(OutputKeys.INDENT, "no");
+		if (indentAmount < 1) {
+			transformer.setOutputProperty(OutputKeys.INDENT, "no");
 
-			} else {
-				transformer.setOutputProperty(OutputKeys.INDENT, "yes");        // write line breaks in between elements (default indent is 0)
-				transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, "yes");
+		} else {
+			transformer.setOutputProperty(OutputKeys.INDENT, "yes");        // write line breaks in between elements (default indent is 0)
+			transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, "yes");
 
-				// set the indent amount
-				String indent = String.valueOf(indentAmount);     				// get the indent amount as String
-				transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", indent);
-			}
-
-			// transform the document to the xml-text that is written to the file
-			transformer.transform(source, result);
-			return true;
-
-		} catch (Exception e) {
-			logger.error("error writing the document to a stream: ", e);
-			return false;
+			// set the indent amount
+			String indent = String.valueOf(indentAmount);     				// get the indent amount as String
+			transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", indent);
 		}
+
+		// transform the document to the xml-text that is written to the file
+		transformer.transform(source, result);
 	}
 
 
 	/**
 	 * removes the indent of an xml file that was read in
+	 * @throws XPathExpressionException 
 	 */
-	public void removeIndent() {
-		try {
-			XPathFactory xfact = XPathFactory.newInstance();
-			XPath xpath = xfact.newXPath();
-			NodeList emptyNodes = (NodeList) xpath.evaluate("//text()[normalize-space(.) = '']", document, XPathConstants.NODESET);
+	public void removeIndent() throws XPathExpressionException {
+		XPathFactory xfact = XPathFactory.newInstance();
+		XPath xpath = xfact.newXPath();
+		NodeList emptyNodes = (NodeList) xpath.evaluate("//text()[normalize-space(.) = '']", document, XPathConstants.NODESET);
 
-			for (int i = 0; i < emptyNodes.getLength(); i++) {
-				Node node = emptyNodes.item(i);
-				node.getParentNode().removeChild(node);
-			}
-
-		} catch (Exception e) {
-			logger.error("error removing the indent of the xml document: ", e);
+		for (int i = 0; i < emptyNodes.getLength(); i++) {
+			Node node = emptyNodes.item(i);
+			node.getParentNode().removeChild(node);
 		}
 	}
 
@@ -318,6 +299,7 @@ public class XmlDoc {
 		parent.appendChild(child);
 	}	
 
+	
 	public Document getDoc() {
 		return document;
 	}  
@@ -332,10 +314,12 @@ public class XmlDoc {
 	/**
 	 * creates an xml document from the passed file name
 	 * @param fileName	 	path to the xml-file
-	 * @return	 			true if successfully read
+	 * @throws ParserConfigurationException 
+	 * @throws IOException 
+	 * @throws SAXException 
 	 */
-	public boolean openXMLFromFile(String fileName) {
-		return openXMLFromFile(fileName, false);
+	public void openXmlFromFile(String fileName) throws SAXException, IOException, ParserConfigurationException {
+		openXmlFromFile(fileName, false);
 	}
 
 
@@ -343,60 +327,59 @@ public class XmlDoc {
 	 * creates an xml document from the passed file name
 	 * @param fileName	 		path to the xml-file
 	 * @param isNamespaceAware	true if the parser is aware of the xml namespace
-	 * @return	 				true if successfully read
+	 * @throws IOException 
+	 * @throws SAXException 
+	 * @throws ParserConfigurationException 
 	 */
-	public boolean openXMLFromFile(String fileName, boolean isNamespaceAware) {
-		try {
-			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			factory.setNamespaceAware(isNamespaceAware);			
-			DocumentBuilder builder = factory.newDocumentBuilder();
+	public void openXmlFromFile(String fileName, boolean isNamespaceAware) throws SAXException, IOException, ParserConfigurationException {
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		factory.setNamespaceAware(isNamespaceAware);			
+		DocumentBuilder builder = factory.newDocumentBuilder();
 
-			// load the input XML document from the passed file
-			document = builder.parse(new File(fileName));
-			return true;
-
-		} catch (Exception e) {
-			logger.error("Exception reading xml file" + e);
-			return false;
-		}		
+		// load the input xml document from the passed file
+		document = builder.parse(new File(fileName));	
 	}
 
 
 
 	/**
 	 * creates an xml document from the passed xml string, the encoding is set to utf-8
-	 * @param xmlString 	XML-String
-	 * @return	 			true if successfully read
+	 * @param xmlString 	the string with the xml data
+	 * @throws ParserConfigurationException 
+	 * @throws IOException 
+	 * @throws SAXException 
 	 */
-	public boolean openXMLFromString(String xmlString) {
-		// get the utf-8 byte array from the string
+	public void openXmlFromString(String xmlString) throws SAXException, IOException, ParserConfigurationException {
 		byte[] xmlBytes = xmlString.getBytes(StandardCharsets.UTF_8);
 
-		return openXMLFromByteArray(xmlBytes, false);
+		openXmlFromByteArray(xmlBytes, false);
 	}
 
 
 	/**
 	 * creates an xml document from the passed xml string, the encoding is set to utf-8
-	 * @param xmlString 		XML-String
+	 * @param xmlString 		the string with the xml data
 	 * @param isNamespaceAware	true if the parser is aware of the xml namespace
-	 * @return	 				true if successfully read
+	 * @throws ParserConfigurationException 
+	 * @throws IOException 
+	 * @throws SAXException 
 	 */
-	public boolean openXMLFromString(String xmlString, boolean isNamespaceAware) {
-		// get the utf-8 byte array from the string
+	public void openXmlFromString(String xmlString, boolean isNamespaceAware) throws SAXException, IOException, ParserConfigurationException {
 		byte[] xmlBytes = xmlString.getBytes(StandardCharsets.UTF_8);
 
-		return openXMLFromByteArray(xmlBytes, isNamespaceAware);
+		openXmlFromByteArray(xmlBytes, isNamespaceAware);
 	}
 
 
 	/**
 	 * creates an xml document from the passed byte array
 	 * @param xmlBytes 		the byte array containing the xml data (utf-8)
-	 * @return	 			true if successfully read
+	 * @throws ParserConfigurationException 
+	 * @throws IOException 
+	 * @throws SAXException 
 	 */
-	public boolean openXMLFromByteArray(byte[] xmlBytes) {
-		return openXMLFromByteArray(xmlBytes, false);
+	public void openXmlFromByteArray(byte[] xmlBytes) throws SAXException, IOException, ParserConfigurationException {
+		openXmlFromByteArray(xmlBytes, false);
 	}
 
 
@@ -404,24 +387,19 @@ public class XmlDoc {
 	 * creates an xml document from the passed byte array
 	 * @param xmlBytes 			the bytes representing the xml document
 	 * @param isNamespaceAware	true if the parser is aware of the xml namespace
-	 * @return	 				true if successfully read
+	 * @throws IOException 
+	 * @throws SAXException 
+	 * @throws ParserConfigurationException 
 	 */
-	public boolean openXMLFromByteArray(byte[] xmlBytes, boolean isNamespaceAware) {
-		try {
-			InputStream is = new ByteArrayInputStream(xmlBytes);
+	public void openXmlFromByteArray(byte[] xmlBytes, boolean isNamespaceAware) throws SAXException, IOException, ParserConfigurationException {
+		InputStream is = new ByteArrayInputStream(xmlBytes);
 
-			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			factory.setNamespaceAware(isNamespaceAware);
-			DocumentBuilder builder = factory.newDocumentBuilder();
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		factory.setNamespaceAware(isNamespaceAware);
+		DocumentBuilder builder = factory.newDocumentBuilder();
 
-			// load the input XML document from the input stream
-			document = builder.parse(is);
-			return true;
-
-		} catch (Exception e)	{
-			logger.error("Exception reading the xml-string: ", e);
-			return false;
-		}
+		// load the input xml document from the input stream
+		document = builder.parse(is);
 	}
 
 
@@ -574,7 +552,7 @@ public class XmlDoc {
 	 * @param element		the element of which the content is returned
 	 * @return  			the string value of the passed xml element
 	 */
-	private String getValueFromElement(Element element) {
+	public String stringFromElement(Element element) {
 		return element.getChildNodes().item(0).getNodeValue();
 	}
 
@@ -589,7 +567,7 @@ public class XmlDoc {
 	public Integer readInteger(Element element, String tag, Integer defaultVal) {
 		try {
 			Element childEl = getChildElementByName(element, tag);
-			String value = getValueFromElement(childEl);
+			String value = stringFromElement(childEl);
 			return Integer.parseInt(value);
 
 		} catch (Exception e) {
@@ -609,7 +587,7 @@ public class XmlDoc {
 	public Long readLong(Element element, String tag, Long defaultVal) {
 		try {
 			Element childEl = getChildElementByName(element, tag);
-			String value = getValueFromElement(childEl);
+			String value = stringFromElement(childEl);
 			return Long.parseLong(value);
 
 		} catch (Exception e) {
@@ -629,7 +607,7 @@ public class XmlDoc {
 	public Double readDouble(Element element, String tag, Double defaultVal) {
 		try {
 			Element childEl = getChildElementByName(element, tag);
-			String value = getValueFromElement(childEl);
+			String value = stringFromElement(childEl);
 			return Double.parseDouble(value);
 
 		} catch (Exception e) {
@@ -649,7 +627,7 @@ public class XmlDoc {
 	public String readString(Element element, String tag, String defaultVal) {
 		try {
 			Element childEl = getChildElementByName(element, tag);
-			String value = getValueFromElement(childEl);
+			String value = stringFromElement(childEl);
 			return value;
 
 		} catch (Exception e) {
@@ -705,10 +683,8 @@ public class XmlDoc {
 		int xmlEndIndex = xmlString.lastIndexOf(firstTagName) + firstTagName.length() + 1;
 
 		// remove the garbage at the end
-		String cleanedXML = xmlString.substring(0, xmlEndIndex);
-		return cleanedXML;
-
+		String cleanedXml = xmlString.substring(0, xmlEndIndex);
+		return cleanedXml;
 	}
-
 }
 
