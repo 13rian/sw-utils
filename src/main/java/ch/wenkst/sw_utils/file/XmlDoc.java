@@ -554,7 +554,11 @@ public class XmlDoc {
 	 * @return  			the string value of the passed xml element
 	 */
 	public String stringFromElement(Element element) {
-		return element.getChildNodes().item(0).getNodeValue();
+		Node node = element.getChildNodes().item(0);
+		if (node == null) {
+			return null;
+		}
+		return node.getNodeValue();
 	}
 	
 	
