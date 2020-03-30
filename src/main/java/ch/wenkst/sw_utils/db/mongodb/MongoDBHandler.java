@@ -228,7 +228,7 @@ public class MongoDBHandler {
 	 * @param entity 		the entity to save to the db
 	 * @param subscriber 	subscriber to the insert one publisher
 	 */
-	public void insertOne(BaseEntity entity, Subscriber<Success> subscriber) {
+	public void insert(BaseEntity entity, Subscriber<Success> subscriber) {
 		// get the collection
 		MongoCollection<BaseEntity> collection = getCollection(entity.getClass());
 
@@ -243,10 +243,10 @@ public class MongoDBHandler {
 	 * @param entityList 	the list with the entities to insert
 	 * @return 				the result of the db operation
 	 */
-	public StatusResult insertOneSync(BaseEntity entity) {
+	public StatusResult insertSync(BaseEntity entity) {
 		List<BaseEntity> entityList = new ArrayList<>();
 		entityList.add(entity);
-		return insertManySync(entityList);
+		return insertSync(entityList);
 	}
 
 
@@ -255,7 +255,7 @@ public class MongoDBHandler {
 	 * @param entities 		the list of entities to save to the db
 	 * @param subscriber 	subscriber to the insert many publisher
 	 */
-	public void insertMany(List<BaseEntity> entities, Subscriber<Success> subscriber) {
+	public void insert(List<? extends BaseEntity> entities, Subscriber<Success> subscriber) {
 		if (entities.size() < 1) {
 			return;
 		}
@@ -274,7 +274,7 @@ public class MongoDBHandler {
 	 * @param entityList 	the list with the entities to insert
 	 * @return 				the result of the db operation
 	 */
-	public StatusResult insertManySync(List<BaseEntity> entityList) {
+	public StatusResult insertSync(List<? extends BaseEntity> entityList) {
 		TimeoutFuture<StatusResult> future = new TimeoutFuture<StatusResult>(dbTimeout);
 		
 		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
@@ -293,7 +293,7 @@ public class MongoDBHandler {
 			}
 		});
 		
-		insertMany(entityList, subscriber);
+		insert(entityList, subscriber);
 		
 		// wait for the db result
 		try {

@@ -91,7 +91,7 @@ public class MainAsyncMongoDB {
 			}
 		});
 		
-		dbHandler.insertMany(peopleList, insertManySub);
+		dbHandler.insert(peopleList, insertManySub);
 		
 		
 		
@@ -195,7 +195,7 @@ public class MainAsyncMongoDB {
 			}
 		});
 		
-		dbHandler.insertMany(peopleList, jsonInsertManySub);
+		dbHandler.insert(peopleList, jsonInsertManySub);
 		
 		
 		// find all entities in the db

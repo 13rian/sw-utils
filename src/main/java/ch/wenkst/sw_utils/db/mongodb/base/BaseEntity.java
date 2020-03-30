@@ -43,7 +43,7 @@ public class BaseEntity {
 			}
 		});
     	
-    	dbHandler.insertOne(this, subscriber);    	
+    	dbHandler.insert(this, subscriber);    	
     }
     
     
@@ -53,7 +53,7 @@ public class BaseEntity {
      */
     public void saveToDB(Subscriber<Success> subscriber) {
     	MongoDBHandler dbHandler = MongoDBHandler.getInstance();
-    	dbHandler.insertOne(this, subscriber);
+    	dbHandler.insert(this, subscriber);
     	
     }
 }
