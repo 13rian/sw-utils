@@ -1,5 +1,6 @@
 package ch.wenkst.sw_utils.db.mongodb;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -18,6 +19,7 @@ import org.reactivestreams.Subscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.Gson;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.model.IndexOptions;
@@ -32,6 +34,9 @@ import com.mongodb.reactivestreams.client.Success;
 
 import ch.wenkst.sw_utils.db.mongodb.base.BaseEntity;
 import ch.wenkst.sw_utils.db.mongodb.base.EntityInfo;
+import ch.wenkst.sw_utils.db.mongodb.subscriber.CallbackSubscriber;
+import ch.wenkst.sw_utils.future.TimeoutFuture;
+import ch.wenkst.sw_utils.miscellaneous.StatusResult;
 
 public class MongoDBHandler {
 	private static final Logger logger = LoggerFactory.getLogger(MongoDBHandler.class);
@@ -43,6 +48,9 @@ public class MongoDBHandler {
 
 	// map of the databases, key: name of the db, value: the db object
 	private HashMap<String, MongoDatabase> dbMap = null;
+	
+	protected long dbTimeout = 10000; 						// time in ms on how long to wait for sync db operations
+	private Gson gson;										// gson to handle json
 
 
 	/**
@@ -50,6 +58,7 @@ public class MongoDBHandler {
 	 */
 	protected MongoDBHandler() {
 		dbMap = new HashMap<>();
+		gson = new Gson();
 	}
 
 
@@ -191,47 +200,6 @@ public class MongoDBHandler {
 	}
 
 
-	// 	not necessary because the connect method will fail if the db is not reachable 
-	//	/**
-	//	 * sends a ping to the db in order to check the connection
-	//	 * @param dbName 	the name of the db to use
-	//	 * @return 			true if the connection is open, false otherwise
-	//	 */
-	//	public boolean testConnection(String dbName) {
-	//		MongoDatabase db = getDatabase(dbName);
-	//		return testConnection(db);
-	//	}
-	//	
-	//	/**
-	//	 * sends a ping to the db in order to check the connection
-	//	 * @return 			true if the connection is open, false otherwise
-	//	 */
-	//	public boolean testConnection() {
-	//		return testConnection(database);
-	//	}
-	//	
-	//	
-	//	/**
-	//	 * sends a ping to the db in order to check the connection
-	//	 * @param databse 	the db to use	
-	//	 * @return 			true if the connection is open, false otherwise
-	//	 */
-	//	private boolean testConnection(MongoDatabase database) {
-	//		Publisher<String> publisher = mongoClient.listDatabaseNames();
-	//		BlockingSubscriber<String> strSubscriber = new BlockingSubscriber<>();
-	//		publisher.subscribe(strSubscriber);
-	//		
-	//		try {
-	//			List<String> strAnswer = strSubscriber.get(10, TimeUnit.SECONDS);
-	//			logger.debug("successfully sent the ping to mongodb: " + strAnswer);
-	//			return true;
-	//		} catch (Exception e) {
-	//			logger.error("failed to send the ping to mongdb: ", e);
-	//			return false;
-	//		}		
-	//	}
-
-
 	/**
 	 * disconnects from the database
 	 */
@@ -268,8 +236,18 @@ public class MongoDBHandler {
 		Publisher<Success> publisher = collection.insertOne(entity);
 		publisher.subscribe(subscriber);
 	}
-
-
+	
+	
+	/**
+	 * synchronously inserts a pojo into the db
+	 * @param entityList 	the list with the entities to insert
+	 * @return 				the result of the db operation
+	 */
+	public StatusResult insertOneSync(BaseEntity entity) {
+		List<BaseEntity> entityList = new ArrayList<>();
+		entityList.add(entity);
+		return insertManySync(entityList);
+	}
 
 
 	/**
@@ -290,6 +268,44 @@ public class MongoDBHandler {
 		publisher.subscribe(subscriber);
 	}
 
+
+	/**
+	 * synchronously inserts a pojo list into the db
+	 * @param entityList 	the list with the entities to insert
+	 * @return 				the result of the db operation
+	 */
+	public StatusResult insertManySync(List<BaseEntity> entityList) {
+		TimeoutFuture<StatusResult> future = new TimeoutFuture<StatusResult>(dbTimeout);
+		
+		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
+			String entityName = "-";
+			if (entityList != null && entityList.size() > 0) {
+				entityName = entityList.get(0).getClass().getSimpleName();
+			}
+			
+			if (error != null) {
+				logger.error(entityName + ": failed to insert pojo entity list to the db: ", error);
+				future.complete(StatusResult.error(error.getMessage()));
+				
+			} else {
+				logger.debug(entityName + ": many pojo documents successfully inserted");
+				future.complete(StatusResult.success(result.get(0)));
+			}
+		});
+		
+		insertMany(entityList, subscriber);
+		
+		// wait for the db result
+		try {
+			StatusResult result = future.get();
+			return result;
+			
+		} catch (Exception e) {
+			logger.error("insert pojo timed out");
+			StatusResult result = StatusResult.error("insert pojo timed out");
+			return result;
+		}
+	}	
 
 
 
@@ -333,6 +349,52 @@ public class MongoDBHandler {
 		FindPublisher<BaseEntity> publisher = collection.find(query).sort(sort);
 		publisher.subscribe((Subscriber<BaseEntity>) subscriber);		
 	}	
+	
+	
+	/**
+	 * synchronously retrieved all pojos from the db
+	 * @param classObj 		the class of the object to find in the db
+	 * @return 				the result of the db operation
+	 */
+	public StatusResult findSync(Class<?> classObj) {
+		return findSync(classObj, null,  null);
+	}	
+	
+	
+	/**
+	 * synchronously retrieved a pojo from the db
+	 * @param classObj 		the class of the object to find in the db
+	 * @param query 		the query for the db
+	 * @param sort 			the sort information
+	 * @return 				the result of the db operation
+	 */
+	public StatusResult findSync(Class<?> classObj, Bson query, Bson sort) {
+		TimeoutFuture<StatusResult> future = new TimeoutFuture<StatusResult>(dbTimeout);
+		
+		CallbackSubscriber<BaseEntity> subscriber = new CallbackSubscriber<>((result, error) ->  {
+			if (error != null) {
+				logger.error(classObj.getSimpleName() + " pojo db find query failed: ", error);
+				future.complete(StatusResult.error(error.getMessage()));
+				
+			} else {
+				logger.debug(classObj.getSimpleName() + " pojo db find query successful, length: " + result.size());
+				future.complete(StatusResult.success(result));
+			}
+		});
+		
+		find(classObj, query, sort, subscriber);
+		
+		// wait for the db result
+		try {
+			StatusResult result = future.get();
+			return result;
+			
+		} catch (Exception e) {
+			logger.error("find pojo timed out");
+			StatusResult result = StatusResult.error("find pojo timed out");
+			return result;
+		}
+	}	
 
 
 
@@ -358,6 +420,43 @@ public class MongoDBHandler {
 		Publisher<UpdateResult> publisher = collection.updateMany(query, update);
 		publisher.subscribe(subscriber);
 	}
+	
+	
+	
+	/**
+	 * synchronously updates a pojo in the db
+	 * @param classObj 		the class of the object to find in the db
+	 * @param query 		the query for the db
+	 * @param update 		the db update
+	 * @return 				the result of the db operation
+	 */
+	public StatusResult updateSync(Class<?> classObj, Bson query, Bson update) {
+		TimeoutFuture<StatusResult> future = new TimeoutFuture<StatusResult>(dbTimeout);
+		
+		CallbackSubscriber<UpdateResult> subscriber = new CallbackSubscriber<>((result, error) ->  {
+			if (error != null) {
+				logger.error(classObj.getSimpleName() + " pojo db update query failed: ", error);
+				future.complete(StatusResult.error("pojo update query failed"));
+				
+			} else {
+				logger.debug(classObj.getSimpleName() + ": pojo db update query successful");
+				future.complete(StatusResult.success(result.get(0)));
+			}
+		});
+		
+		update(classObj, query, update, subscriber);
+		
+		// wait for the db result
+		try {
+			StatusResult result = future.get();
+			return result;
+			
+		} catch (Exception e) {
+			logger.error("update pojo timed out");
+			StatusResult result = StatusResult.error("update pojo timed out");
+			return result;
+		}
+	}
 
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -380,6 +479,41 @@ public class MongoDBHandler {
 		// execute the update
 		Publisher<DeleteResult> publisher = collection.deleteMany(query);
 		publisher.subscribe(subscriber);
+	}
+	
+	
+	/**
+	 * synchronously deletes a pojo from the db
+	 * @param classObj 		the class of the object to find in the db
+	 * @param query 		the query for the db
+	 * @return 				the result of the db operation
+	 */
+	public StatusResult deleteSync(Class<?> classObj, Bson query) {
+		TimeoutFuture<StatusResult> future = new TimeoutFuture<StatusResult>(dbTimeout);
+		
+		CallbackSubscriber<DeleteResult> subscriber = new CallbackSubscriber<>((result, error) ->  {
+			if (error != null) {
+				logger.debug(classObj.getSimpleName() + ": pojo db delete query failed: ", error);
+				future.complete(StatusResult.error("pojo delete query failed"));
+				
+			} else {
+				logger.debug(classObj.getSimpleName() + ": pojo delete query successful");
+				future.complete(StatusResult.success(result.get(0)));
+			}
+		});
+		
+		delete(classObj, query, subscriber);
+		
+		// wait for the db result
+		try {
+			StatusResult result = future.get();
+			return result;
+			
+		} catch (Exception e) {
+			logger.error("delete pojo timed out");
+			StatusResult result = StatusResult.error("delete pojo timed out");
+			return result;
+		}
 	}
 
 
@@ -419,8 +553,6 @@ public class MongoDBHandler {
 
 
 
-
-
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 		 																											  //
 	// 												OPERATIONS WITH JSON	 	 										  //
@@ -448,7 +580,7 @@ public class MongoDBHandler {
 	 * @param subscriber 		subscriber to the find publisher
 	 */
 	public void findJson(String collectionName, String dbName, Subscriber<Document> subscriber) {
-		MongoCollection<Document> collection = getJsonCollection(collectionName);
+		MongoCollection<Document> collection = getJsonCollection(collectionName, dbName);
 		findJson(collection, subscriber);
 	}
 
@@ -515,6 +647,54 @@ public class MongoDBHandler {
 
 		FindPublisher<Document> publisher = collection.find(query).sort(sort).projection(projection);
 		publisher.subscribe(subscriber);
+	}
+	
+	
+	/**
+	 * synchronously queries all entities in the db
+	 * @param collectionName 	the name of the collection to query
+	 */
+	public StatusResult findJsonSync(String collectionName) {
+		return findJsonSync(collectionName, null, null, null);
+	}
+	
+	
+	/**
+	 * returns json as a result of the db query
+	 * @param collectionName	the name of the collection to query
+	 * @param query				the query for the db
+	 * @param sort				the sort information
+	 * @param projection	    the projection information	
+	 * @return
+	 */
+	public StatusResult findJsonSync(String collectionName, Bson query, Bson sort, Bson projection) {
+		TimeoutFuture<StatusResult> future = new TimeoutFuture<StatusResult>(dbTimeout);
+		
+		CallbackSubscriber<Document> subscriber = new CallbackSubscriber<>((result, error) ->  {
+			if (error != null) {
+				logger.error(collectionName + " json find query failed: ", error);
+				future.complete(StatusResult.error(error.getMessage()));
+				
+			} else {
+				logger.debug(collectionName + " json find query successfull, length: " + result.size());
+				String jsonList = gson.toJson(result);
+				StatusResult statusResult = StatusResult.success(jsonList);
+				future.complete(statusResult);
+			}
+		});
+		
+		findJson(collectionName, query, sort, projection, subscriber);
+		
+		// wait for the db result
+		try {
+			StatusResult result = future.get();
+			return result;
+			
+		} catch (Exception e) {
+			logger.error("find pojo timed out");
+			StatusResult result = StatusResult.error("find pojo timed out");
+			return result;
+		}
 	}
 
 
