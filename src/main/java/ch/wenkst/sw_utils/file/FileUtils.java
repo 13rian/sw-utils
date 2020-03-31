@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
@@ -140,21 +141,34 @@ public class FileUtils {
 	/**
 	 * writes a String to a file. If the passed directory does not exist it will be created. If the file already exists
 	 * it will be overwritten.
-	 * @param filePath	 	path of the file in which the String is written
+	 * @param filePath	 	path of the file in which the string is written
 	 * @param content 		content of the file
 	 * @throws FileNotFoundException 
 	 */
 	public static void writeStrToFile(String filePath, String content) throws FileNotFoundException {
-		// create the file and ensure that the parent directories exist
 		File file = new File(filePath);
-		if (file.getParentFile() != null) {
-			file.getParentFile().mkdirs();
-		}
+		file.mkdirs();
 
-		// write the new file
 		PrintWriter pw = new PrintWriter(filePath);
 		pw.println(content);
 		pw.close();	
+	}
+	
+	
+	/**
+	 * writes the passed input stream to a file, if the file already exists its content will be replaced
+	 * @param filePath 			path of the file that is written
+	 * @param is				the input stream with the data
+	 * @throws IOException
+	 */
+	public static void inputStreamToFile(String filePath, InputStream is) throws IOException {
+		File file = new File(filePath);
+		file.mkdirs();
+
+		Files.copy(
+				is, 
+				file.toPath(), 
+				StandardCopyOption.REPLACE_EXISTING);
 	}
 	
 	
