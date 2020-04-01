@@ -14,7 +14,6 @@ public class HttpResponseParser extends HttpParser {
 	}
 
 
-
 	/**
 	 * extracts the status code and phrase from the status line
 	 */
@@ -50,11 +49,20 @@ public class HttpResponseParser extends HttpParser {
 		return status;
 	}
 
+	
 	public String getStatusTxt() {
 		if (statusTxt == null) {
 			parseStatusLine();
 		}
 		
 		return statusTxt;
+	}
+	
+	
+	@Override
+	public void clearAfterFullMessage() {
+		super.clearAfterFullMessage();
+		status = -1;
+		statusTxt = null;
 	}
 }

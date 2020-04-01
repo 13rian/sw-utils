@@ -40,4 +40,12 @@ public class HttpRequestParser extends HttpParser {
 		
 		return requestURI;
 	}
+	
+	
+	@Override
+	public void clearAfterFullMessage() {
+		super.clearAfterFullMessage();
+		httpMethod = null;
+		requestURI = null;
+	}
 }
