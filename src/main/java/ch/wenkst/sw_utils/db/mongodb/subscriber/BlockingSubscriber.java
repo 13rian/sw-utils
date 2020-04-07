@@ -23,7 +23,6 @@ public class BlockingSubscriber<T> extends BaseSubscriber<T> {
 	@Override
 	public void onComplete() {
 		latch.countDown();
-		super.onComplete();
 	}
 
 	

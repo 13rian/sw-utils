@@ -10,7 +10,6 @@ public class CallbackSubscriber<T> extends BaseSubscriber<T> {
 
 	@Override
 	public void onComplete() {
-		super.onComplete();
 		callback.onResult(result, error);
 	}
 }

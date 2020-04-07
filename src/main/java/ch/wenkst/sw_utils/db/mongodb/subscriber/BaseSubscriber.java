@@ -5,7 +5,7 @@ import java.util.List;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
-public class BaseSubscriber<T> implements Subscriber<T> {	
+public abstract class BaseSubscriber<T> implements Subscriber<T> {	
 	protected final List<T> result;					// result list of the db
 	protected Exception error = null; 				// the first error that occurred
 	protected volatile boolean completed; 			// true if the stream is completed, false otherwise
@@ -33,13 +33,7 @@ public class BaseSubscriber<T> implements Subscriber<T> {
 			error = new Exception(t);
 		}
 		onComplete();
-	}
-
-	@Override
-	public void onComplete() {
-		completed = true;
-	}
-	
+	}	
 
 	public List<T> getResult() {
 		return result;

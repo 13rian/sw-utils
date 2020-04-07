@@ -1,14 +1,13 @@
 package ch.wenkst.sw_utils.db.mongodb.base;
 
 import org.bson.types.ObjectId;
-import org.reactivestreams.Subscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.mongodb.reactivestreams.client.Success;
 
 import ch.wenkst.sw_utils.db.mongodb.MongoDBHandler;
-import ch.wenkst.sw_utils.db.mongodb.subscriber.CallbackSubscriber;
+import ch.wenkst.sw_utils.db.mongodb.subscriber.IResultCallback;
 
 public class BaseEntity {
 	private static final Logger logger = LoggerFactory.getLogger(BaseEntity.class);
@@ -37,13 +36,12 @@ public class BaseEntity {
      */
     public void saveToDB() {
     	MongoDBHandler dbHandler = MongoDBHandler.getInstance();
-		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
-			if (error != null) {
+    	
+    	dbHandler.insert(this, (result, error) -> {
+    		if (error != null) {
 				logger.error("failed to save the entity " + getClass().getSimpleName() + " to the db: ", error);
 			}
-		});
-    	
-    	dbHandler.insert(this, subscriber);    	
+    	});    	
     }
     
     
@@ -51,9 +49,8 @@ public class BaseEntity {
      * saves this entity to the db
      * @param subscriber 	 the subscriber to the insert one publisher
      */
-    public void saveToDB(Subscriber<Success> subscriber) {
-    	MongoDBHandler dbHandler = MongoDBHandler.getInstance();
-    	dbHandler.insert(this, subscriber);
-    	
+    public void saveToDB(IResultCallback<Success> resultCallback) {
+    	MongoDBHandler dbHandler = MongoDBHandler.getInstance();    	
+    	dbHandler.insert(this, resultCallback);
     }
 }

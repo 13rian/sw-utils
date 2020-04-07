@@ -3,16 +3,11 @@ package ch.wenkst.sw_utils.db.mongodb;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.bson.Document;
-import org.bson.codecs.configuration.CodecProvider;
-import org.bson.codecs.configuration.CodecRegistries;
-import org.bson.codecs.configuration.CodecRegistry;
-import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.conversions.Bson;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
@@ -20,14 +15,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
-import com.mongodb.ConnectionString;
-import com.mongodb.MongoClientSettings;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.FindPublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 import com.mongodb.reactivestreams.client.Success;
@@ -35,6 +27,7 @@ import com.mongodb.reactivestreams.client.Success;
 import ch.wenkst.sw_utils.db.mongodb.base.BaseEntity;
 import ch.wenkst.sw_utils.db.mongodb.base.EntityInfo;
 import ch.wenkst.sw_utils.db.mongodb.subscriber.CallbackSubscriber;
+import ch.wenkst.sw_utils.db.mongodb.subscriber.IResultCallback;
 import ch.wenkst.sw_utils.future.TimeoutFuture;
 import ch.wenkst.sw_utils.miscellaneous.StatusResult;
 
@@ -48,7 +41,7 @@ public class MongoDBHandler {
 
 	// map of the databases, key: name of the db, value: the db object
 	private HashMap<String, MongoDatabase> dbMap = null;
-	
+
 	protected long dbTimeout = 10000; 						// time in ms on how long to wait for sync db operations
 	private Gson gson;										// gson to handle json
 
@@ -77,127 +70,32 @@ public class MongoDBHandler {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 												Connection to the database 								   			  //
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	public void connectToDB(DbConnectOptions options) throws DbConnectException, InterruptedException, ExecutionException, TimeoutException {
+		if (options.getConnectString() == null) {
+			options.createConnectString();
+		}		
 
-	/**
-	 * establishes a connection to the mongodb
-	 * @param host 				the host to connect to
-	 * @param port 				the port of the mongo db
-	 * @param timeout 			the time in seconds how long to wait for the connection establishment (more than 30secs makes
-	 * 							no sense as the timeout of the mongo client is 30 seconds)
-	 * @param dbName 			the name of the db to use
-	 * @param packageNames 		package names that contain the db entities
-	 * @throws TimeoutException 
-	 * @throws ExecutionException 
-	 * @throws InterruptedException 
-	 */
-	public void connecToDB(String host, int port, int timeout, String dbName, String[] packageNames) throws InterruptedException, ExecutionException, TimeoutException {
-		connecToDB(host, port, timeout, null, null, dbName, packageNames);
-	}
+		long timeout = options.getTimeout();
+		String connectString = options.getConnectString();
+		String dbName = options.getDbName();
+		if (dbName == null) {
+			throw new DbConnectException("no db name specified in the connect options");
+		}
 
+		logger.info("connect to db " + dbName + ", connection string: " + connectString);
+		
+		mongoClient = options.createMongClient();
 
-	/**
-	 * establishes a connection to the mongodb
-	 * @param host 				the host to connect to
-	 * @param port 				the port of the mongo db
-	 * @param timeout 			the time in seconds how long to wait for the connection establishment (more than 30secs makes
-	 * 							no sense as the timeout of the mongo client is 30 seconds)
-	 * @param username			the user name if the db is authenticated, null otherwise
-	 * @param password  		the password if the db is authenticated, null otherwise
-	 * @param dbName 			the name of the db to use
-	 * @param packageNames 		package names that contain the db entities
-	 * @throws TimeoutException 
-	 * @throws ExecutionException 
-	 * @throws InterruptedException 
-	 */
-	public void connecToDB(String host, int port, int timeout, String username, String password, String dbName, String[] packageNames) throws InterruptedException, ExecutionException, TimeoutException {
-		String connString = createConnectString(host, port, username, password);
-		logger.info("connect to db " + dbName + ", connection string: " + connString);
+		
+		// wait for the db to establish the connection
+		Throwable throwable = options.getConnectionFuture().get(timeout, TimeUnit.SECONDS);
+		if (throwable != null) {
+			throw new DbConnectException(throwable.getMessage());
+		}		
 
-		connecToDB(connString, timeout, packageNames);
 		database = mongoClient.getDatabase(dbName);
 	}
 
-
-	/**
-	 * establishes a connection to the mongodb
-	 * @param connectString 	mongodb connection string to connect to the db
-	 * @param timeout 			the time in seconds how long to wait for the connection establishment (more than 30secs makes no sense)
-	 * 							as the timeout of the mongo client is 30 seconds
-	 * @param packageNames 		package names that contain the db entities
-	 * @throws TimeoutException 
-	 * @throws ExecutionException 
-	 * @throws InterruptedException 
-	 */
-	public void connecToDB(String connectString, int timeout, String... packageNames) throws InterruptedException, ExecutionException, TimeoutException {
-		// before using the driver with java objects a CodecRegistry needs to be configured. This includes codecs that
-		// handle the translation to and form bson for the java objects. 
-		// This combines the default codec registry, with the PojoCodecProvider configured to automatically create PojoCodecs
-		CodecProvider provider;
-		if (packageNames == null || packageNames.length == 0) {
-			// use the default codec provider
-			provider = PojoCodecProvider.builder().automatic(true).build();
-
-		} else {
-			// use the registered db models of the passed packages. initially the codec uses reflection but later
-			// the setter and getters are used if the exist
-			provider = PojoCodecProvider.builder().register(packageNames).build();
-		}
-
-		CodecRegistry pojoCodecRegistry = CodecRegistries.fromRegistries(
-				CodecRegistries.fromProviders(provider),
-				MongoClients.getDefaultCodecRegistry());
-
-		// create the listener for the mongo server description
-		CompletableFuture<Boolean> connectionFuture = new CompletableFuture<>();
-		MongoStatusListener statusListener = new MongoStatusListener(connectionFuture);
-
-
-		// configure the mongo client	
-		MongoClientSettings settings = MongoClientSettings.builder()
-				.codecRegistry(pojoCodecRegistry)
-				.applyConnectionString(new ConnectionString(connectString))
-				//                .applyToClusterSettings(builder -> {
-				//	                builder.hosts(hosts); 		
-				//	             })
-				.applyToSocketSettings(builder -> {
-					builder.connectTimeout(timeout, TimeUnit.SECONDS);
-				})
-				.applyToServerSettings(builder -> {
-					builder.addServerListener(statusListener);
-				})
-				.build();
-
-		mongoClient = MongoClients.create(settings);		
-
-		// wait for the db to establish the connection
-		boolean connEstablished = connectionFuture.get(timeout, TimeUnit.SECONDS);
-		if (connEstablished) {
-			logger.info("connection to mongo db successfully established");
-		} else {
-			logger.info("failed to establish a connection to mongo db");
-		}
-	}
-
-
-	/**
-	 * creates the connect string to connect to mongodb
-	 * @param host 			the host of the db
-	 * @param port 			the port of the db
-	 * @param username 		user name, if the db is authenticated, null otherwise 
-	 * @param password 		password, if the db is authenticated, null otherwise 
-	 * @return 				the connect string which can be used to open the connection to the db
-	 */
-	private String createConnectString(String host, int port, String username, String password) {
-		// create the connect string from the values in the configuration file
-		StringBuilder sb = new StringBuilder();
-		sb.append("mongodb://");
-		if (username != null && password != null) {
-			sb.append(username).append(":");
-			sb.append(password).append("@");
-		}
-		sb.append(host).append(":").append(port);
-		return sb.toString();
-	}
 
 
 	/**
@@ -226,18 +124,22 @@ public class MongoDBHandler {
 	/**
 	 * asynchronously inserts one document to the db
 	 * @param entity 		the entity to save to the db
-	 * @param subscriber 	subscriber to the insert one publisher
+	 * @param resultCallback 	callback tha is called with the db result
 	 */
-	public void insert(BaseEntity entity, Subscriber<Success> subscriber) {
+	public void insert(BaseEntity entity, IResultCallback<Success> resultCallback) {
 		// get the collection
 		MongoCollection<BaseEntity> collection = getCollection(entity.getClass());
+		
+		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
+			resultCallback.onResult(result, error);
+		});
 
 		// insert the document
 		Publisher<Success> publisher = collection.insertOne(entity);
 		publisher.subscribe(subscriber);
 	}
-	
-	
+
+
 	/**
 	 * synchronously inserts a pojo into the db
 	 * @param entityList 	the list with the entities to insert
@@ -252,19 +154,24 @@ public class MongoDBHandler {
 
 	/**
 	 * asynchronously inserts many documents to the db
-	 * @param entities 		the list of entities to save to the db
-	 * @param subscriber 	subscriber to the insert many publisher
+	 * @param entityList 		the list of entities to save to the db
+	 * @param resultCallback 	callback tha is called with the db result
 	 */
-	public void insert(List<? extends BaseEntity> entities, Subscriber<Success> subscriber) {
-		if (entities.size() < 1) {
+	public void insert(List<? extends BaseEntity> entityList, IResultCallback<Success> resultCallback) {
+		if (entityList.size() < 1) {
 			return;
 		}
+		
+		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
+			resultCallback.onResult(result, error);
+		});
+		
 
 		// get the collection
-		MongoCollection<BaseEntity> collection = getCollection(entities.get(0).getClass());
+		MongoCollection<BaseEntity> collection = getCollection(entityList.get(0).getClass());
 
 		// insert the documents
-		Publisher<Success> publisher = collection.insertMany(entities);
+		Publisher<Success> publisher = collection.insertMany(entityList);
 		publisher.subscribe(subscriber);
 	}
 
@@ -276,30 +183,28 @@ public class MongoDBHandler {
 	 */
 	public StatusResult insertSync(List<? extends BaseEntity> entityList) {
 		TimeoutFuture<StatusResult> future = new TimeoutFuture<StatusResult>(dbTimeout);
-		
-		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
+
+		insert(entityList, (result, error) ->  {
 			String entityName = "-";
 			if (entityList != null && entityList.size() > 0) {
 				entityName = entityList.get(0).getClass().getSimpleName();
 			}
-			
+
 			if (error != null) {
 				logger.error(entityName + ": failed to insert pojo entity list to the db: ", error);
 				future.complete(StatusResult.error(error.getMessage()));
-				
+
 			} else {
 				logger.debug(entityName + ": many pojo documents successfully inserted");
 				future.complete(StatusResult.success(result.get(0)));
 			}
 		});
-		
-		insert(entityList, subscriber);
-		
+
 		// wait for the db result
 		try {
 			StatusResult result = future.get();
 			return result;
-			
+
 		} catch (Exception e) {
 			logger.error("insert pojo timed out");
 			StatusResult result = StatusResult.error("insert pojo timed out");
@@ -314,12 +219,15 @@ public class MongoDBHandler {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/**
 	 * queries all entities in the db
-	 * @param classObj 		the entity to retrieve
-	 * @param subscriber 	subscriber to the find publisher
+	 * @param classObj 			the entity to retrieve
+	 * @param resultCallback 	callback tha is called with the db result
 	 */
-	@SuppressWarnings("unchecked")
-	public void find(Class<?> classObj, Subscriber<? extends BaseEntity> subscriber) {
+	public void find(Class<?> classObj, IResultCallback<BaseEntity> resultCallback) {
 		MongoCollection<BaseEntity> collection = getCollection(classObj);
+		
+		CallbackSubscriber<BaseEntity> subscriber = new CallbackSubscriber<>((result, error) ->  {
+			resultCallback.onResult(result, error);
+		});
 
 		FindPublisher<BaseEntity> publisher = collection.find();
 		publisher.subscribe((Subscriber<BaseEntity>) subscriber);	
@@ -328,13 +236,12 @@ public class MongoDBHandler {
 
 	/**
 	 * queries entities in the db based on the passed query
-	 * @param classObj 		the entity to retrieve
-	 * @param query 		the query, can be null
-	 * @param sort 			the sort information, can be null
-	 * @param subscriber 	subscriber to the find publisher
+	 * @param classObj 			the entity to retrieve
+	 * @param query 			the query, can be null
+	 * @param sort 				the sort information, can be null
+	 * @param resultCallback 	callback tha is called with the db result
 	 */
-	@SuppressWarnings("unchecked")
-	public void find(Class<?> classObj, Bson query, Bson sort, Subscriber<? extends BaseEntity> subscriber) {
+	public void find(Class<?> classObj, Bson query, Bson sort, IResultCallback<BaseEntity> resultCallback) {
 		if (query == null) {
 			query = new Document();
 		}
@@ -344,13 +251,17 @@ public class MongoDBHandler {
 
 		// get the collection
 		MongoCollection<BaseEntity> collection = getCollection(classObj);
+		
+		CallbackSubscriber<BaseEntity> subscriber = new CallbackSubscriber<>((result, error) ->  {
+			resultCallback.onResult(result, error);
+		});
 
 		// retrieve the entities from the db
 		FindPublisher<BaseEntity> publisher = collection.find(query).sort(sort);
 		publisher.subscribe((Subscriber<BaseEntity>) subscriber);		
 	}	
-	
-	
+
+
 	/**
 	 * synchronously retrieved all pojos from the db
 	 * @param classObj 		the class of the object to find in the db
@@ -359,8 +270,8 @@ public class MongoDBHandler {
 	public StatusResult findSync(Class<?> classObj) {
 		return findSync(classObj, null,  null);
 	}	
-	
-	
+
+
 	/**
 	 * synchronously retrieved a pojo from the db
 	 * @param classObj 		the class of the object to find in the db
@@ -370,25 +281,23 @@ public class MongoDBHandler {
 	 */
 	public StatusResult findSync(Class<?> classObj, Bson query, Bson sort) {
 		TimeoutFuture<StatusResult> future = new TimeoutFuture<StatusResult>(dbTimeout);
-		
-		CallbackSubscriber<BaseEntity> subscriber = new CallbackSubscriber<>((result, error) ->  {
+
+		find(classObj, query, sort, (result, error) ->  {
 			if (error != null) {
 				logger.error(classObj.getSimpleName() + " pojo db find query failed: ", error);
 				future.complete(StatusResult.error(error.getMessage()));
-				
+
 			} else {
 				logger.debug(classObj.getSimpleName() + " pojo db find query successful, length: " + result.size());
 				future.complete(StatusResult.success(result));
 			}
 		});
-		
-		find(classObj, query, sort, subscriber);
-		
+
 		// wait for the db result
 		try {
 			StatusResult result = future.get();
 			return result;
-			
+
 		} catch (Exception e) {
 			logger.error("find pojo timed out");
 			StatusResult result = StatusResult.error("find pojo timed out");
@@ -403,26 +312,30 @@ public class MongoDBHandler {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/**
 	 * updates entities in the db
-	 * @param classObj 		the class of the entity to update
-	 * @param query 		the query to for the update, can be null
-	 * @param update 		the values for the update
-	 * @param subscriber 	subscriber to the update publisher
+	 * @param classObj 			the class of the entity to update
+	 * @param query 			the query to for the update, can be null
+	 * @param update 			the values for the update
+	 * @param resultCallback 	callback tha is called with the db result
 	 */
-	public void update(Class<?> classObj, Bson query, Bson update, Subscriber<UpdateResult> subscriber) {
+	public void update(Class<?> classObj, Bson query, Bson update, IResultCallback<UpdateResult> resultCallback) {
 		if (query == null) {
 			query = new Document();
 		}
 
 		// get the collection
 		MongoCollection<BaseEntity> collection = getCollection(classObj);
+		
+		CallbackSubscriber<UpdateResult> subscriber = new CallbackSubscriber<>((result, error) ->  {
+			resultCallback.onResult(result, error);
+		});
 
 		// execute the update
 		Publisher<UpdateResult> publisher = collection.updateMany(query, update);
 		publisher.subscribe(subscriber);
 	}
-	
-	
-	
+
+
+
 	/**
 	 * synchronously updates a pojo in the db
 	 * @param classObj 		the class of the object to find in the db
@@ -432,25 +345,23 @@ public class MongoDBHandler {
 	 */
 	public StatusResult updateSync(Class<?> classObj, Bson query, Bson update) {
 		TimeoutFuture<StatusResult> future = new TimeoutFuture<StatusResult>(dbTimeout);
-		
-		CallbackSubscriber<UpdateResult> subscriber = new CallbackSubscriber<>((result, error) ->  {
+
+		update(classObj, query, update, (result, error) ->  {
 			if (error != null) {
 				logger.error(classObj.getSimpleName() + " pojo db update query failed: ", error);
 				future.complete(StatusResult.error("pojo update query failed"));
-				
+
 			} else {
 				logger.debug(classObj.getSimpleName() + ": pojo db update query successful");
 				future.complete(StatusResult.success(result.get(0)));
 			}
 		});
-		
-		update(classObj, query, update, subscriber);
-		
+
 		// wait for the db result
 		try {
 			StatusResult result = future.get();
 			return result;
-			
+
 		} catch (Exception e) {
 			logger.error("update pojo timed out");
 			StatusResult result = StatusResult.error("update pojo timed out");
@@ -464,24 +375,28 @@ public class MongoDBHandler {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/**
 	 * deletes entities in the db
-	 * @param classObj 		the class of the entity to delete
-	 * @param query 		the query for the deletion, can be null
-	 * @param subscriber 	subscriber to the delete publisher
+	 * @param classObj 			the class of the entity to delete
+	 * @param query 			the query for the deletion, can be null
+	 * @param resultCallback 	callback tha is called with the db result
 	 */
-	public void delete(Class<?> classObj, Bson query, Subscriber<DeleteResult> subscriber) {
+	public void delete(Class<?> classObj, Bson query, IResultCallback<DeleteResult> resultCallback) {
 		if (query == null) {
 			query = new Document();
 		}
 
 		// get the collection
 		MongoCollection<BaseEntity> collection = getCollection(classObj);
+		
+		CallbackSubscriber<DeleteResult> subscriber = new CallbackSubscriber<>((result, error) ->  {
+			resultCallback.onResult(result, error);
+		});
 
 		// execute the update
 		Publisher<DeleteResult> publisher = collection.deleteMany(query);
 		publisher.subscribe(subscriber);
 	}
-	
-	
+
+
 	/**
 	 * synchronously deletes a pojo from the db
 	 * @param classObj 		the class of the object to find in the db
@@ -490,25 +405,23 @@ public class MongoDBHandler {
 	 */
 	public StatusResult deleteSync(Class<?> classObj, Bson query) {
 		TimeoutFuture<StatusResult> future = new TimeoutFuture<StatusResult>(dbTimeout);
-		
-		CallbackSubscriber<DeleteResult> subscriber = new CallbackSubscriber<>((result, error) ->  {
+
+		delete(classObj, query, (result, error) ->  {
 			if (error != null) {
 				logger.debug(classObj.getSimpleName() + ": pojo db delete query failed: ", error);
 				future.complete(StatusResult.error("pojo delete query failed"));
-				
+
 			} else {
 				logger.debug(classObj.getSimpleName() + ": pojo delete query successful");
 				future.complete(StatusResult.success(result.get(0)));
 			}
 		});
-		
-		delete(classObj, query, subscriber);
-		
+
 		// wait for the db result
 		try {
 			StatusResult result = future.get();
 			return result;
-			
+
 		} catch (Exception e) {
 			logger.error("delete pojo timed out");
 			StatusResult result = StatusResult.error("delete pojo timed out");
@@ -519,11 +432,16 @@ public class MongoDBHandler {
 
 	/**
 	 * drops the collection in the db of the passed entity class
-	 * @param classObj 		the class of the entity to delete
-	 * @param subscriber 	subscriber to the drop collection publisher
+	 * @param classObj 			the class of the entity to delete
+	 * @param resultCallback 	callback tha is called with the db result
 	 */
-	public void dropCollection(Class<?> classObj, Subscriber<Success> subscriber) {
+	public void dropCollection(Class<?> classObj, IResultCallback<Success> resultCallback) {
 		MongoCollection<BaseEntity> collection = getCollection(classObj);
+		
+		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
+			resultCallback.onResult(result, error);
+		});
+		
 		Publisher<Success> publisher = collection.drop();
 		publisher.subscribe(subscriber);
 	}
@@ -532,9 +450,13 @@ public class MongoDBHandler {
 
 	/**
 	 * drops the used database
-	 * @param subscriber 	subscriber to the drop database publisher
+	 * @param resultCallback 	callback tha is called with the db result
 	 */
-	public void dropDatabase(Subscriber<Success> subscriber) {
+	public void dropDatabase(IResultCallback<Success> resultCallback) {
+		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
+			resultCallback.onResult(result, error);
+		});
+		
 		Publisher<Success> publisher = database.drop();
 		publisher.subscribe(subscriber);
 	}
@@ -542,11 +464,16 @@ public class MongoDBHandler {
 
 	/**
 	 * drops the db with the passed name
-	 * @param dbName 		the name of the db to drop
-	 * @param subscriber 	subscriber to the drop database publisher
+	 * @param dbName 			the name of the db to drop
+	 * @param resultCallback 	callback tha is called with the db result
 	 */
-	public void dropDatabase(String dbName, Subscriber<Success> subscriber) {
+	public void dropDatabase(String dbName, IResultCallback<Success> resultCallback) {
 		MongoDatabase db = getDatabase(dbName);
+		
+		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
+			resultCallback.onResult(result, error);
+		});
+		
 		Publisher<Success> publisher = db.drop();
 		publisher.subscribe(subscriber);
 	}
@@ -565,11 +492,11 @@ public class MongoDBHandler {
 	/**
 	 * queries all entities in the db
 	 * @param collectionName 	the name of the collection to query
-	 * @param subscriber 		subscriber to the find publisher
+	 * @param resultCallback 	callback tha is called with the db result
 	 */
-	public void findJson(String collectionName, Subscriber<Document> subscriber) {
+	public void findJson(String collectionName, IResultCallback<Document> resultCallback) {
 		MongoCollection<Document> collection = getJsonCollection(collectionName);
-		findJson(collection, subscriber);
+		findJson(collection, resultCallback);
 	}
 
 
@@ -577,21 +504,26 @@ public class MongoDBHandler {
 	 * queries all entities in the db
 	 * @param collectionName 	the name of the collection to query
 	 * @param dbName 			the name of the database to use
-	 * @param subscriber 		subscriber to the find publisher
+	 * @param resultCallback 	callback tha is called with the db result
 	 */
-	public void findJson(String collectionName, String dbName, Subscriber<Document> subscriber) {
+	public void findJson(String collectionName, String dbName, IResultCallback<Document> resultCallback) {
 		MongoCollection<Document> collection = getJsonCollection(collectionName, dbName);
-		findJson(collection, subscriber);
+		findJson(collection, resultCallback);
 	}
 
 
 	/**
 	 * queries all entities in the db
-	 * @param collection 	the collection to perform the query
-	 * @param subscriber 	subscriber to the find publisher
+	 * @param collection 		the collection to perform the query
+	 * @param resultCallback 	callback tha is called with the db result
 	 */
-	private void findJson(MongoCollection<Document> collection, Subscriber<Document> subscriber) {
+	private void findJson(MongoCollection<Document> collection, IResultCallback<Document> resultCallback) {
 		FindPublisher<Document> publisher = collection.find();
+		
+		CallbackSubscriber<Document> subscriber = new CallbackSubscriber<>((result, error) ->  {
+			resultCallback.onResult(result, error);
+		});
+		
 		publisher.subscribe(subscriber);
 	}
 
@@ -602,11 +534,11 @@ public class MongoDBHandler {
 	 * @param query 			the query to execute, can be null
 	 * @param sort 				the sort information, can be null
 	 * @param projection 		the projection information, can be null
-	 * @param subscriber 		subscriber to the find publisher
+	 * @param resultCallback 	callback tha is called with the db result
 	 */
-	public void findJson(String collectionName, Bson query, Bson sort, Bson projection, Subscriber<Document> subscriber) {
+	public void findJson(String collectionName, Bson query, Bson sort, Bson projection, IResultCallback<Document> resultCallback) {
 		MongoCollection<Document> collection = getJsonCollection(collectionName);
-		findJson(collection, query, sort, projection, subscriber);
+		findJson(collection, query, sort, projection, resultCallback);
 	}
 
 
@@ -617,11 +549,11 @@ public class MongoDBHandler {
 	 * @param query 			the query to execute, can be null
 	 * @param sort 				the sort information, can be null
 	 * @param projection 		the projection information, can be null
-	 * @param subscriber 		subscriber to the find publisher
+	 * @param resultCallback 	callback tha is called with the db result
 	 */
-	public void findJson(String collectionName, String dbName, Bson query, Bson sort, Bson projection, Subscriber<Document> subscriber) {
+	public void findJson(String collectionName, String dbName, Bson query, Bson sort, Bson projection, IResultCallback<Document> resultCallback) {
 		MongoCollection<Document> collection = getJsonCollection(collectionName, dbName);
-		findJson(collection, query, sort, projection, subscriber);
+		findJson(collection, query, sort, projection, resultCallback);
 	}
 
 
@@ -632,9 +564,9 @@ public class MongoDBHandler {
 	 * @param query 			the query to execute, can be null
 	 * @param sort 				the sort information, can be null
 	 * @param projection 		the projection information, can be null
-	 * @param subscriber 		subscriber to the find publisher
+	 * @param resultCallback 	callback tha is called with the db result
 	 */
-	private void findJson(MongoCollection<Document> collection, Bson query, Bson sort, Bson projection, Subscriber<Document> subscriber) {
+	private void findJson(MongoCollection<Document> collection, Bson query, Bson sort, Bson projection, IResultCallback<Document> resultCallback) {
 		if (query == null) {
 			query = new Document();
 		}
@@ -646,10 +578,15 @@ public class MongoDBHandler {
 		}
 
 		FindPublisher<Document> publisher = collection.find(query).sort(sort).projection(projection);
+		
+		CallbackSubscriber<Document> subscriber = new CallbackSubscriber<>((result, error) ->  {
+			resultCallback.onResult(result, error);
+		});
+		
 		publisher.subscribe(subscriber);
 	}
-	
-	
+
+
 	/**
 	 * synchronously queries all entities in the db
 	 * @param collectionName 	the name of the collection to query
@@ -657,8 +594,8 @@ public class MongoDBHandler {
 	public StatusResult findJsonSync(String collectionName) {
 		return findJsonSync(collectionName, null, null, null);
 	}
-	
-	
+
+
 	/**
 	 * returns json as a result of the db query
 	 * @param collectionName	the name of the collection to query
@@ -669,12 +606,12 @@ public class MongoDBHandler {
 	 */
 	public StatusResult findJsonSync(String collectionName, Bson query, Bson sort, Bson projection) {
 		TimeoutFuture<StatusResult> future = new TimeoutFuture<StatusResult>(dbTimeout);
-		
-		CallbackSubscriber<Document> subscriber = new CallbackSubscriber<>((result, error) ->  {
+
+		findJson(collectionName, query, sort, projection, (result, error) ->  {
 			if (error != null) {
 				logger.error(collectionName + " json find query failed: ", error);
 				future.complete(StatusResult.error(error.getMessage()));
-				
+
 			} else {
 				logger.debug(collectionName + " json find query successfull, length: " + result.size());
 				String jsonList = gson.toJson(result);
@@ -682,14 +619,12 @@ public class MongoDBHandler {
 				future.complete(statusResult);
 			}
 		});
-		
-		findJson(collectionName, query, sort, projection, subscriber);
-		
+
 		// wait for the db result
 		try {
 			StatusResult result = future.get();
 			return result;
-			
+
 		} catch (Exception e) {
 			logger.error("find pojo timed out");
 			StatusResult result = StatusResult.error("find pojo timed out");
@@ -706,11 +641,16 @@ public class MongoDBHandler {
 	 * drops the collection in the db
 	 * @param collectionName 	the name of the collection to drop
 	 * @param dbName 			the name of the db to use
-	 * @param subscriber 		subscriber to the drop collection publisher
+	 * @param resultCallback 	callback tha is called with the db result
 	 */
-	public void dropCollection(String collectionName, String dbName, Subscriber<Success> subscriber) {
+	public void dropCollection(String collectionName, String dbName, IResultCallback<Success> resultCallback) {
 		MongoDatabase db = getDatabase(dbName);
 		MongoCollection<Document> collection = db.getCollection(collectionName);
+		
+		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
+			resultCallback.onResult(result, error);
+		});
+		
 		Publisher<Success> publisher = collection.drop();
 		publisher.subscribe(subscriber);
 	}
@@ -718,10 +658,15 @@ public class MongoDBHandler {
 	/**
 	 * drops the collection in the db
 	 * @param collectionName 	the name of the collection to drop
-	 * @param subscriber 		subscriber to the drop collection publisher
+	 * @param resultCallback 	callback tha is called with the db result
 	 */
-	public void dropCollection(String collectionName, Subscriber<Success> subscriber) {
+	public void dropCollection(String collectionName, IResultCallback<Success> resultCallback) {
 		MongoCollection<Document> collection = database.getCollection(collectionName);
+		
+		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
+			resultCallback.onResult(result, error);
+		});
+		
 		Publisher<Success> publisher = collection.drop();
 		publisher.subscribe(subscriber);
 	}
@@ -738,12 +683,12 @@ public class MongoDBHandler {
 	 * @param dbName 			the name of the database to use
 	 * @param index 			the definition of the index
 	 * @param indexOptions 		the options for the index, can be null
-	 * @param subscriber 		subscriber to the index publisher
+	 * @param resultCallback 	callback tha is called with the db result
 	 */
-	public void createIndex(String collectionName, String dbName, Bson index, IndexOptions indexOptions, Subscriber<String> subscriber) {
+	public void createIndex(String collectionName, String dbName, Bson index, IndexOptions indexOptions, IResultCallback<String> resultCallback) {
 		MongoDatabase db = getDatabase(dbName);
 		MongoCollection<Document> collection = db.getCollection(collectionName);
-		createIndex(collection, index, indexOptions, subscriber);
+		createIndex(collection, index, indexOptions, resultCallback);
 	}
 
 
@@ -752,11 +697,11 @@ public class MongoDBHandler {
 	 * @param collectionName 	the name of the collection for which the index is created
 	 * @param index 			the definition of the index
 	 * @param indexOptions 		the options for the index, can be null
-	 * @param subscriber 		subscriber to the index publisher
+	 * @param resultCallback 	callback tha is called with the db result
 	 */
-	public void createIndex(String collectionName, Bson index, IndexOptions indexOptions, Subscriber<String> subscriber) {
-		MongoCollection<Document> collection = database.getCollection(collectionName);
-		createIndex(collection, index, indexOptions, subscriber);
+	public void createIndex(String collectionName, Bson index, IndexOptions indexOptions, IResultCallback<String> resultCallback) {
+		MongoCollection<Document> collection = database.getCollection(collectionName);		
+		createIndex(collection, index, indexOptions, resultCallback);
 	}
 
 
@@ -765,15 +710,20 @@ public class MongoDBHandler {
 	 * @param collection 		the collection for which the index is created
 	 * @param index 			the definition of the index
 	 * @param indexOptions 		the options for the index, can be null
-	 * @param subscriber 		subscriber to the index publisher
+	 * @param resultCallback 	callback tha is called with the db result
 	 */
-	private void createIndex(MongoCollection<Document> collection, Bson index, IndexOptions indexOptions, Subscriber<String> subscriber) {
+	private void createIndex(MongoCollection<Document> collection, Bson index, IndexOptions indexOptions, IResultCallback<String> resultCallback) {
 		Publisher<String> publisher;
 		if (indexOptions == null) {
 			publisher = collection.createIndex(index);
 		} else {
 			publisher = collection.createIndex(index, indexOptions);
 		}
+		
+		CallbackSubscriber<String> subscriber = new CallbackSubscriber<>((result, error) ->  {
+			resultCallback.onResult(result, error);
+		});
+		
 		publisher.subscribe(subscriber);
 	}
 
@@ -781,10 +731,15 @@ public class MongoDBHandler {
 	/**
 	 * drops all indexes of this collection
 	 * @param collectionName 	the name of the collection for which all indexes are deleted
-	 * @param subscriber 		subscriber to the delete indexes publisher
+	 * @param resultCallback 	callback tha is called with the db result
 	 */
-	public void deleteIndexes(String collectionName, Subscriber<Success> subscriber) {
+	public void deleteIndexes(String collectionName, IResultCallback<Success> resultCallback) {
 		MongoCollection<Document> collection = database.getCollection(collectionName);
+		
+		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
+			resultCallback.onResult(result, error);
+		});
+		
 		Publisher<Success> publisher = collection.dropIndexes();
 		publisher.subscribe(subscriber);
 	}
@@ -794,11 +749,16 @@ public class MongoDBHandler {
 	 * drops all indexes of this collection
 	 * @param collectionName 	the name of the collection for which all indexes are deleted
 	 * @param dbName 			the name of the database to use
-	 * @param subscriber 		subscriber to the delete indexes publisher
+	 * @param resultCallback 	callback tha is called with the db result
 	 */
-	public void deleteIndexes(String collectionName, String dbName, Subscriber<Success> subscriber) {
+	public void deleteIndexes(String collectionName, String dbName, IResultCallback<Success> resultCallback) {
 		MongoDatabase db = getDatabase(dbName);
 		MongoCollection<Document> collection = db.getCollection(collectionName);
+		
+		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
+			resultCallback.onResult(result, error);
+		});
+		
 		Publisher<Success> publisher = collection.dropIndexes();
 		publisher.subscribe(subscriber);
 	}

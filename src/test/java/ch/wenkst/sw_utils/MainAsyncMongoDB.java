@@ -18,17 +18,16 @@ import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.Updates;
-import com.mongodb.client.result.DeleteResult;
-import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.AggregatePublisher;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.Success;
 
 import ch.wenkst.sw_utils.Utils;
+import ch.wenkst.sw_utils.db.mongodb.DbConnectOptions;
 import ch.wenkst.sw_utils.db.mongodb.MongoDBHandler;
 import ch.wenkst.sw_utils.db.mongodb.base.BaseEntity;
 import ch.wenkst.sw_utils.db.mongodb.subscriber.CallbackSubscriber;
-import ch.wenkst.sw_utils.db.mongodb.subscriber.PrintSubscriber;
+import ch.wenkst.sw_utils.db.mongodb.subscriber.PrintResultCallback;
 
 public class MainAsyncMongoDB {
 	static {
@@ -45,7 +44,15 @@ public class MainAsyncMongoDB {
 		String[] packageNames = {Person.class.getPackage().getName()};
 		
 		try {
-			dbHandler.connecToDB("192.168.152.128", 27017, 10, "AsyncTest", packageNames);
+			DbConnectOptions options = new DbConnectOptions();
+			options.setHost("192.168.152.128");
+			options.setPort(27017);
+			options.setTimeout(10);
+			options.setDbName("AsyncTest");
+			options.setPackageNames(packageNames);
+			
+			dbHandler.connectToDB(options);
+			
 		} catch (Exception e) {
 			logger.error("failed to connect to the db: ", e);
 		}
@@ -61,7 +68,7 @@ public class MainAsyncMongoDB {
 		// insert one document
 		Person ada = new Person("Ada Byron", 20, new Address("St James Square", "London", "W1"));		
 		
-		CallbackSubscriber<Success> insertOne = new CallbackSubscriber<>((result, error) ->  {
+		ada.saveToDB((result, error) ->  {
 			if (error == null) {
 				logger.debug("one document successfully inserted");
 			
@@ -69,8 +76,6 @@ public class MainAsyncMongoDB {
 				logger.error("failed to insert one document to the db: ", error);
 			}
 		});
-		
-		ada.saveToDB(insertOne);
 		
 		
 		// insert many documents
@@ -81,8 +86,7 @@ public class MainAsyncMongoDB {
 				new Person("Timothy Berners-Lee", 61, new Address("Colehill", "Wimborne", null))
 		);
 		
-
-		CallbackSubscriber<Success> insertManySub = new CallbackSubscriber<>((result, error) ->  {
+		dbHandler.insert(peopleList, (result, error) ->  {
 			if (error == null) {
 				logger.debug("many documents successfully inserted");
 			
@@ -91,21 +95,18 @@ public class MainAsyncMongoDB {
 			}
 		});
 		
-		dbHandler.insert(peopleList, insertManySub);
-		
 		
 		
 		// make a query to get all persons
 		Utils.sleep(200);
-		CallbackSubscriber<Person> findAllSub = new CallbackSubscriber<>((result, error) ->  {
+		
+		dbHandler.find(Person.class, (result, error) ->  {
 			if (error != null) {
 				logger.error("query failed: ", error);
 			} else {
 				logger.info("query successful, length: " + result.size());
 			}
 		});
-		
-		dbHandler.find(Person.class, findAllSub);
 		
 		
 		// make a query to retrieve specific persons
@@ -113,15 +114,13 @@ public class MainAsyncMongoDB {
 		Bson query = Filters.and(Filters.eq("address.city", "London"), Filters.lte("age", 30));
 		Bson sort = Sorts.ascending("age");
 		
-		CallbackSubscriber<Person> findQuerySub = new CallbackSubscriber<>((result, error) ->  {
+		dbHandler.find(Person.class, query, sort, (result, error) ->  {
 			if (error != null) {
 				logger.error("query failed: ", error);
 			} else {
 				logger.info("query successful, length: " + result.size());
 			}
 		});
-		
-		dbHandler.find(Person.class, query, sort, findQuerySub);
 		
 		
 		
@@ -131,9 +130,8 @@ public class MainAsyncMongoDB {
 		Bson update = Updates.set("address.zip", null);
 		
 		// example to combine updates
-		// Updates.combine(Updates.set("address.zip", null), Updates.set("age", 23));
-		
-		CallbackSubscriber<UpdateResult> updateSub = new CallbackSubscriber<>((result, error) ->  {
+		// Updates.combine(Updates.set("address.zip", null), Updates.set("age", 23));		
+		dbHandler.update(Person.class, query, update, (result, error) ->  {
 			if (error == null) {
 				logger.info("many persons altered, modify count: " + result.get(0).getModifiedCount());
 			} else {
@@ -141,15 +139,13 @@ public class MainAsyncMongoDB {
 			}
 		});
 		
-		dbHandler.update(Person.class, query, update, updateSub);
-		
 		
 		
 		// delete entities in the db
 		Utils.sleep(200);
 		query = Filters.eq("address.city", "London");
 		
-		CallbackSubscriber<DeleteResult> deleteSub = new CallbackSubscriber<>((result, error) ->  {
+		dbHandler.delete(Person.class, query, (result, error) ->  {
 			if (error == null) {
 				logger.info("delete many person, deleted count: " + result.get(0).getDeletedCount());
 			} else {
@@ -157,20 +153,17 @@ public class MainAsyncMongoDB {
 			}
 		});
 		
-		dbHandler.delete(Person.class, query, deleteSub);
-		
 		
 		// drop the collection
 		Utils.sleep(200);
-		CallbackSubscriber<Success> dropCollSub = new CallbackSubscriber<>((result, error) ->  {
+		
+		dbHandler.dropCollection(Person.class, (result, error) ->  {
 			if (error == null) {
 				logger.info("collection successfully dropped");
 			} else {
 				logger.error("failed to drop the collection: ", error);
 			}
 		});
-		
-		dbHandler.dropCollection(Person.class, dropCollSub);
 		
 		
 		
@@ -187,7 +180,7 @@ public class MainAsyncMongoDB {
 				new Person("Roy Handsome", 57, new Address("Colehill", "Budapest", "MI34"))
 		);
 		
-		CallbackSubscriber<Success> jsonInsertManySub = new CallbackSubscriber<>((result, error) ->  {
+		dbHandler.insert(peopleList, (result, error) ->  {
 			if (error == null) {
 				logger.debug("many documents successfully inserted");
 			} else {
@@ -195,13 +188,11 @@ public class MainAsyncMongoDB {
 			}
 		});
 		
-		dbHandler.insert(peopleList, jsonInsertManySub);
-		
 		
 		// find all entities in the db
 		Utils.sleep(200);
 		
-		CallbackSubscriber<Document> jsonFindSub = new CallbackSubscriber<>((result, error) ->  {
+		dbHandler.findJson("Person", (result, error) ->  {
 			if (error != null) {
 				logger.error("json-query failed: ", error);
 				
@@ -211,14 +202,12 @@ public class MainAsyncMongoDB {
 //				logger.info(jsonList);
 			}
 		});
-		
-		dbHandler.findJson("Person", jsonFindSub);
 		
 		
 		// use more complex method, to find all entities
 		Utils.sleep(200);
 		
-		CallbackSubscriber<Document> jsonFindComplSub = new CallbackSubscriber<>((result, error) ->  {
+		dbHandler.findJson("Person", null, null, null, (result, error) ->  {
 			if (error != null) {
 				logger.error("json-query failed: ", error);
 				
@@ -228,8 +217,6 @@ public class MainAsyncMongoDB {
 //				logger.info(jsonList);
 			}
 		});
-		
-		dbHandler.findJson("Person", null, null, null, jsonFindComplSub);
 		
 		
 		
@@ -241,7 +228,8 @@ public class MainAsyncMongoDB {
 	            .append("age",1)
 	            .append("_id", 0); 		// 0: exclude, 1: include
 		
-		CallbackSubscriber<Document> jsonProjSub = new CallbackSubscriber<>((result, error) ->  {
+		
+		dbHandler.findJson("Person", null, Sorts.ascending("age"), projection, (result, error) ->  {
 			if (error != null) {
 				logger.error("json-query failed: ", error);
 				
@@ -252,8 +240,6 @@ public class MainAsyncMongoDB {
 			}
 		});
 		
-		dbHandler.findJson("Person", null, Sorts.ascending("age"), projection, jsonProjSub);
-		
 		
 		
 		// create indexes
@@ -261,45 +247,43 @@ public class MainAsyncMongoDB {
 		
 		// single ascending index
 		Bson index1 = Indexes.ascending("name");
-		dbHandler.createIndex("Person", index1, null, new PrintSubscriber<String>("ascending-index"));
+		dbHandler.createIndex("Person", index1, null, new PrintResultCallback<String>("ascending-index"));
 
 		// compound ascending index (index of multiple fields)
 		Bson index2 = Indexes.ascending("name", "age");
-		dbHandler.createIndex("Person", index2, null, new PrintSubscriber<String>("ascending-compound-index"));
+		dbHandler.createIndex("Person", index2, null, new PrintResultCallback<String>("ascending-compound-index"));
 
 		// single descending index
 		Bson index3 = Indexes.descending("name");
-		dbHandler.createIndex("Person", index3, null, new PrintSubscriber<String>("descending-index"));
+		dbHandler.createIndex("Person", index3, null, new PrintResultCallback<String>("descending-index"));
 
 		// compound descending index
 		Bson index4 = Indexes.descending("stars", "age");
-		dbHandler.createIndex("Person", index4, null, new PrintSubscriber<String>("descending-compound-index"));
+		dbHandler.createIndex("Person", index4, null, new PrintResultCallback<String>("descending-compound-index"));
 
 		// compound descending and ascending index 
 		// here it is saved in the db like this
 		// age : 	92	85	65	65	65	28	28	28	17 		first order descending
 		// name:	ca  ab  aa  ab  ac  bc	bd  s   a 		second order ascending name if age is equal
 		Bson index5 = Indexes.compoundIndex(Indexes.descending("age"), Indexes.ascending("name"));
-		dbHandler.createIndex("Person", index5, null, new PrintSubscriber<String>("ascending-and-descending-compound-index"));
+		dbHandler.createIndex("Person", index5, null, new PrintResultCallback<String>("ascending-and-descending-compound-index"));
 		
 		// create a unique index, the field age and name cannot be the same
 		IndexOptions indexOptions = new IndexOptions().unique(true);
 		Bson index6 = Indexes.ascending("name", "stars");
-		dbHandler.createIndex("Person", index6, indexOptions, new PrintSubscriber<String>("unique-index"));
+		dbHandler.createIndex("Person", index6, indexOptions, new PrintResultCallback<String>("unique-index"));
 		
 		
 		// delete all indexes
 		Utils.sleep(200);
 		
-		CallbackSubscriber<Success> jsonDeleteIndSub = new CallbackSubscriber<>((result, error) ->  {
+		dbHandler.deleteIndexes("Person", (result, error) ->  {
 			if (error == null) {
 				logger.info("all indexes successfully deleted");
 			} else {
 				logger.info("failed to delete all indexs: ", error);
 			}
 		});
-		
-		dbHandler.deleteIndexes("Person", jsonDeleteIndSub);
 		
 		
 		
@@ -365,13 +349,13 @@ public class MainAsyncMongoDB {
 		
 		// drop the collection
 		Utils.sleep(200);
-		dbHandler.dropCollection("Person", new PrintSubscriber<Success>("drop-collection"));
+		dbHandler.dropCollection("Person", new PrintResultCallback<Success>("drop-collection"));
 		
 		
 		// drop the database
 		Utils.sleep(200);
 
-        dbHandler.dropDatabase(new PrintSubscriber<Success>("drop-db"));
+        dbHandler.dropDatabase(new PrintResultCallback<Success>("drop-db"));
         
         
         Utils.sleep(200);
