@@ -147,7 +147,9 @@ public class FileUtils {
 	 */
 	public static void writeStrToFile(String filePath, String content) throws FileNotFoundException {
 		File file = new File(filePath);
-		file.mkdirs();
+		if(! file.getParentFile().exists()) {
+			file.getParentFile().mkdirs();
+		}
 
 		PrintWriter pw = new PrintWriter(filePath);
 		pw.println(content);
@@ -163,7 +165,9 @@ public class FileUtils {
 	 */
 	public static void inputStreamToFile(String filePath, InputStream is) throws IOException {
 		File file = new File(filePath);
-		file.mkdirs();
+		if(! file.getParentFile().exists()) {
+			file.getParentFile().mkdirs();
+		}
 
 		Files.copy(
 				is, 
