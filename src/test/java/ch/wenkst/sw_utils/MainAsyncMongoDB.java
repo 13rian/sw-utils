@@ -26,8 +26,8 @@ import ch.wenkst.sw_utils.Utils;
 import ch.wenkst.sw_utils.db.mongodb.DbConnectOptions;
 import ch.wenkst.sw_utils.db.mongodb.MongoDBHandler;
 import ch.wenkst.sw_utils.db.mongodb.base.BaseEntity;
-import ch.wenkst.sw_utils.db.mongodb.subscriber.CallbackSubscriber;
 import ch.wenkst.sw_utils.db.mongodb.subscriber.PrintResultCallback;
+import ch.wenkst.sw_utils.db.mongodb.subscriber.value.ValueCallbackSubscriber;
 
 public class MainAsyncMongoDB {
 	static {
@@ -101,6 +101,8 @@ public class MainAsyncMongoDB {
 		Utils.sleep(200);
 		
 		dbHandler.find(Person.class, (result, error) ->  {
+			List<Person> persons = (List<Person>) result;
+			
 			if (error != null) {
 				logger.error("query failed: ", error);
 			} else {
@@ -133,7 +135,7 @@ public class MainAsyncMongoDB {
 		// Updates.combine(Updates.set("address.zip", null), Updates.set("age", 23));		
 		dbHandler.update(Person.class, query, update, (result, error) ->  {
 			if (error == null) {
-				logger.info("many persons altered, modify count: " + result.get(0).getModifiedCount());
+				logger.info("many persons altered, modify count: " + result.getModifiedCount());
 			} else {
 				logger.error("error updating many person in the db: ", error);
 			}
@@ -147,7 +149,7 @@ public class MainAsyncMongoDB {
 		
 		dbHandler.delete(Person.class, query, (result, error) ->  {
 			if (error == null) {
-				logger.info("delete many person, deleted count: " + result.get(0).getDeletedCount());
+				logger.info("delete many person, deleted count: " + result.getDeletedCount());
 			} else {
 				logger.error("error deleting many persons: ", error);
 			}
@@ -197,9 +199,7 @@ public class MainAsyncMongoDB {
 				logger.error("json-query failed: ", error);
 				
 			} else {
-				logger.info("json-query successfull, length: " + result.size());
-//				String jsonList = gson.toJson(list);
-//				logger.info(jsonList);
+				logger.info("json-query successful: " + result);
 			}
 		});
 		
@@ -212,9 +212,7 @@ public class MainAsyncMongoDB {
 				logger.error("json-query failed: ", error);
 				
 			} else {
-				logger.info("json-query successfull, length: " + result.size());
-//				String jsonList = gson.toJson(list);
-//				logger.info(jsonList);
+				logger.info("json-query successful: " + result);
 			}
 		});
 		
@@ -234,12 +232,9 @@ public class MainAsyncMongoDB {
 				logger.error("json-query failed: ", error);
 				
 			} else {
-				logger.info("json-query successfull, length: " + result.size());
-				String jsonList = gson.toJson(result);
-				logger.info(jsonList);
+				logger.info("json-query successfull: " + result);
 			}
 		});
-		
 		
 		
 		// create indexes
@@ -299,7 +294,7 @@ public class MainAsyncMongoDB {
 				Aggregates.group("$age", Accumulators.sum("count", 1)))
 		);
 		
-		CallbackSubscriber<Document> diffAgeCountSub = new CallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<Document> diffAgeCountSub = new ValueCallbackSubscriber<>((result, error) ->  {
 			if (error == null) {
 				logger.info("aggregation finished, summed age");
 			} else {
@@ -317,7 +312,7 @@ public class MainAsyncMongoDB {
 				Aggregates.group("$address.city", Accumulators.sum("sum", "$age")))
 		);
 		
-		CallbackSubscriber<Document> agePerCitySub = new CallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<Document> agePerCitySub = new ValueCallbackSubscriber<>((result, error) ->  {
 			if (error == null) {
 				logger.info("aggregation finished, summed age");
 			} else {
@@ -336,7 +331,7 @@ public class MainAsyncMongoDB {
 				Aggregates.group("", Accumulators.sum("sum", "$age")))
 		);
 		
-		CallbackSubscriber<Document> summedAgeSub = new CallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<Document> summedAgeSub = new ValueCallbackSubscriber<>((result, error) ->  {
 			if (error == null) {
 				logger.info("aggregation finished, summed age");
 			} else {

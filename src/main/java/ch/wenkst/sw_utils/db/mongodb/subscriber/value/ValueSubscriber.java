@@ -1,20 +1,18 @@
-package ch.wenkst.sw_utils.db.mongodb.subscriber;
+package ch.wenkst.sw_utils.db.mongodb.subscriber.value;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
-public abstract class BaseSubscriber<T> implements Subscriber<T> {	
-	protected final List<T> result;					// result list of the db
-	protected Exception error = null; 				// the first error that occurred
-	protected volatile boolean completed; 			// true if the stream is completed, false otherwise
+public abstract class ValueSubscriber<T> implements Subscriber<T> {	
+	protected T result;						// result of the db operation
+	protected Exception error = null; 		// the first error that occurred
+	protected volatile boolean completed; 	// true if the stream is completed, false otherwise
 
 	/**
 	 * base subscriber for a reactive stream mongodb operation
 	 */
-	public BaseSubscriber() {
-		result = new ArrayList<T>();
+	public ValueSubscriber() {
+		result = null;
 	}
 
 	@Override
@@ -24,7 +22,7 @@ public abstract class BaseSubscriber<T> implements Subscriber<T> {
 
 	@Override
 	public void onNext(final T t) {
-		result.add(t);
+		result = t;
 	}
 
 	@Override
@@ -35,7 +33,7 @@ public abstract class BaseSubscriber<T> implements Subscriber<T> {
 		onComplete();
 	}	
 
-	public List<T> getResult() {
+	public T getResult() {
 		return result;
 	}
 

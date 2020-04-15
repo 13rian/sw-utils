@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.reactivestreams.Publisher;
@@ -27,8 +26,10 @@ import com.mongodb.reactivestreams.client.Success;
 
 import ch.wenkst.sw_utils.db.mongodb.base.BaseEntity;
 import ch.wenkst.sw_utils.db.mongodb.base.EntityInfo;
-import ch.wenkst.sw_utils.db.mongodb.subscriber.CallbackSubscriber;
-import ch.wenkst.sw_utils.db.mongodb.subscriber.IResultCallback;
+import ch.wenkst.sw_utils.db.mongodb.subscriber.value.ValueCallback;
+import ch.wenkst.sw_utils.db.mongodb.subscriber.value.ValueCallbackSubscriber;
+import ch.wenkst.sw_utils.db.mongodb.subscriber.list.ListCallback;
+import ch.wenkst.sw_utils.db.mongodb.subscriber.list.ListCallbackSubscriber;
 import ch.wenkst.sw_utils.future.TimeoutFuture;
 import ch.wenkst.sw_utils.miscellaneous.StatusResult;
 
@@ -126,11 +127,11 @@ public class MongoDBHandler {
 	 * @param entity 		the entity to save to the db
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void insert(BaseEntity entity, IResultCallback<Success> resultCallback) {
+	public void insert(BaseEntity entity, ValueCallback<Success> resultCallback) {
 		MongoCollection<BaseEntity> collection = getCollection(entity.getClass());
 		Publisher<Success> publisher = collection.insertOne(entity);
 		
-		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
 			resultCallback.onResult(result, error);
 		});		
 		publisher.subscribe(subscriber);
@@ -154,7 +155,7 @@ public class MongoDBHandler {
 	 * @param entityList 		the list of entities to save to the db
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void insert(List<? extends BaseEntity> entityList, IResultCallback<Success> resultCallback) {
+	public void insert(List<? extends BaseEntity> entityList, ValueCallback<Success> resultCallback) {
 		if (entityList.size() < 1) {
 			return;
 		}
@@ -162,7 +163,7 @@ public class MongoDBHandler {
 		MongoCollection<BaseEntity> collection = getCollection(entityList.get(0).getClass());
 		Publisher<Success> publisher = collection.insertMany(entityList);
 		
-		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
 			resultCallback.onResult(result, error);
 		});		
 		publisher.subscribe(subscriber);
@@ -189,7 +190,7 @@ public class MongoDBHandler {
 
 			} else {
 				logger.debug(entityName + ": many pojo documents successfully inserted");
-				future.complete(StatusResult.success(result.get(0)));
+				future.complete(StatusResult.success(result));
 			}
 		});
 		
@@ -206,11 +207,11 @@ public class MongoDBHandler {
 	 * @param classObj 			the entity to retrieve
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void find(Class<?> classObj, IResultCallback<BaseEntity> resultCallback) {
+	public void find(Class<?> classObj, ListCallback resultCallback) {
 		MongoCollection<BaseEntity> collection = getCollection(classObj);
 		FindPublisher<BaseEntity> publisher = collection.find();
 		
-		CallbackSubscriber<BaseEntity> subscriber = new CallbackSubscriber<>((result, error) ->  {
+		ListCallbackSubscriber subscriber = new ListCallbackSubscriber((result, error) ->  {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe((Subscriber<BaseEntity>) subscriber);	
@@ -224,7 +225,7 @@ public class MongoDBHandler {
 	 * @param sort 				the sort information, can be null
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void find(Class<?> classObj, Bson query, Bson sort, IResultCallback<BaseEntity> resultCallback) {
+	public <T, U> void find(Class<?> classObj, Bson query, Bson sort, ListCallback resultCallback) {
 		if (query == null) {
 			query = new Document();
 		}
@@ -235,7 +236,7 @@ public class MongoDBHandler {
 		MongoCollection<BaseEntity> collection = getCollection(classObj);
 		FindPublisher<BaseEntity> publisher = collection.find(query).sort(sort);
 		
-		CallbackSubscriber<BaseEntity> subscriber = new CallbackSubscriber<>((result, error) ->  {
+		ListCallbackSubscriber subscriber = new ListCallbackSubscriber((result, error) ->  {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe((Subscriber<BaseEntity>) subscriber);		
@@ -288,7 +289,7 @@ public class MongoDBHandler {
 	 * @param update 			the values for the update
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void update(Class<?> classObj, Bson query, Bson update, IResultCallback<UpdateResult> resultCallback) {
+	public void update(Class<?> classObj, Bson query, Bson update, ValueCallback<UpdateResult> resultCallback) {
 		if (query == null) {
 			query = new Document();
 		}
@@ -296,7 +297,7 @@ public class MongoDBHandler {
 		MongoCollection<BaseEntity> collection = getCollection(classObj);
 		Publisher<UpdateResult> publisher = collection.updateMany(query, update);
 		
-		CallbackSubscriber<UpdateResult> subscriber = new CallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<UpdateResult> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);
@@ -320,7 +321,7 @@ public class MongoDBHandler {
 
 			} else {
 				logger.debug(classObj.getSimpleName() + ": pojo db update query successful");
-				future.complete(StatusResult.success(result.get(0)));
+				future.complete(StatusResult.success(result));
 			}
 		});
 
@@ -337,7 +338,7 @@ public class MongoDBHandler {
 	 * @param query 			the query for the deletion, can be null
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void delete(Class<?> classObj, Bson query, IResultCallback<DeleteResult> resultCallback) {
+	public void delete(Class<?> classObj, Bson query, ValueCallback<DeleteResult> resultCallback) {
 		if (query == null) {
 			query = new Document();
 		}
@@ -345,7 +346,7 @@ public class MongoDBHandler {
 		MongoCollection<BaseEntity> collection = getCollection(classObj);
 		Publisher<DeleteResult> publisher = collection.deleteMany(query);
 		
-		CallbackSubscriber<DeleteResult> subscriber = new CallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<DeleteResult> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);
@@ -368,7 +369,7 @@ public class MongoDBHandler {
 
 			} else {
 				logger.debug(classObj.getSimpleName() + ": pojo delete query successful");
-				future.complete(StatusResult.success(result.get(0)));
+				future.complete(StatusResult.success(result));
 			}
 		});
 
@@ -381,11 +382,11 @@ public class MongoDBHandler {
 	 * @param classObj 			the class of the entity to delete
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void dropCollection(Class<?> classObj, IResultCallback<Success> resultCallback) {
+	public void dropCollection(Class<?> classObj, ValueCallback<Success> resultCallback) {
 		MongoCollection<BaseEntity> collection = getCollection(classObj);
 		Publisher<Success> publisher = collection.drop();		
 		
-		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);
@@ -420,10 +421,10 @@ public class MongoDBHandler {
 	 * drops the used database
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void dropDatabase(IResultCallback<Success> resultCallback) {
+	public void dropDatabase(ValueCallback<Success> resultCallback) {
 		Publisher<Success> publisher = database.drop();
 		
-		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);
@@ -435,11 +436,11 @@ public class MongoDBHandler {
 	 * @param dbName 			the name of the db to drop
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void dropDatabase(String dbName, IResultCallback<Success> resultCallback) {
+	public void dropDatabase(String dbName, ValueCallback<Success> resultCallback) {
 		MongoDatabase db = getDatabase(dbName);
 		Publisher<Success> publisher = db.drop();
 		
-		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);
@@ -484,7 +485,7 @@ public class MongoDBHandler {
 	 * @param collectionName 	the name of the collection to query
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void findJson(String collectionName, IResultCallback<Document> resultCallback) {
+	public void findJson(String collectionName, ValueCallback<String> resultCallback) {
 		MongoCollection<Document> collection = getJsonCollection(collectionName);
 		findJson(collection, resultCallback);
 	}
@@ -496,7 +497,7 @@ public class MongoDBHandler {
 	 * @param dbName 			the name of the database to use
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void findJson(String collectionName, String dbName, IResultCallback<Document> resultCallback) {
+	public void findJson(String collectionName, String dbName, ValueCallback<String> resultCallback) {
 		MongoCollection<Document> collection = getJsonCollection(collectionName, dbName);
 		findJson(collection, resultCallback);
 	}
@@ -507,11 +508,12 @@ public class MongoDBHandler {
 	 * @param collection 		the collection to perform the query
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	private void findJson(MongoCollection<Document> collection, IResultCallback<Document> resultCallback) {
+	private void findJson(MongoCollection<Document> collection, ValueCallback<String> resultCallback) {
 		FindPublisher<Document> publisher = collection.find();
 		
-		CallbackSubscriber<Document> subscriber = new CallbackSubscriber<>((result, error) ->  {
-			resultCallback.onResult(result, error);
+		ValueCallbackSubscriber<Document> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
+			String jsonList = gson.toJson(result);
+			resultCallback.onResult(jsonList, error);
 		});
 		publisher.subscribe(subscriber);
 	}
@@ -525,7 +527,7 @@ public class MongoDBHandler {
 	 * @param projection 		the projection information, can be null
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void findJson(String collectionName, Bson query, Bson sort, Bson projection, IResultCallback<Document> resultCallback) {
+	public void findJson(String collectionName, Bson query, Bson sort, Bson projection, ValueCallback<String> resultCallback) {
 		MongoCollection<Document> collection = getJsonCollection(collectionName);
 		findJson(collection, query, sort, projection, resultCallback);
 	}
@@ -540,7 +542,7 @@ public class MongoDBHandler {
 	 * @param projection 		the projection information, can be null
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void findJson(String collectionName, String dbName, Bson query, Bson sort, Bson projection, IResultCallback<Document> resultCallback) {
+	public void findJson(String collectionName, String dbName, Bson query, Bson sort, Bson projection, ValueCallback<String> resultCallback) {
 		MongoCollection<Document> collection = getJsonCollection(collectionName, dbName);
 		findJson(collection, query, sort, projection, resultCallback);
 	}
@@ -554,7 +556,7 @@ public class MongoDBHandler {
 	 * @param projection 		the projection information, can be null
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	private void findJson(MongoCollection<Document> collection, Bson query, Bson sort, Bson projection, IResultCallback<Document> resultCallback) {
+	private void findJson(MongoCollection<Document> collection, Bson query, Bson sort, Bson projection, ValueCallback<String> resultCallback) {
 		if (query == null) {
 			query = new Document();
 		}
@@ -567,8 +569,9 @@ public class MongoDBHandler {
 
 		FindPublisher<Document> publisher = collection.find(query).sort(sort).projection(projection);
 		
-		CallbackSubscriber<Document> subscriber = new CallbackSubscriber<>((result, error) ->  {
-			resultCallback.onResult(result, error);
+		ValueCallbackSubscriber<Document> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
+			String jsonList = gson.toJson(result);
+			resultCallback.onResult(jsonList, error);
 		});
 		publisher.subscribe(subscriber);
 	}
@@ -600,9 +603,8 @@ public class MongoDBHandler {
 				future.complete(StatusResult.error(error.getMessage()));
 
 			} else {
-				logger.debug(collectionName + " json find query successfull, length: " + result.size());
-				String jsonList = gson.toJson(result);
-				StatusResult statusResult = StatusResult.success(jsonList);
+				logger.debug(collectionName + " json find query successfull");
+				StatusResult statusResult = StatusResult.success(result);
 				future.complete(statusResult);
 			}
 		});
@@ -621,12 +623,12 @@ public class MongoDBHandler {
 	 * @param dbName 			the name of the db to use
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void dropCollection(String collectionName, String dbName, IResultCallback<Success> resultCallback) {
+	public void dropCollection(String collectionName, String dbName, ValueCallback<Success> resultCallback) {
 		MongoDatabase db = getDatabase(dbName);
 		MongoCollection<Document> collection = db.getCollection(collectionName);
 		Publisher<Success> publisher = collection.drop();
 		
-		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);
@@ -638,11 +640,11 @@ public class MongoDBHandler {
 	 * @param collectionName 	the name of the collection to drop
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void dropCollection(String collectionName, IResultCallback<Success> resultCallback) {
+	public void dropCollection(String collectionName, ValueCallback<Success> resultCallback) {
 		MongoCollection<Document> collection = database.getCollection(collectionName);
 		Publisher<Success> publisher = collection.drop();
 		
-		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);
@@ -688,7 +690,7 @@ public class MongoDBHandler {
 	 * @param indexOptions 		the options for the index, can be null
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void createIndex(String collectionName, String dbName, Bson index, IndexOptions indexOptions, IResultCallback<String> resultCallback) {
+	public void createIndex(String collectionName, String dbName, Bson index, IndexOptions indexOptions, ValueCallback<String> resultCallback) {
 		MongoDatabase db = getDatabase(dbName);
 		MongoCollection<Document> collection = db.getCollection(collectionName);
 		createIndex(collection, index, indexOptions, resultCallback);
@@ -702,7 +704,7 @@ public class MongoDBHandler {
 	 * @param indexOptions 		the options for the index, can be null
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void createIndex(String collectionName, Bson index, IndexOptions indexOptions, IResultCallback<String> resultCallback) {
+	public void createIndex(String collectionName, Bson index, IndexOptions indexOptions, ValueCallback<String> resultCallback) {
 		MongoCollection<Document> collection = database.getCollection(collectionName);		
 		createIndex(collection, index, indexOptions, resultCallback);
 	}
@@ -715,7 +717,7 @@ public class MongoDBHandler {
 	 * @param indexOptions 		the options for the index, can be null
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	private void createIndex(MongoCollection<Document> collection, Bson index, IndexOptions indexOptions, IResultCallback<String> resultCallback) {
+	private void createIndex(MongoCollection<Document> collection, Bson index, IndexOptions indexOptions, ValueCallback<String> resultCallback) {
 		Publisher<String> publisher;
 		if (indexOptions == null) {
 			publisher = collection.createIndex(index);
@@ -723,7 +725,7 @@ public class MongoDBHandler {
 			publisher = collection.createIndex(index, indexOptions);
 		}
 		
-		CallbackSubscriber<String> subscriber = new CallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<String> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
 			resultCallback.onResult(result, error);
 		});		
 		publisher.subscribe(subscriber);
@@ -762,11 +764,11 @@ public class MongoDBHandler {
 	 * @param collectionName 	the name of the collection for which all indexes are deleted
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void deleteIndexes(String collectionName, IResultCallback<Success> resultCallback) {
+	public void deleteIndexes(String collectionName, ValueCallback<Success> resultCallback) {
 		MongoCollection<Document> collection = database.getCollection(collectionName);
 		Publisher<Success> publisher = collection.dropIndexes();
 		
-		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);
@@ -779,12 +781,12 @@ public class MongoDBHandler {
 	 * @param dbName 			the name of the database to use
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void deleteIndexes(String collectionName, String dbName, IResultCallback<Success> resultCallback) {
+	public void deleteIndexes(String collectionName, String dbName, ValueCallback<Success> resultCallback) {
 		MongoDatabase db = getDatabase(dbName);
 		MongoCollection<Document> collection = db.getCollection(collectionName);
 		Publisher<Success> publisher = collection.dropIndexes();
 		
-		CallbackSubscriber<Success> subscriber = new CallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);
