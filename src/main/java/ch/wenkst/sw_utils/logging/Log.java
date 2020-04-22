@@ -307,6 +307,18 @@ public class Log {
 		logger.setLevel(level);
 	}
 	
+	
+	/**
+	 * disables the logger of the passed names, note that if you disable org.test, org.test.test1 will also be disabled
+	 * @param names 	the names of the logger to disable
+	 */
+	public static void disableLoggers(String... names) {
+		for (String name : names) {
+			Logger bcLogger = Logger.getLogger(name);
+			bcLogger.setLevel(Level.OFF);
+		}
+	}
+	
 		
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
