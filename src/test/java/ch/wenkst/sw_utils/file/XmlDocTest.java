@@ -98,10 +98,11 @@ public class XmlDocTest {
 	 * write xml
 	 * @throws TransformerException 
 	 * @throws UnsupportedEncodingException 
+	 * @throws ParserConfigurationException 
 	 */
 	@Test
 	@DisplayName("xml write")
-	public void xmlWriteTest() throws UnsupportedEncodingException, TransformerException {
+	public void xmlWriteTest() throws UnsupportedEncodingException, TransformerException, ParserConfigurationException {
 		// create a new document
 		XmlDoc xmlWriteDoc = new XmlDoc();
 		xmlWriteDoc.createNewDocument();

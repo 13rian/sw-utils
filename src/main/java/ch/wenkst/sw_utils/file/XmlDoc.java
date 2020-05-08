@@ -46,29 +46,16 @@ public class XmlDoc {
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 												write methods 												//
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	/**
-	 * handles an xml document
-	 */
-	public XmlDoc() {
-		 
-	}
-
 
 	/**
 	 * creates a new xml document and deletes the one that might already be present
+	 * @throws ParserConfigurationException 
 	 */
-	public void createNewDocument() {
+	public void createNewDocument() throws ParserConfigurationException {
 		DocumentBuilderFactory icFactory = DocumentBuilderFactory.newInstance(); 
 		DocumentBuilder icBuilder;  		// api to get DOM document instance from xml
-
-		try {
-			icBuilder = icFactory.newDocumentBuilder();
-			document = icBuilder.newDocument();          // create a new document
-			// document.setXmlStandalone(true); 			// get rid of the standalone attribute in the declaration of the document			 		
-
-		} catch (Exception e) {
-			logger.error("failed creating root element: " + e.getMessage());
-		}  
+		icBuilder = icFactory.newDocumentBuilder();
+		document = icBuilder.newDocument();          	// create a new document
 	}
 
 
@@ -79,7 +66,6 @@ public class XmlDoc {
 	 * @return	 				the xml rootElement
 	 */
 	public Element createRootElement(String rootElementName, String namespace) {
-		// create the element that defines the namespace to avoid element name conflicts between multiple elements
 		Element rootElement = document.createElementNS(namespace, rootElementName);					
 		document.appendChild(rootElement);
 
@@ -94,9 +80,7 @@ public class XmlDoc {
 	 * @return	 				the newly created element
 	 */
 	public Element createElement(String elementName) {
-		Element element = document.createElement(elementName);     // create a new element
-
-		return element;
+		return document.createElement(elementName);     // create a new element
 	}
 	
 	
@@ -107,9 +91,7 @@ public class XmlDoc {
 	 * @return	 				the newly created element
 	 */
 	public Element createElementNS(String namespace, String elementName) {
-		Element element = document.createElementNS(namespace, elementName);     // create a new element
-
-		return element;
+		return document.createElementNS(namespace, elementName);
 	}
 	
 	
@@ -235,9 +217,7 @@ public class XmlDoc {
 	public String writeToString(int indentAmount) throws UnsupportedEncodingException, TransformerException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		writeToStream(baos, indentAmount);
-		String result = baos.toString("UTF8");
-
-		return result;
+		return baos.toString("UTF8");
 	}
 
 
@@ -251,7 +231,7 @@ public class XmlDoc {
 	 */
 	public void writeToStream(OutputStream os, int indentAmount) throws TransformerException, UnsupportedEncodingException {
 		DOMSource source = new DOMSource(document);                  	// create a new input source
-		OutputStreamWriter fw = new OutputStreamWriter(os, "UTF8");
+		OutputStreamWriter fw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
 		StreamResult result = new StreamResult(fw);        				// holder to save the output
 
 		// create the transformer
@@ -507,7 +487,7 @@ public class XmlDoc {
 			logger.error(nElement + ". element not found");
 			return null;
 		} else {
-			return (Element)(elements.item(nElement));
+			return (Element) (elements.item(nElement));
 		}   
 	}
 
@@ -769,8 +749,8 @@ public class XmlDoc {
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/**
 	 * removes the garbage at the end of the xml string
-	 * @param xmlString: 	the xml string from which the garbage should be removed
-	 * @return: 			xml string without garbage
+	 * @param xmlString 	the xml string from which the garbage should be removed
+	 * @return 				xml string without garbage
 	 */
 	public static String removeTrailingGarbage(String xmlString) {
 		// find the position of the first tag
