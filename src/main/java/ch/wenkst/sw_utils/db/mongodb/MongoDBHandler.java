@@ -156,7 +156,7 @@ public class MongoDBHandler {
 	 * @param resultCallback 	callback that is called with the db result
 	 */
 	public void insert(List<? extends BaseEntity> entityList, ValueCallback<Success> resultCallback) {
-		if (entityList.size() < 1) {
+		if (entityList.isEmpty()) {
 			return;
 		}
 
@@ -180,7 +180,7 @@ public class MongoDBHandler {
 
 		insert(entityList, (result, error) ->  {
 			String entityName = "-";
-			if (entityList != null && entityList.size() > 0) {
+			if (entityList != null && !entityList.isEmpty()) {
 				entityName = entityList.get(0).getClass().getSimpleName();
 			}
 
@@ -346,7 +346,7 @@ public class MongoDBHandler {
 		MongoCollection<BaseEntity> collection = getCollection(classObj);
 		Publisher<DeleteResult> publisher = collection.deleteMany(query);
 		
-		ValueCallbackSubscriber<DeleteResult> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<DeleteResult> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);
@@ -360,7 +360,7 @@ public class MongoDBHandler {
 	 * @return 				the result of the db operation
 	 */
 	public StatusResult deleteSync(Class<?> classObj, Bson query) {
-		TimeoutFuture<StatusResult> future = new TimeoutFuture<StatusResult>(dbTimeout);
+		TimeoutFuture<StatusResult> future = new TimeoutFuture<>(dbTimeout);
 
 		delete(classObj, query, (result, error) ->  {
 			if (error != null) {
@@ -386,7 +386,7 @@ public class MongoDBHandler {
 		MongoCollection<BaseEntity> collection = getCollection(classObj);
 		Publisher<Success> publisher = collection.drop();		
 		
-		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);
@@ -424,7 +424,7 @@ public class MongoDBHandler {
 	public void dropDatabase(ValueCallback<Success> resultCallback) {
 		Publisher<Success> publisher = database.drop();
 		
-		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);
@@ -440,7 +440,7 @@ public class MongoDBHandler {
 		MongoDatabase db = getDatabase(dbName);
 		Publisher<Success> publisher = db.drop();
 		
-		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);
@@ -452,7 +452,7 @@ public class MongoDBHandler {
 	 * @return
 	 */
 	public StatusResult dropDatabaseSync() {
-		TimeoutFuture<StatusResult> future = new TimeoutFuture<StatusResult>(dbTimeout);
+		TimeoutFuture<StatusResult> future = new TimeoutFuture<>(dbTimeout);
 
 		dropDatabase((result, error) ->  {
 			if (error != null) {
@@ -595,7 +595,7 @@ public class MongoDBHandler {
 	 * @return
 	 */
 	public StatusResult findJsonSync(String collectionName, Bson query, Bson sort, Bson projection) {
-		TimeoutFuture<StatusResult> future = new TimeoutFuture<StatusResult>(dbTimeout);
+		TimeoutFuture<StatusResult> future = new TimeoutFuture<>(dbTimeout);
 
 		findJson(collectionName, query, sort, projection, (result, error) ->  {
 			if (error != null) {
@@ -628,7 +628,7 @@ public class MongoDBHandler {
 		MongoCollection<Document> collection = db.getCollection(collectionName);
 		Publisher<Success> publisher = collection.drop();
 		
-		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);
@@ -644,7 +644,7 @@ public class MongoDBHandler {
 		MongoCollection<Document> collection = database.getCollection(collectionName);
 		Publisher<Success> publisher = collection.drop();
 		
-		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);
@@ -725,7 +725,7 @@ public class MongoDBHandler {
 			publisher = collection.createIndex(index, indexOptions);
 		}
 		
-		ValueCallbackSubscriber<String> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<String> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
 			resultCallback.onResult(result, error);
 		});		
 		publisher.subscribe(subscriber);
@@ -768,7 +768,7 @@ public class MongoDBHandler {
 		MongoCollection<Document> collection = database.getCollection(collectionName);
 		Publisher<Success> publisher = collection.dropIndexes();
 		
-		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);
@@ -786,7 +786,7 @@ public class MongoDBHandler {
 		MongoCollection<Document> collection = db.getCollection(collectionName);
 		Publisher<Success> publisher = collection.dropIndexes();
 		
-		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);
@@ -799,7 +799,7 @@ public class MongoDBHandler {
 	 * @return
 	 */
 	public StatusResult deleteIndexesSync(String collectionName) {
-		TimeoutFuture<StatusResult> future = new TimeoutFuture<StatusResult>(dbTimeout);
+		TimeoutFuture<StatusResult> future = new TimeoutFuture<>(dbTimeout);
 		
 		deleteIndexes(collectionName, (result, error) -> {
 			if (error != null) {
@@ -879,9 +879,7 @@ public class MongoDBHandler {
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public MongoCollection<BaseEntity> getCollection(String collectionName, Class classObj, MongoDatabase database) {
-		MongoCollection<BaseEntity> collection = database.getCollection(collectionName, classObj); 	
-
-		return collection;
+		return database.getCollection(collectionName, classObj); 	
 	}
 
 
@@ -920,8 +918,7 @@ public class MongoDBHandler {
 
 		} catch (Exception e) {
 			logger.error("error waiting on db operation future: ", e);
-			StatusResult result = StatusResult.error("error waiting on db operation future");
-			return result;
+			return StatusResult.error("error waiting on db operation future");
 		}
 	}
 }

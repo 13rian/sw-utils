@@ -15,22 +15,19 @@ import org.slf4j.LoggerFactory;
  */
 public class DateUtils {
 	private static final Logger logger = LoggerFactory.getLogger(DateUtils.class);
+	
+	private static final String EUROPEAN_DATE_FORMAT = "dd.MM.yyyy";
 
 	// static list of holiday dates (is only initialized once when it it is used for the first time)
 	private static ArrayList<Calendar> chHolidayList = null;
 	private static ArrayList<Calendar> deHolidayList = null;
 	private static int holidayListYearCH = 0; 							// the year of the ch holiday list
 	private static int holidayListYearDE = 0; 							// the year of the de holiday list
-
-	//	// ch holidays
-	//	public static enum HolidaysCH {OSTERMONTAG, KARFREITAG, HIMMELFAHRT, PFINGSTMONTAG, NEUJAHRSTAG, 
-	//								   BERCHTOLDSTAG, TAG_DER_ARBEIT, NATIONALFEIERTAG, ERSTER_WEIHNACHTSTAG,
-	//								   STEPHANSTAG};
-	//	
-	//	// de holidays 
-	//	public static enum HolidaysDE {OSTERMONTAG, KARFREITAG, HIMMELFAHRT, PFINGSTMONTAG, NEUJAHRSTAG, 
-	//		   						   TAG_DER_ARBEIT, 	TAG_DER_DEUTSCHEN_EINHEIT, WEIHNACHTSTAG,
-	//		   						   ERSTER_WEIHNACHTSTAG, ZWEITER_WEIHNACHTSTAG, SILVESTER};
+	
+	
+	private DateUtils() {
+		
+	}
 
 
 
@@ -66,8 +63,7 @@ public class DateUtils {
 	public static String dateToStr(Calendar date, String format) {
 		try {
 			SimpleDateFormat sdf = new SimpleDateFormat(format);
-			String sDate= sdf.format(date.getTime());
-			return sDate;
+			return sdf.format(date.getTime());
 
 		} catch (Exception e) {
 			logger.error("error converting the date to a String: ", e);
@@ -109,12 +105,9 @@ public class DateUtils {
 	 * @return 			true if the passed dates are equal, false otherwise
 	 */
 	public static boolean areDatesEqual(Calendar date1, Calendar date2) {
-		boolean areDatesEqual = 
-				date1.get(Calendar.DAY_OF_MONTH) == date2.get(Calendar.DAY_OF_MONTH) &&
+		return 	date1.get(Calendar.DAY_OF_MONTH) == date2.get(Calendar.DAY_OF_MONTH) &&
 				date1.get(Calendar.MONTH) == date2.get(Calendar.MONTH) &&
 				date1.get(Calendar.YEAR) == date2.get(Calendar.YEAR);
-
-		return areDatesEqual;
 	}
 	
 	
@@ -198,21 +191,18 @@ public class DateUtils {
 	 * @return 			calendar instance with the easter date of the passed year
 	 */
 	public static Calendar easterDate(int year) {
-		// declare the needed varaibles
-		int a, b, c, d, e, f, g, h, i, k, l, m;   	
-
-		a = year % 19;
-		b = (int)Math.floor(year/100.0);
-		c = year % 100;
-		d = (int)Math.floor(b/4.0);
-		e = b % 4;
-		f = (int)Math.floor((b+8)/25.0);
-		g = (int)Math.floor((b-f+1)/3.0);
-		h = (19*a + b - d - g + 15) % 30;
-		i = (int)Math.floor(c/4.0);
-		k = c % 4;
-		l = (32 + 2*e + 2*i - h - k) % 7;
-		m = (int)Math.floor((a + 11*h + 22*l)/451.0);
+		int a = year % 19;
+		int b = (int)Math.floor(year/100.0);
+		int c = year % 100;
+		int d = (int)Math.floor(b/4.0);
+		int e = b % 4;
+		int f = (int)Math.floor((b+8)/25.0);
+		int g = (int)Math.floor((b-f+1)/3.0);
+		int h = (19*a + b - d - g + 15) % 30;
+		int i = (int)Math.floor(c/4.0);
+		int k = c % 4;
+		int l = (32 + 2*e + 2*i - h - k) % 7;
+		int m = (int)Math.floor((a + 11*h + 22*l)/451.0);
 
 		// get the day and the month
 		int month = (int)Math.floor((h + l - 7*m + 114)/31.0); 
@@ -221,9 +211,7 @@ public class DateUtils {
 
 		// get a date instance with the Easter Sunday
 		String dateStr = day + "." + month + "." + year;
-		Calendar easterDate = strToDate(dateStr, "dd.MM.yyyy");
-
-		return easterDate;		
+		return strToDate(dateStr, EUROPEAN_DATE_FORMAT);
 	}
 
 
@@ -243,9 +231,9 @@ public class DateUtils {
 
 		// get the correct to use for the comparison depending on the country code
 		ArrayList<Calendar> holidayList = null;
-		if (countryCode.toLowerCase().equals("ch")) {
+		if (countryCode.equalsIgnoreCase("ch")) {
 			holidayList = chHolidayList;
-		} else if (countryCode.toLowerCase().equals("de")) {
+		} else if (countryCode.equalsIgnoreCase("de")) {
 			holidayList = deHolidayList;
 		} else {
 			logger.error("country code "+ countryCode + " not implemented");
@@ -274,12 +262,12 @@ public class DateUtils {
 	 */
 	private static boolean createHolidayList(String countryCode, int year) {
 		// check if the desired holiday list was already calculated
-		if (countryCode.toLowerCase().equals("ch")) {
+		if (countryCode.equalsIgnoreCase("ch")) {
 			if (chHolidayList != null && year == holidayListYearCH) {
 				return true;
 			}
 
-		} else if (countryCode.toLowerCase().equals("de")) {
+		} else if (countryCode.equalsIgnoreCase("de")) {
 			if (deHolidayList != null && year == holidayListYearDE) {
 				return true;
 			}
@@ -317,25 +305,25 @@ public class DateUtils {
 
 		// fix holidays
 		// Neujahrstag
-		Calendar neujahrstag = strToDate("01.01."+year, "dd.MM.yyyy");
+		Calendar neujahrstag = strToDate("01.01."+year, EUROPEAN_DATE_FORMAT);
 
 		// Tag der Arbeit
-		Calendar tagDerArbeit = strToDate("01.05."+year, "dd.MM.yyyy");
+		Calendar tagDerArbeit = strToDate("01.05."+year, EUROPEAN_DATE_FORMAT);
 
 		// Erster Weihnachtstag
-		Calendar ersterWeihnachtstag = strToDate("25.12."+year, "dd.MM.yyyy");
+		Calendar ersterWeihnachtstag = strToDate("25.12."+year, EUROPEAN_DATE_FORMAT);
 
 
 		// specific for ch
 		if (countryCode.toLowerCase().equals("ch")) {
 			// Stephanstag
-			Calendar stephanstag = strToDate("26.12."+year, "dd.MM.yyyy");
+			Calendar stephanstag = strToDate("26.12."+year, EUROPEAN_DATE_FORMAT);
 
 			// Berchtholdstag
-			Calendar berchtholdstag = strToDate("02.01."+year, "dd.MM.yyyy");
+			Calendar berchtholdstag = strToDate("02.01."+year, EUROPEAN_DATE_FORMAT);
 
 			// Nationalfeiertag
-			Calendar nationalfeiertag = strToDate("01.08."+year, "dd.MM.yyyy");
+			Calendar nationalfeiertag = strToDate("01.08."+year, EUROPEAN_DATE_FORMAT);
 
 
 			// add all holiday dates to the list
@@ -357,18 +345,18 @@ public class DateUtils {
 		}
 
 		// specific for de
-		else if (countryCode.toLowerCase().equals("de")) {
+		else if (countryCode.equalsIgnoreCase("de")) {
 			// Tag der Deutschen Einheit
-			Calendar tagDerDeutschenEinheit = strToDate("03.10."+year, "dd.MM.yyyy");	
+			Calendar tagDerDeutschenEinheit = strToDate("03.10."+year, EUROPEAN_DATE_FORMAT);	
 
 			// Weihnachtstag
-			Calendar weihnachtstag = strToDate("24.12."+year, "dd.MM.yyyy");
+			Calendar weihnachtstag = strToDate("24.12."+year, EUROPEAN_DATE_FORMAT);
 
 			// Zweiter Weihnachtstag
-			Calendar zweiterWeihnachtstag = strToDate("26.12."+year, "dd.MM.yyyy");
+			Calendar zweiterWeihnachtstag = strToDate("26.12."+year, EUROPEAN_DATE_FORMAT);
 
 			// Silvester
-			Calendar silvester = strToDate("31.12."+year, "dd.MM.yyyy");
+			Calendar silvester = strToDate("31.12."+year, EUROPEAN_DATE_FORMAT);
 
 
 			// add all holiday dates to the list
@@ -392,7 +380,4 @@ public class DateUtils {
 
 		return true;
 	}
-
-
-
 }

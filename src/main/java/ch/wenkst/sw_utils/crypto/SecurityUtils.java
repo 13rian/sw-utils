@@ -60,7 +60,15 @@ import ch.wenkst.sw_utils.file.FileUtils;
 public class SecurityUtils {
 	private static final Logger logger = LoggerFactory.getLogger(SecurityUtils.class);
 	
-	public static enum KeyType {
+	public static final String BC = "BC";
+	public static final String BCJSSE = "BCJSSE";
+	public static final String PKCS12 = "PKCS12";
+	public static final String X509 = "X.509";
+	public static final String RSA = "RSA";
+	public static final String EC = "EC";
+	
+	
+	public enum KeyType {
 		RSA, 		// rsa keys
 		EC 			// elliptic keys
 	}
@@ -68,7 +76,7 @@ public class SecurityUtils {
 	/**
 	 * file formats of the private key
 	 */
-	public static enum FileFormat {
+	public enum FileFormat {
 		PEM,
 		DER
 	}
@@ -76,7 +84,7 @@ public class SecurityUtils {
 	/**
 	 * cryptographic standards how the key is stored in the file
 	 */
-	public static enum KeyFormat {
+	public enum KeyFormat {
 		PKCS1, 		// legacy format from openssl for rsa private keys
 		PKCS8, 		// new standard that should be used whenever possible, only standard supported by java
 		SEC1, 		// legacy format from openssl for ec private keys
@@ -91,7 +99,7 @@ public class SecurityUtils {
 	 */
 	public static void registerBC() {	
 		// Register the bouncy castle security provider, if not registered yet
-		if (Security.getProvider("BC") == null) {
+		if (Security.getProvider(BC) == null) {
 			Security.addProvider(new BouncyCastleProvider());
 			setSourceOfRandom();
 			logger.info("Successfully registered Bouncy Castle as crypto provider.");
@@ -104,8 +112,8 @@ public class SecurityUtils {
 	 */
 	public static void unregisterBC() {
 		// unregister the bouncy castle provider if registered before
-		if (Security.getProvider("BC") != null) {
-			Security.removeProvider("BC");
+		if (Security.getProvider(BC) != null) {
+			Security.removeProvider(BC);
 			logger.info("Successfully unregistered Bouncy Castle as crypto provider.");
 		}
 	}
@@ -119,7 +127,7 @@ public class SecurityUtils {
 	 */
 	public static void registerBCJSSE() {
 		// insert the bouncy castle JSSE provider at position 2 if not already registered
-		if (Security.getProvider("BCJSSE") == null) {
+		if (Security.getProvider(BCJSSE) == null) {
 			try {
 				// with this approach it is not necessary to have the bcjsse dependency in the class path
 				Object bc = Class.forName("org.bouncycastle.jsse.provider.BouncyCastleJsseProvider").newInstance();
@@ -132,7 +140,7 @@ public class SecurityUtils {
 		}
 
 		// insert the bouncy castle provider at position 3 if not already registered
-		if (Security.getProvider("BC") == null) {
+		if (Security.getProvider(BC) == null) {
 			Security.insertProviderAt(new BouncyCastleProvider(), 3);
 			logger.info("Successfully registered Bouncy Castle BC as security provider at position 3.");
 		}
@@ -146,14 +154,14 @@ public class SecurityUtils {
 	 */
 	public static void unregisterBCJSSE() {
 		// unregister the bouncy castle BCJSSE provider if registered before
-		if (Security.getProvider("BCJSSE") != null) {
-			Security.removeProvider("BCJSSE");
+		if (Security.getProvider(BCJSSE) != null) {
+			Security.removeProvider(BCJSSE);
 			logger.info("Successfully unregistered Bouncy Castle BCJSSE as crypto provider.");
 		}
 
 		// unregister the bouncy castle BC provider if registered before
-		if(Security.getProvider("BC") != null) {
-			Security.removeProvider("BC");
+		if(Security.getProvider(BC) != null) {
+			Security.removeProvider(BC);
 			logger.info("Successfully unregistered Bouncy Castle BC as crypto provider.");
 		}
 	}
@@ -248,13 +256,13 @@ public class SecurityUtils {
 			FileInputStream certInput = new FileInputStream(certFile);
 
 			CertificateFactory certFactory;
-			if (Security.getProvider("BC") == null) {
-				certFactory = CertificateFactory.getInstance("X.509", new BouncyCastleProvider());
+			if (Security.getProvider(BC) == null) {
+				certFactory = CertificateFactory.getInstance(X509, new BouncyCastleProvider());
 			} else {
-				certFactory = CertificateFactory.getInstance("X.509", "BC");
+				certFactory = CertificateFactory.getInstance(X509, BC);
 			}
 			
-			return (X509Certificate) certFactory.generateCertificate(certInput);
+			return certFactory.generateCertificate(certInput);
 
 		} catch (Exception e) {
 			logger.error("error loading the certificate: ", e);
@@ -271,15 +279,13 @@ public class SecurityUtils {
 	public static Certificate certFromDer(byte[] certBytes) {
 		try {
 			CertificateFactory certFactory;
-			if (Security.getProvider("BC") == null) {
-				certFactory = CertificateFactory.getInstance("X.509", new BouncyCastleProvider());
+			if (Security.getProvider(BC) == null) {
+				certFactory = CertificateFactory.getInstance(X509, new BouncyCastleProvider());
 			} else {
-				certFactory = CertificateFactory.getInstance("X.509", "BC");
+				certFactory = CertificateFactory.getInstance(X509, BC);
 			}
 			ByteArrayInputStream is = new ByteArrayInputStream(certBytes); 
-			X509Certificate cert = (X509Certificate) certFactory.generateCertificate(is);
-
-			return cert;
+			return certFactory.generateCertificate(is);
 
 		} catch (Exception e) {
 			logger.error("error creating a certificate from the passed bytes: ", e);
@@ -297,15 +303,14 @@ public class SecurityUtils {
 	 */
 	public static byte[] derFromCertFile(String path, FileFormat fileFormat) throws IOException {
 		if (fileFormat.equals(FileFormat.DER)) {
-			byte[] b64CertBytes = FileUtils.readByteArrFromFile(path);
-			return b64CertBytes;
+			return FileUtils.readByteArrFromFile(path);
 			
 		} else if (fileFormat.equals(FileFormat.PEM)) {
 			List<String> pemObjs = loadPem(path);
-			if (pemObjs != null && pemObjs.size() > 0) {
+			if (pemObjs != null && !pemObjs.isEmpty()) {
 				String b64CertStr =  pemObjs.get(0);
-				byte[] b64CertBytes = Conversion.base64StrToByteArray(b64CertStr);
-				return b64CertBytes;
+				return Conversion.base64StrToByteArray(b64CertStr);
+
 			} else {
 				logger.error("no pem objects found in the passed pem file");
 				return null;
@@ -462,8 +467,7 @@ public class SecurityUtils {
 			byte[] pkcs8KeyBytes = derFromKeyFile(path, keyType, fileFormat, keyFormat);	
 		
 			// create the private key from the der bytes
-			PrivateKey pk = keyFromDer(pkcs8KeyBytes, keyType);
-			return pk;
+			return keyFromDer(pkcs8KeyBytes, keyType);
 			
 		} catch (Exception e) {
 			logger.error("failed to parse the key file form path " + path, e);
@@ -530,7 +534,7 @@ public class SecurityUtils {
 		// pem and pkcs8
 		if (fileFormat.equals(FileFormat.PEM) && keyFormat.equals(KeyFormat.PKCS8)) {
 			List<String> pemObjs = loadPem(path);
-			if (pemObjs != null && pemObjs.size() > 0) {
+			if (pemObjs != null && !pemObjs.isEmpty()) {
 				String b64Key = pemObjs.get(0);
 				pkcs8KeyBytes = Conversion.base64StrToByteArray(b64Key);
 			
@@ -589,7 +593,7 @@ public class SecurityUtils {
 		// pem and pkcs8
 		if (fileFormat.equals(FileFormat.PEM) && keyFormat.equals(KeyFormat.PKCS8)) {
 			List<String> pemObjs = loadPem(path);
-			if (pemObjs != null && pemObjs.size() > 0) {
+			if (pemObjs != null && !pemObjs.isEmpty()) {
 				String b64Key = pemObjs.get(0);
 				pkcs8KeyBytes = Conversion.base64StrToByteArray(b64Key);
 			
@@ -649,19 +653,19 @@ public class SecurityUtils {
 		// key factory for rsa curves
 		KeyFactory keyFactory = null;
 		if (keyType.equals(KeyType.RSA)) {
-			if (Security.getProvider("BC") == null) {
-				keyFactory = KeyFactory.getInstance("RSA", new BouncyCastleProvider());
+			if (Security.getProvider(BC) == null) {
+				keyFactory = KeyFactory.getInstance(RSA, new BouncyCastleProvider());
 			} else {
-				keyFactory = KeyFactory.getInstance("RSA", "BC");
+				keyFactory = KeyFactory.getInstance(RSA, BC);
 			}
 		}
 
 		// key factory for ec curves
 		else if (keyType.equals(KeyType.EC)) {
-			if (Security.getProvider("BC") == null) {
-				keyFactory = KeyFactory.getInstance("EC", new BouncyCastleProvider());
+			if (Security.getProvider(BC) == null) {
+				keyFactory = KeyFactory.getInstance(EC, new BouncyCastleProvider());
 			} else {
-				keyFactory = KeyFactory.getInstance("EC", "BC");
+				keyFactory = KeyFactory.getInstance(EC, BC);
 			}
 		}
 
@@ -669,8 +673,7 @@ public class SecurityUtils {
 			throw new KeyParsingException("unsupported key type " + keyType);
 		}
 
-		PrivateKey pk = keyFactory.generatePrivate(keySpec);			
-		return pk;
+		return keyFactory.generatePrivate(keySpec);			
 	}
 
 	
@@ -756,10 +759,10 @@ public class SecurityUtils {
 	public static PublicKey pubRsaKeyFromPrivKey(PrivateKey rsaPrivateKey) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
 		// get the key factory
 		KeyFactory keyFactory = null;
-		if (Security.getProvider("BC") == null) {
-			keyFactory = KeyFactory.getInstance("RSA", new BouncyCastleProvider());
+		if (Security.getProvider(BC) == null) {
+			keyFactory = KeyFactory.getInstance(RSA, new BouncyCastleProvider());
 		} else {
-			keyFactory = KeyFactory.getInstance("RSA", "BC");
+			keyFactory = KeyFactory.getInstance(RSA, BC);
 		}
 
 		RSAPrivateCrtKey privk = (RSAPrivateCrtKey) rsaPrivateKey;
@@ -780,10 +783,10 @@ public class SecurityUtils {
 	public static PublicKey pubEcKeyFromPrivKey(PrivateKey ecPrivateKey) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
 		// get the key factory
 		KeyFactory keyFactory = null;
-		if (Security.getProvider("BC") == null) {
-			keyFactory = KeyFactory.getInstance("EC", new BouncyCastleProvider());
+		if (Security.getProvider(BC) == null) {
+			keyFactory = KeyFactory.getInstance(EC, new BouncyCastleProvider());
 		} else {
-			keyFactory = KeyFactory.getInstance("EC", "BC");
+			keyFactory = KeyFactory.getInstance(EC, BC);
 		}	
 
 		ECPrivateKey pkEcKey = (ECPrivateKey) ecPrivateKey;
@@ -791,8 +794,7 @@ public class SecurityUtils {
 		org.bouncycastle.jce.spec.ECParameterSpec ecSpec = pkEcKey.getParameters();
 		org.bouncycastle.math.ec.ECPoint Q = pkEcKey.getParameters().getG().multiply(d);
 		org.bouncycastle.jce.spec.ECPublicKeySpec pubSpec = new org.bouncycastle.jce.spec.ECPublicKeySpec(Q, ecSpec);
-		PublicKey publicEcKey = keyFactory.generatePublic(pubSpec);
-		return publicEcKey;
+		return keyFactory.generatePublic(pubSpec);
 	}
 	
 	
@@ -814,10 +816,10 @@ public class SecurityUtils {
 	 */
 	public static KeyStore keyStoreFromP12(String path, String password) throws KeyStoreException, NoSuchProviderException, NoSuchAlgorithmException, CertificateException, IOException {
 		KeyStore keyStore;
-		if (Security.getProvider("BC") == null) {
-			keyStore = KeyStore.getInstance("PKCS12", new BouncyCastleProvider());
+		if (Security.getProvider(BC) == null) {
+			keyStore = KeyStore.getInstance(PKCS12, new BouncyCastleProvider());
 		} else {
-			keyStore = KeyStore.getInstance("PKCS12", "BC");
+			keyStore = KeyStore.getInstance(PKCS12, BC);
 		}
 
 		File keyFile = new File(path);
@@ -992,10 +994,10 @@ public class SecurityUtils {
 	
 	
 	public static class KeyInfo {
-		public byte[] pkcs8KeyBytes;
-		public FileFormat fileFormat;
-		public KeyType keyType;
-		public KeyFormat keyFormat;
+		private byte[] pkcs8KeyBytes;
+		private FileFormat fileFormat;
+		private KeyType keyType;
+		private KeyFormat keyFormat;
 		
 		public void addKeyInfo(FileFormat fileFormat, KeyType keyType, KeyFormat keyFormat) {
 			this.fileFormat = fileFormat;

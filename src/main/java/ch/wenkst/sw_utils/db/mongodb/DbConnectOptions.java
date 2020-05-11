@@ -106,16 +106,7 @@ public class DbConnectOptions {
 				})
 				.build();
 
-		MongoClient mongoClient = MongoClients.create(settings);
-		return mongoClient;
-	}
-	
-	
-	/**
-	 * holds all configuration values that are needed to connect to the db
-	 */
-	public DbConnectOptions() {
-		
+		return MongoClients.create(settings);
 	}
 	
 	

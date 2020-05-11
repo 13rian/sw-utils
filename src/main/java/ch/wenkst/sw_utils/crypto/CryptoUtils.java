@@ -33,6 +33,11 @@ public class CryptoUtils {
 	private static final Logger logger = LoggerFactory.getLogger(CryptoUtils.class);
 	
 	
+	private CryptoUtils() {
+		
+	}
+	
+	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 												AES cryptography 													  //	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -76,9 +81,7 @@ public class CryptoUtils {
 			byte[] encMessage = cipher.doFinal(messageBytes);
 
 			// convert the encrypted bytes to a base64 string
-			String b64EncMessage = Conversion.byteArrayToBase64(encMessage);
-
-			return b64EncMessage;
+			return Conversion.byteArrayToBase64(encMessage);
 
 		} catch (Exception e) {
 			logger.error("error during the aes encryption: ", e);
@@ -100,9 +103,7 @@ public class CryptoUtils {
 			SecretKeySpec keySpec = new SecretKeySpec(key.getEncoded(), "AES");
 			Cipher cipher = Cipher.getInstance("AES", "BC");                        // get an instance of the cipher
 			cipher.init(Cipher.ENCRYPT_MODE, keySpec);	    
-			byte[] encMessage = cipher.doFinal(message);
-
-			return encMessage;
+			return cipher.doFinal(message);
 
 		} catch (Exception e) {
 			logger.error("error during the aes encryption: ", e);
@@ -130,9 +131,7 @@ public class CryptoUtils {
 			byte[] decMessage = cipher.doFinal(encByteArr);
 
 			// convert the decrypted bytes back to the message
-			String message = new String(decMessage, StandardCharsets.UTF_8);
-
-			return message;
+			return new String(decMessage, StandardCharsets.UTF_8);
 
 		} catch (Exception e) {
 			logger.error("error during the aes decryption: ", e);
@@ -155,10 +154,7 @@ public class CryptoUtils {
 			SecretKeySpec keySpec = new SecretKeySpec(key.getEncoded(), "AES");
 			Cipher cipher = Cipher.getInstance("AES", "BC");                        // get an instance of the cipher
 			cipher.init(Cipher.DECRYPT_MODE, keySpec);	    
-			byte[] decMessage = cipher.doFinal(encMessage);
-
-
-			return decMessage;
+			return cipher.doFinal(encMessage);
 
 		} catch (Exception e) {
 			logger.error("error during the aes decryption: ", e);
@@ -245,9 +241,7 @@ public class CryptoUtils {
 			Signature signature = Signature.getInstance("SHA256withECDSA", "BC");   // get the signature instance
 			signature.initSign(senderKey); 											// define the private key to sign the data
 			signature.update(bytes); 												// set the bytes to sign
-			byte[] signatureBytes = signature.sign(); 								// create the signature
-
-			return signatureBytes;
+			return signature.sign(); 												// create the signature
 
 		} catch (Exception e) {
 			logger.error("error during the signature: ", e);
@@ -270,9 +264,7 @@ public class CryptoUtils {
 			Signature signature = Signature.getInstance("SHA256withECDSA", "BC");   // get the signature instance
 			signature.initVerify (publicKey); 										// define the public key that is used to verify the signature
 			signature.update (dataBytes); 											// set the data bytes that were signed
-			boolean isSigValid = signature.verify(signatureBytes); 					// verify the signature
-
-			return isSigValid;
+			return signature.verify(signatureBytes); 								// verify the signature
 
 		} catch (Exception e) {
 			logger.error("error during verify: ", e);

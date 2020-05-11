@@ -35,11 +35,16 @@ public class FileUtils {
 	private static final Logger logger = LoggerFactory.getLogger(FileUtils.class);
 
 	// define the constants to recursively copy a directory
-	public static enum CopyDirMode {
+	public enum CopyDirMode {
 		COMPLETE_REPLACE, 			// the directory is completely replaced
 		NO_REPLACE, 				// if the directory already exists it will not be replaced
 		MERGE_REPLACE, 				// the directories will be merged, files that already exist will be replace
 		MERGE_NO_REPLACE 			// the directories will be merged, files that already exist will not be replace
+	}
+	
+	
+	private FileUtils() {
+		
 	}
 	
 
@@ -91,7 +96,7 @@ public class FileUtils {
 	 * @param searchDir 	the directory in which the file is searched
 	 * @param pattern 		some fraction of the file name, can be null
 	 * @param end 			the ending of the file
-	 * @return	 			an absolute file path or null if no file was found mathing the pattern
+	 * @return	 			an absolute file path or null if no file was found matching the pattern
 	 */
 	public static String findFileByPattern(String searchDir, String pattern, String end) {
 		File dir = new File(searchDir);
@@ -124,9 +129,7 @@ public class FileUtils {
 			return new ArrayList<>();
 		}
 
-		File[] files = dir.listFiles((directory, fileName) -> {
-			return fileName.endsWith(end) && (pattern == null || fileName.contains(pattern));
-		});
+		File[] files = dir.listFiles((directory, fileName) -> fileName.endsWith(end) && (pattern == null || fileName.contains(pattern)));
 
 		List<String> result = new ArrayList<>();
 		for (File file : files) {

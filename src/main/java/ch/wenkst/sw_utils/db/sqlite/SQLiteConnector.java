@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SQLiteConnector {
-	final static Logger logger = LoggerFactory.getLogger(SQLiteConnector.class);    // initialize the logger
+	private static final Logger logger = LoggerFactory.getLogger(SQLiteConnector.class);    // initialize the logger
 
 
 	private Connection connection = null; 		// the connection to the db
@@ -397,5 +397,4 @@ public class SQLiteConnector {
 			logger.error("failed to execute the update operation: " + sql + ": ", e);
 		}
 	}
-	
 }

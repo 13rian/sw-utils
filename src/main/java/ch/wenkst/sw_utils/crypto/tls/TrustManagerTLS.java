@@ -74,7 +74,7 @@ public class TrustManagerTLS implements X509TrustManager {
 			if (alias == null) {
 				alias = UUID.randomUUID().toString();
 			}
-			trustStore.setCertificateEntry(UUID.randomUUID().toString(), cert);
+			trustStore.setCertificateEntry(alias, cert);
 			
 			// set up trust manager factory to use our trust store
 			if (Security.getProvider("BCJSSE") == null) {
@@ -123,8 +123,7 @@ public class TrustManagerTLS implements X509TrustManager {
 	@Override
 	public X509Certificate[] getAcceptedIssuers() {
 		if (trustStore != null) {
-			X509Certificate[] issuers = trustManager.getAcceptedIssuers();
-			return issuers;
+			return trustManager.getAcceptedIssuers();
 		
 		} else {
 			return new X509Certificate[0];

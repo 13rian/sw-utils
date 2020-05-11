@@ -7,9 +7,9 @@ import ch.wenkst.sw_utils.event.IListener;
 
 
 public class SyncSameEventEventManager implements IEventManager {
-	public String eventName = "";      					   // name of the event and id of the event manager
-	private HashMap<IListener,Object> listeners = null;    // registered listeners for this event, key: listener, value: synchronized lock object
-	private Executor threadPool = null; 				   // thread pool to inform the registered listeners asynchronously
+	private String eventName = "";      					// name of the event and id of the event manager
+	private HashMap<IListener,Object> listeners = null;    	// registered listeners for this event, key: listener, value: synchronized lock object
+	private Executor threadPool = null; 				   	// thread pool to inform the registered listeners asynchronously
 
 
 	/**

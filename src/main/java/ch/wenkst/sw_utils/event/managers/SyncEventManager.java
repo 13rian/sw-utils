@@ -6,8 +6,8 @@ import ch.wenkst.sw_utils.event.IListener;
 
 
 public class SyncEventManager implements IEventManager {
-	public String eventName = "";      				// name of the event and id of the event manager
-	private ArrayList<IListener> listeners = null;  // registered listeners for this event
+	private String eventName = "";      				// name of the event and id of the event manager
+	private ArrayList<IListener> listeners = null;  	// registered listeners for this event
 
 	/**
 	 * handles one type of event, the listeners are notified synchronously in the order they were registered
@@ -49,7 +49,6 @@ public class SyncEventManager implements IEventManager {
 
 	@Override
 	public boolean hasListeners() {
-		return listeners.size() != 0;
+		return !listeners.isEmpty();
 	}
-
 }

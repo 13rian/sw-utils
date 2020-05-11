@@ -6,7 +6,7 @@ import java.util.concurrent.Executor;
 import ch.wenkst.sw_utils.event.IListener;
 
 public class AsyncEventManager implements IEventManager {
-	public String eventName = "";      				// name of the event and id of the event manager
+	private String eventName = "";      				// name of the event and id of the event manager
 	private ArrayList<IListener> listeners = null;  // registered listeners for this event
 	private Executor threadPool = null; 			// thread pool to inform the registered listeners asynchronously
 
@@ -46,16 +46,13 @@ public class AsyncEventManager implements IEventManager {
 	public synchronized void fire(Object params) {
 		// use the thread pool for the asynchronous events
 		for (IListener listener : listeners) {
-			threadPool.execute(() -> {
-				listener.handleEvent(eventName, params);
-			});
+			threadPool.execute(() -> listener.handleEvent(eventName, params));
 		}
 	}
 
 
 	@Override
 	public boolean hasListeners() {
-		return listeners.size() != 0;
+		return !listeners.isEmpty();
 	}
-
 }

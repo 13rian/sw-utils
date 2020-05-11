@@ -16,7 +16,7 @@ public abstract class ListSubscriber implements Subscriber<BaseEntity> {
 	 * base subscriber for a reactive stream mongodb operation
 	 */
 	public ListSubscriber() {
-		result = new ArrayList<BaseEntity>();
+		result = new ArrayList<>();
 	}
 
 	@Override

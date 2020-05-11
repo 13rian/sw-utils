@@ -16,6 +16,8 @@ import javax.net.ssl.TrustManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ch.wenkst.sw_utils.crypto.SecurityUtils;
+
 /**
  * generates the SSL context if ec brainpool curves should be supported as well the BC and the BCJSSE
  * security provider need to be registered.
@@ -23,6 +25,11 @@ import org.slf4j.LoggerFactory;
 public class SSLContextGenerator {
 	private static final Logger logger = LoggerFactory.getLogger(SSLContextGenerator.class);
 
+	
+	private SSLContextGenerator() {
+		
+	}
+	
 
 	/**
 	 * sets up the sslScontext for a secure connection, can be used for the server and the client
@@ -39,18 +46,18 @@ public class SSLContextGenerator {
 			String protocol) {
 		try {
 			SSLContext sslContext;
-			if (Security.getProvider("BCJSSE") == null) {
+			if (Security.getProvider(SecurityUtils.BCJSSE) == null) {
 				sslContext = SSLContext.getInstance(protocol);
 			} else {
-				sslContext = SSLContext.getInstance(protocol, "BCJSSE");
+				sslContext = SSLContext.getInstance(protocol, SecurityUtils.BCJSSE);
 			}
 			
 			// set up Keystore (class to save certificates and private key) and import the client certificate
 			KeyStore keyStore; 								// the pkcs12 format stores the private key and the certificate together
-			if (Security.getProvider("BC") == null) {
-				keyStore = KeyStore.getInstance("PKCS12");
+			if (Security.getProvider(SecurityUtils.BC) == null) {
+				keyStore = KeyStore.getInstance(SecurityUtils.PKCS12);
 			} else {
-				keyStore  = KeyStore.getInstance("PKCS12", "BC");	
+				keyStore  = KeyStore.getInstance(SecurityUtils.PKCS12, SecurityUtils.BC);	
 			}
 			
 			File keyFile = new File(keyFilePath);
@@ -60,10 +67,10 @@ public class SSLContextGenerator {
 			
 			// set up key manager factory to use our key store
 			KeyManagerFactory kmf;
-			if (Security.getProvider("BCJSSE") == null) {
+			if (Security.getProvider(SecurityUtils.BCJSSE) == null) {
 				kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 			} else {
-				kmf = KeyManagerFactory.getInstance("PKIX", "BCJSSE");
+				kmf = KeyManagerFactory.getInstance("PKIX", SecurityUtils.BCJSSE);
 			}
 			kmf.init(keyStore, keyStorePassword.toCharArray());
 
@@ -92,7 +99,6 @@ public class SSLContextGenerator {
 			return null;
 		}
 	}
-
 
 
 
@@ -115,19 +121,19 @@ public class SSLContextGenerator {
 			String protocol) {
 		try {
 			SSLContext sslContext;
-			if (Security.getProvider("BCJSSE") == null) {
+			if (Security.getProvider(SecurityUtils.BCJSSE) == null) {
 				sslContext = SSLContext.getInstance(protocol);
 			} else {
-				sslContext = SSLContext.getInstance(protocol, "BCJSSE");
+				sslContext = SSLContext.getInstance(protocol, SecurityUtils.BCJSSE);
 			}
 
 
 			// set up Keystore (class to save certificates and private key) and import the client certificate
 			KeyStore keyStore; 								// the pkcs12 format stores the private key and the certificate together
-			if (Security.getProvider("BC") == null) {
-				keyStore = KeyStore.getInstance("PKCS12");
+			if (Security.getProvider(SecurityUtils.BC) == null) {
+				keyStore = KeyStore.getInstance(SecurityUtils.PKCS12);
 			} else {
-				keyStore  = KeyStore.getInstance("PKCS12", "BC");	
+				keyStore  = KeyStore.getInstance(SecurityUtils.PKCS12, SecurityUtils.BC);	
 			}
 			keyStore.load(null); 
 
@@ -139,10 +145,10 @@ public class SSLContextGenerator {
 
 			// set up key manager factory to use our key store
 			KeyManagerFactory kmf;
-			if (Security.getProvider("BCJSSE") == null) {
+			if (Security.getProvider(SecurityUtils.BCJSSE) == null) {
 				kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 			} else {
-				kmf = KeyManagerFactory.getInstance("PKIX", "BCJSSE");
+				kmf = KeyManagerFactory.getInstance("PKIX", SecurityUtils.BCJSSE);
 			}
 			kmf.init(keyStore, keyStorePassword.toCharArray());
 			
@@ -172,6 +178,4 @@ public class SSLContextGenerator {
 			return null;
 		}
 	}
-
-
 }

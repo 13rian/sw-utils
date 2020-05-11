@@ -22,8 +22,14 @@ import org.slf4j.LoggerFactory;
 public class Conversion {
 	private static final Logger logger = LoggerFactory.getLogger(Conversion.class);
 
-	private final static char[] hexArray = "0123456789ABCDEF".toCharArray(); 	// needed for hex conversions
+	private static final char[] hexArray = "0123456789ABCDEF".toCharArray(); 	// needed for hex conversions
+	
+	
+	private Conversion() {
+		
+	}
 
+	
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 												Base64 													   //
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -53,9 +59,7 @@ public class Conversion {
 	 * @return	 			Base64 String, that holds the binary representation of the string with utf-8 character set
 	 */
 	public static String strToBase64Str(String str) {
-		String result = Base64.getEncoder().encodeToString(str.getBytes(StandardCharsets.UTF_8));
-
-		return result;
+		return Base64.getEncoder().encodeToString(str.getBytes(StandardCharsets.UTF_8));
 	}
 
 
@@ -79,9 +83,7 @@ public class Conversion {
 	 * @return	 		Base64 String
 	 */
 	public static String byteArrayToBase64(byte[] barr) {
-		String result = Base64.getEncoder().encodeToString(barr);
-
-		return result;
+		return Base64.getEncoder().encodeToString(barr);
 	}
 
 
@@ -91,9 +93,7 @@ public class Conversion {
 	 * @return	 	resulting byte array
 	 */
 	public static byte[] base64StrToByteArray(String str) {
-		byte[] result = Base64.getDecoder().decode(str.getBytes());		
-
-		return result;
+		return Base64.getDecoder().decode(str.getBytes());
 	}
 
 
@@ -124,12 +124,8 @@ public class Conversion {
 	 * @return	 	a String with UTF-8 character set
 	 */
 	public static String hexStrToStr(String str) {
-		// get the binary representation of the hex String
 		byte[] barr = hexStrToByteArray(str);
-
-		// create the string with UTF-8 character set
-		String result = new String(barr, StandardCharsets.UTF_8);
-		return result;
+		return new String(barr, StandardCharsets.UTF_8);
 	}
 
 
@@ -145,9 +141,7 @@ public class Conversion {
 			hexChars[j * 2] = hexArray[v >>> 4];
 			hexChars[j * 2 + 1] = hexArray[v & 0x0F];
 		}
-		String result = new String(hexChars);
-
-		return result;
+		return new String(hexChars);
 	}
 
 
@@ -190,8 +184,7 @@ public class Conversion {
 	 * @return		hex string in capital letters
 	 */
 	public static String intToHexStr(int i) {
-		String result = Integer.toHexString(i).toUpperCase();
-		return result;
+		return Integer.toHexString(i).toUpperCase();
 	}
 
 
@@ -201,8 +194,7 @@ public class Conversion {
 	 * @return 			the integer representation of the passed hex string
 	 */
 	public static long hexStrToInt(String hexStr) {
-		long result = Integer.parseInt(hexStr, 16);
-		return result;
+		return Integer.parseInt(hexStr, 16);
 	}
 
 
@@ -227,8 +219,7 @@ public class Conversion {
 	 * @return 		hex string in capital letters
 	 */
 	public static String longToHexStr(long l) {
-		String result = Long.toHexString(l).toUpperCase();
-		return result;
+		return Long.toHexString(l).toUpperCase();
 	}
 
 
@@ -238,8 +229,7 @@ public class Conversion {
 	 * @return 			the long representation of the passed hex string
 	 */
 	public static long hexStrToLong(String hexStr) {
-		long result = Long.parseLong(hexStr, 16);
-		return result;
+		return Long.parseLong(hexStr, 16);
 	}
 
 
@@ -258,11 +248,7 @@ public class Conversion {
 	 * @return 		boolean representation of the number
 	 */
 	public static boolean numToBoolean(Number num) {
-		if (num.doubleValue() == 0) {
-			return false;
-		} else {
-			return true;
-		}
+		return num.doubleValue() != 0;
 	}
 
 
@@ -289,7 +275,7 @@ public class Conversion {
 	 * @return	 		the converted arrayList
 	 */
 	public static List<Byte> byteArrayToArrayList(byte[] barr) {
-		List<Byte> result = new ArrayList<Byte>();
+		List<Byte> result = new ArrayList<>();
 		for (int i=0; i<barr.length; i++) {
 			result.add(barr[i]);
 		}
@@ -440,7 +426,6 @@ public class Conversion {
 	    }
 	 
 	    buffer.flush();
-	    byte[] byteArray = buffer.toByteArray();
-	    return byteArray;
+	    return buffer.toByteArray();
 	}
 }
