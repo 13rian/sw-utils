@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.mongodb.client.model.IndexOptions;
+import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.FindPublisher;
@@ -31,6 +32,7 @@ import ch.wenkst.sw_utils.db.mongodb.subscriber.value.ValueCallbackSubscriber;
 import ch.wenkst.sw_utils.db.mongodb.subscriber.list.ListCallback;
 import ch.wenkst.sw_utils.db.mongodb.subscriber.list.ListCallbackSubscriber;
 import ch.wenkst.sw_utils.future.TimeoutFuture;
+import ch.wenkst.sw_utils.map.MapUtils;
 import ch.wenkst.sw_utils.miscellaneous.StatusResult;
 
 public class MongoDBHandler {
@@ -326,6 +328,40 @@ public class MongoDBHandler {
 		});
 
 		return waitForFuture(future);
+	}
+	
+	
+	/**
+	 * saves the passed update to the db
+	 * @param findQuery			query to find the alredy existing entity in the db
+	 * @param updateQuery		the query to update
+	 * @param classObj 			the db entity class to update or insert
+	 * @return					the status result of the db operation
+	 */
+	public StatusResult insertOrUpdateSync(Bson findQuery, Map<String, Object> updateMap, Class<?> classObj) {
+		// check if the device already exists in the db
+		StatusResult result = findSync(classObj, findQuery, null);
+		if (!result.isSuccess()) {
+			logger.error("error executing find pojo, reason: " + result.getErrorMsg());
+			return result;
+		}
+
+
+		// update or insert the entity
+		List<BaseEntity> deviceEntities = result.getResult();
+		if (deviceEntities.size() > 0) {
+			Bson update = updateMapToBson(updateMap);			
+			return updateSync(classObj, findQuery, update);
+
+		} else {
+			BaseEntity device = (BaseEntity) MapUtils.mapToObj(updateMap, classObj);
+			if (device == null) {
+				logger.error("failed to save the pojo to the db, entity class could not be created form the update map");
+				return StatusResult.error("failed to save the pojo to the db, entity class could not be created form the update map");
+			}			
+
+			return insertSync(device);
+		}
 	}
 
 
@@ -907,7 +943,7 @@ public class MongoDBHandler {
 	 * waits for the passed future to be completed
 	 * @return	status result of the completed future
 	 */
-	private StatusResult waitForFuture(TimeoutFuture<StatusResult> future) {
+	protected StatusResult waitForFuture(TimeoutFuture<StatusResult> future) {
 		try {
 			StatusResult result = future.get();
 			if (result == null) {
@@ -920,5 +956,26 @@ public class MongoDBHandler {
 			logger.error("error waiting on db operation future: ", e);
 			return StatusResult.error("error waiting on db operation future");
 		}
+	}
+	
+	
+	/**
+	 * creates the bson update from the passed update map
+	 * @param updateMap 	map that contains all the parameters to update
+	 * @return 				bson update that is used for the db query
+	 */
+	public Bson updateMapToBson(Map<String, Object> updateMap) {
+		// remove any db id fields
+		updateMap.remove("id");
+		updateMap.remove("_id");
+		
+		ArrayList<Bson> updateList = new ArrayList<>();		
+		for (Map.Entry<String, Object> entry : updateMap.entrySet()) {
+			Bson update = Updates.set(entry.getKey(), entry.getValue());
+			updateList.add(update);
+		}
+		
+		Bson update = Updates.combine(updateList);
+		return update;
 	}
 }
