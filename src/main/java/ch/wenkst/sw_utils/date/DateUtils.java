@@ -2,6 +2,10 @@ package ch.wenkst.sw_utils.date;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -32,7 +36,7 @@ public class DateUtils {
 
 
 	/////////////////////////////////////////////////////////////////////////////////////////////
-	// 						String to Date conversion management 							   //
+	// 								date conversion management 							   	   //
 	/////////////////////////////////////////////////////////////////////////////////////////////
 	/**
 	 * parses the passed date in string format to a Calendar instance, or null if it could not be parsed
@@ -94,6 +98,50 @@ public class DateUtils {
 	}
 	
 	
+	/**
+	 * converts the passed unix time in ms to a LocalDateTime, utc is used for the zone
+	 * @param unixTime	unix time in ms
+	 * @return
+	 */
+	public static LocalDateTime unixToLocalDateTime(long unixTime) {
+    	return unixToLocalDateTime(unixTime, ZoneId.of("UTC"));
+	}
+	
+	
+	/**
+	 * converts the passed unix time in ms to a LocalDateTime
+	 * @param unixTime	unix time in ms
+	 * @param zoneId	the time zone to use for the conversion
+	 * @return
+	 */
+	public static LocalDateTime unixToLocalDateTime(long unixTime, ZoneId zoneId) {
+    	return Instant.ofEpochMilli(unixTime)
+    			.atZone(zoneId)
+    			.toLocalDateTime();
+	}
+	
+	
+	/**
+	 * converts the passed localDateTime to unix time in ms, utc is used for the zone
+	 * @param localDateTime		the local date time 
+	 * @return
+	 */
+	public static long localDateTimeToUnix(LocalDateTime localDateTime) {
+		return localDateTimeToUnix(localDateTime, ZoneId.of("UTC"));		
+	}
+	
+	
+	/**
+	 * converts the passed localDateTime to unix time in ms
+	 * @param localDateTime		the local date time 
+	 * @param zoneId			the time zone that is used for the conversion
+	 * @return
+	 */
+	public static long localDateTimeToUnix(LocalDateTime localDateTime, ZoneId zoneId) {
+		return localDateTime.atZone(zoneId).toInstant().toEpochMilli();
+	}
+	
+	
 
 	/////////////////////////////////////////////////////////////////////////////////////////////
 	// 									comparing methods 							   		   //
@@ -126,6 +174,17 @@ public class DateUtils {
 		dateToTest.setTimeInMillis(timestamp);
 		
 		return areDatesEqual(today, dateToTest);
+	}
+	
+	
+	/**
+	 * returns the duration in ms between the two passed dates
+	 * @param startLocalDateTime		the start time
+	 * @param endLocalDateTime			the end time
+	 * @return
+	 */
+	public static long durationInMilli(LocalDateTime startLocalDateTime, LocalDateTime endLocalDateTime) {
+		return Duration.between(startLocalDateTime, endLocalDateTime).toMillis();
 	}
 
 
