@@ -15,7 +15,7 @@ public abstract class BaseThread extends Thread {
 	 * simple polling thread that has a default polling interval of 100ms
 	 */
 	public BaseThread() {
-		
+		pollInterval = 100;
 	}
 	
 	
@@ -34,7 +34,6 @@ public abstract class BaseThread extends Thread {
 			startWork();
 
 			while (running) {	
-				// execute the task
 				doWork();	 	
 
 				if (pollInterval > 0) {
