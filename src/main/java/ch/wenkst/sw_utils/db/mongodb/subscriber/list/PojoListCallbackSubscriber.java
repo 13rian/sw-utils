@@ -1,9 +1,9 @@
 package ch.wenkst.sw_utils.db.mongodb.subscriber.list;
 
-public class ListCallbackSubscriber extends ListSubscriber {
-	private ListCallback callback;
+public class PojoListCallbackSubscriber extends PojoListSubscriber {
+	private PojoListCallback callback;
 	
-	public ListCallbackSubscriber(ListCallback callback) {
+	public PojoListCallbackSubscriber(PojoListCallback callback) {
 		this.callback = callback;
 	}
 			

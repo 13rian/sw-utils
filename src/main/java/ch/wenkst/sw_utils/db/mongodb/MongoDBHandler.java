@@ -29,8 +29,11 @@ import ch.wenkst.sw_utils.db.mongodb.base.BaseEntity;
 import ch.wenkst.sw_utils.db.mongodb.base.EntityInfo;
 import ch.wenkst.sw_utils.db.mongodb.subscriber.value.ValueCallback;
 import ch.wenkst.sw_utils.db.mongodb.subscriber.value.ValueCallbackSubscriber;
-import ch.wenkst.sw_utils.db.mongodb.subscriber.list.ListCallback;
-import ch.wenkst.sw_utils.db.mongodb.subscriber.list.ListCallbackSubscriber;
+import ch.wenkst.sw_utils.db.mongodb.subscriber.list.DocumentListCallback;
+import ch.wenkst.sw_utils.db.mongodb.subscriber.list.DocumentListCallbackSubscriber;
+import ch.wenkst.sw_utils.db.mongodb.subscriber.list.DocumentListSubscriber;
+import ch.wenkst.sw_utils.db.mongodb.subscriber.list.PojoListCallback;
+import ch.wenkst.sw_utils.db.mongodb.subscriber.list.PojoListCallbackSubscriber;
 import ch.wenkst.sw_utils.future.TimeoutFuture;
 import ch.wenkst.sw_utils.map.MapUtils;
 import ch.wenkst.sw_utils.miscellaneous.StatusResult;
@@ -209,11 +212,11 @@ public class MongoDBHandler {
 	 * @param classObj 			the entity to retrieve
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void find(Class<?> classObj, ListCallback resultCallback) {
+	public void find(Class<?> classObj, PojoListCallback resultCallback) {
 		MongoCollection<BaseEntity> collection = getCollection(classObj);
 		FindPublisher<BaseEntity> publisher = collection.find();
 		
-		ListCallbackSubscriber subscriber = new ListCallbackSubscriber((result, error) ->  {
+		PojoListCallbackSubscriber subscriber = new PojoListCallbackSubscriber((result, error) ->  {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe((Subscriber<BaseEntity>) subscriber);	
@@ -227,7 +230,7 @@ public class MongoDBHandler {
 	 * @param sort 				the sort information, can be null
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public <T, U> void find(Class<?> classObj, Bson query, Bson sort, ListCallback resultCallback) {
+	public <T, U> void find(Class<?> classObj, Bson query, Bson sort, PojoListCallback resultCallback) {
 		if (query == null) {
 			query = new Document();
 		}
@@ -238,7 +241,7 @@ public class MongoDBHandler {
 		MongoCollection<BaseEntity> collection = getCollection(classObj);
 		FindPublisher<BaseEntity> publisher = collection.find(query).sort(sort);
 		
-		ListCallbackSubscriber subscriber = new ListCallbackSubscriber((result, error) ->  {
+		PojoListCallbackSubscriber subscriber = new PojoListCallbackSubscriber((result, error) ->  {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe((Subscriber<BaseEntity>) subscriber);		
@@ -605,7 +608,7 @@ public class MongoDBHandler {
 
 		FindPublisher<Document> publisher = collection.find(query).sort(sort).projection(projection);
 		
-		ValueCallbackSubscriber<Document> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
+		DocumentListCallbackSubscriber subscriber = new DocumentListCallbackSubscriber((result, error) ->  {
 			String jsonList = gson.toJson(result);
 			resultCallback.onResult(jsonList, error);
 		});
