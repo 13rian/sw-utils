@@ -16,6 +16,7 @@ import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
+import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.Updates;
 import com.mongodb.reactivestreams.client.AggregatePublisher;
@@ -221,18 +222,23 @@ public class MainAsyncMongoDB {
 		// use query, sort and projection
 		Utils.sleep(200);
 		
-		Document projection = new Document()
-				.append("name", 1)
-	            .append("age",1)
-	            .append("_id", 0); 		// 0: exclude, 1: include
+		Bson projection = Projections.fields(
+				Projections.include("name"),
+				Projections.include("age"),
+				Projections.excludeId());
+		
+//		Document projection = new Document()
+//				.append("name", 1)
+//	            .append("age",1)
+//	            .append("_id", 0); 		// 0: exclude, 1: include
 		
 		
 		dbHandler.findJson("Person", null, Sorts.ascending("age"), projection, (result, error) ->  {
 			if (error != null) {
-				logger.error("json-query failed: ", error);
+				logger.error("json-projection-query failed: ", error);
 				
 			} else {
-				logger.info("json-query successfull: " + result);
+				logger.info("json-projection-query successful: " + result);
 			}
 		});
 		

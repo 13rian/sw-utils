@@ -2,15 +2,14 @@ package ch.wenkst.sw_utils.db.mongodb.subscriber.list;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
-import ch.wenkst.sw_utils.db.mongodb.base.BaseEntity;
-
-public abstract class ListSubscriber implements Subscriber<BaseEntity> {	
-	protected final List<BaseEntity> result;		// result list of the db
-	protected Exception error = null; 				// the first error that occurred
-	protected volatile boolean completed; 			// true if the stream is completed, false otherwise
+public abstract class ListSubscriber<T> implements Subscriber<T> {	
+	protected final List<T> result;				// result list of the db
+	protected Exception error = null; 			// the first error that occurred
+	protected volatile boolean completed; 		// true if the stream is completed, false otherwise
 
 	/**
 	 * base subscriber for a reactive stream mongodb operation
@@ -25,7 +24,7 @@ public abstract class ListSubscriber implements Subscriber<BaseEntity> {
 	}
 
 	@Override
-	public void onNext(BaseEntity t) {
+	public void onNext(T t) {
 		result.add(t);
 	}
 
@@ -37,7 +36,7 @@ public abstract class ListSubscriber implements Subscriber<BaseEntity> {
 		onComplete();
 	}	
 
-	public List<? extends BaseEntity> getResult() {
+	public List<T> getResult() {
 		return result;
 	}
 

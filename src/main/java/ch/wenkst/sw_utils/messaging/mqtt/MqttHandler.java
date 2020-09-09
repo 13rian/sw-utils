@@ -68,7 +68,7 @@ public class MqttHandler {
 	
 	
 	/**
-	 * returns true if the broker is reachble and false if not
+	 * returns true if the broker is reachable and false if not
 	 * @return
 	 */
 	public boolean isReachable() {
@@ -96,9 +96,12 @@ public class MqttHandler {
 	 */
 	public void setupClient(String clientId) throws MqttSecurityException, MqttException {
 		publisher = new MqttClient(brokerUrl, clientId + "_sub", null);
-		subscriber = new MqttClient(brokerUrl, clientId + "_pub", null);
 		publisher.connect(options);
+		publisher.setCallback(new MqttCallbackHandler(publisher));
+		
+		subscriber = new MqttClient(brokerUrl, clientId + "_pub", null);
 		subscriber.connect(options);
+		subscriber.setCallback(new MqttCallbackHandler(subscriber));
 	}
 	
 	
