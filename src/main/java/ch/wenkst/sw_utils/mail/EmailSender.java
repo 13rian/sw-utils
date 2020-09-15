@@ -51,10 +51,22 @@ public class EmailSender {
 	
 	/**
 	 * configures the smtp host, e.g. smtp.gmail.com, smtp.celsi.ch
+	 * @param host
 	 * @return
 	 */
 	public EmailSender host(String host) {
 		props.put("mail.smtp.host", host);
+		return this;
+	}
+	
+	
+	/**
+	 * configures the port of the smtp server
+	 * @param port
+	 * @return
+	 */
+	public EmailSender port(int port) {
+		props.put("mail.smtp.port", port+"");
 		return this;
 	}
 	

@@ -41,6 +41,7 @@ public class MainEmail {
 			emailSender
 				.debugMessages(false) 								// true to print debug messages
 				.host(host)											// add the smpt host
+				.port(587) 											// port of the smpt server
 				.authentication(fromEmail, password)				// add the username and password
 				.createClientSession() 								// init the email client
 				.createBasicMsg("Test", toEmail1, toEmail2) 		// create the basic message
@@ -57,9 +58,6 @@ public class MainEmail {
 			logger.error("error sending the email: ", e);
 		}
 		logger.info("email successfully sent");
-		
-		
-		
 	}
 
 }
