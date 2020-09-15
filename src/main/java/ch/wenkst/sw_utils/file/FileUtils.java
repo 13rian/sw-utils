@@ -150,7 +150,7 @@ public class FileUtils {
 	 */
 	public static void writeStrToFile(String filePath, String content) throws FileNotFoundException {
 		File file = new File(filePath);
-		if(! file.getParentFile().exists()) {
+		if(!file.getParentFile().exists()) {
 			file.getParentFile().mkdirs();
 		}
 
@@ -168,7 +168,7 @@ public class FileUtils {
 	 */
 	public static void inputStreamToFile(String filePath, InputStream is) throws IOException {
 		File file = new File(filePath);
-		if(! file.getParentFile().exists()) {
+		if(!file.getParentFile().exists()) {
 			file.getParentFile().mkdirs();
 		}
 
