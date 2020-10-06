@@ -1,12 +1,14 @@
 package ch.wenkst.sw_utils.scheduler;
 
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executor;
 import ch.wenkst.sw_utils.threads.BaseThread;
 
 
 public class Scheduler extends BaseThread {
-	private Executor executor = null; 									// executes the tasks asynchronously 
+	private Executor executor = null; 										// executes the tasks asynchronously 
 	private ArrayList<ScheduledTask> scheduledTasks = new ArrayList<>(); 	// holds all scheduled tasks
 	
 	
@@ -59,44 +61,67 @@ public class Scheduler extends BaseThread {
 	@Override
 	public void doWork() {
 		synchronized (scheduledTasks) {
-			long currentTime = System.currentTimeMillis();
-			
-			// get all tasks that have an expired timeout
-			ArrayList<ScheduledTask> tasksToStart = new ArrayList<>();
-			for (ScheduledTask task : scheduledTasks) {
-				if (currentTime >= task.getStartTime()) {
-					tasksToStart.add(task);
-				}
-			}
-			
-			// call the method that defines what happened after the timeout expired and remove the task from the list
+			List<ScheduledTask> tasksToStart = tasksToStart();
 			for (ScheduledTask task : tasksToStart) {
-				// remove the task or reschedule the next execution
-				if (task.isPeriodic()) {
-					// change the start time of the task and do not remove it from the task list
-					long newStartTime = task.getStartTime() + task.getInterval(); 
-					task.setStartTime(newStartTime);
-					
-				} else {
-					// the task is not periodic remove it from the task list
-					scheduledTasks.remove(task);
-				}
-				
-				// start the execution of the task
-				if (executor != null) {
-					// asynchronous call
-					executor.execute(() -> {
-						task.onStartTask();
-					});
-				
-				} else {
-					// synchronous call
-					task.onStartTask();
-				}
+				startTask(task);
 			}
-			
 		}
 	}
+	
+	
+	
+	/**
+	 * starts the passed task
+	 * @param task		task to start
+	 */
+	private void startTask(ScheduledTask task) {
+		if (executor != null) {
+			executor.execute(() -> {
+				executeTask(task);
+			});
+		
+		} else {
+			executeTask(task);
+		}
+	}
+	
+	
+	/**
+	 * returns a list of all tasks to start
+	 * @return
+	 */
+	private List<ScheduledTask> tasksToStart() {
+		long currentTime = Instant.now().toEpochMilli();
+		
+		List<ScheduledTask> tasksToStart = new ArrayList<>();
+		for (ScheduledTask task : scheduledTasks) {
+			if (currentTime >= task.getStartTime()) {
+				tasksToStart.add(task);
+			}
+		}
+		
+		return tasksToStart;
+	}
+	
+	
+	/**
+	 * executes the passed task
+	 * @param task
+	 */
+	private void executeTask(ScheduledTask task) {
+		if (task instanceof IntervalTask) {
+			task.reschedule();
+		} else {
+			scheduledTasks.remove(task);
+		}
+		task.onStartTask();
+		
+		if (task instanceof PeriodicTask) {
+			task.reschedule();
+			scheduledTasks.add(task);
+		}
+	}
+	
 	
 	@Override
 	public void startWork() {
@@ -124,6 +149,4 @@ public class Scheduler extends BaseThread {
 	public void stopScheduler() {
 		stopWorker();
 	}
-
-
 }

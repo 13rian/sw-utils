@@ -15,6 +15,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import ch.wenkst.sw_utils.scheduler.Scheduler;
+
 public class SchedulerTest {
 	private static Scheduler scheduler = null; 	 	// the scheduler that handles added tasks
 	private static Executor executor = null; 		// thread pool executor for the scheduler
@@ -50,12 +52,12 @@ public class SchedulerTest {
 	public void distinctStartTimeTaskTest() {
 		// schedule the task1 300 ms into the future
 		long startTime1 = System.currentTimeMillis() + 300;
-		OneTimeTask task1 = new OneTimeTask(startTime1);
+		OneTimeTestTask task1 = new OneTimeTestTask(startTime1);
 		scheduler.addToTasks(task1);
 		
 		// schedule the task2 500 ms into the future
 		long startTime2 = System.currentTimeMillis() + 500;
-		OneTimeTask task2 = new OneTimeTask(startTime2);
+		OneTimeTestTask task2 = new OneTimeTestTask(startTime2);
 		scheduler.addToTasks(task2);
 		
 		// check the state of the scheduler
@@ -94,12 +96,12 @@ public class SchedulerTest {
 	public void sameStartTimeTaskTest() {
 		// schedule the task1 300 ms into the future
 		long startTime1 = System.currentTimeMillis() + 300;
-		OneTimeTask task1 = new OneTimeTask(startTime1);
+		OneTimeTestTask task1 = new OneTimeTestTask(startTime1);
 		scheduler.addToTasks(task1);
 		
 		// schedule the task2 300 ms into the future
 		long startTime2 = System.currentTimeMillis() + 300;
-		OneTimeTask task2 = new OneTimeTask(startTime2);
+		OneTimeTestTask task2 = new OneTimeTestTask(startTime2);
 		scheduler.addToTasks(task2);
 		
 		// check the state of the scheduler
@@ -129,7 +131,7 @@ public class SchedulerTest {
 	
 	
 	/**
-	 * execute tow periodic tasks with a different interval
+	 * execute two periodic tasks with a different interval
 	 */
 	@Test
 	@DisplayName("periodic task")
@@ -138,11 +140,11 @@ public class SchedulerTest {
 		long startTime = System.currentTimeMillis() + 100;
 		
 		// schedule a periodic task with an interval of 200ms
-		PeriodicTask task1 = new PeriodicTask(startTime, 200);
+		PeriodicTestTask task1 = new PeriodicTestTask(startTime, 200);
 		scheduler.addToTasks(task1);
 		
 		// schedule a periodic task with an interval of 300ms
-		PeriodicTask task2 = new PeriodicTask(startTime, 300);
+		PeriodicTestTask task2 = new PeriodicTestTask(startTime, 300);
 		scheduler.addToTasks(task2);
 		
 		// check the state of the scheduler

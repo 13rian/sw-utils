@@ -29,9 +29,7 @@ import ch.wenkst.sw_utils.db.mongodb.base.BaseEntity;
 import ch.wenkst.sw_utils.db.mongodb.base.EntityInfo;
 import ch.wenkst.sw_utils.db.mongodb.subscriber.value.ValueCallback;
 import ch.wenkst.sw_utils.db.mongodb.subscriber.value.ValueCallbackSubscriber;
-import ch.wenkst.sw_utils.db.mongodb.subscriber.list.DocumentListCallback;
 import ch.wenkst.sw_utils.db.mongodb.subscriber.list.DocumentListCallbackSubscriber;
-import ch.wenkst.sw_utils.db.mongodb.subscriber.list.DocumentListSubscriber;
 import ch.wenkst.sw_utils.db.mongodb.subscriber.list.PojoListCallback;
 import ch.wenkst.sw_utils.db.mongodb.subscriber.list.PojoListCallbackSubscriber;
 import ch.wenkst.sw_utils.future.TimeoutFuture;
@@ -182,6 +180,10 @@ public class MongoDBHandler {
 	 */
 	public StatusResult insertSync(List<? extends BaseEntity> entityList) {
 		TimeoutFuture<StatusResult> future = new TimeoutFuture<StatusResult>(dbTimeout);
+		if (entityList.isEmpty()) {
+			logger.debug("tried to insert empty list of db entities");
+			future.complete(StatusResult.success(null));
+		}
 
 		insert(entityList, (result, error) ->  {
 			String entityName = "-";

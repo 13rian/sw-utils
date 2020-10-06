@@ -2,7 +2,7 @@ package ch.wenkst.sw_utils.scheduler;
 
 import java.util.ArrayList;
 
-public class PeriodicTask extends ScheduledTask {
+public class PeriodicTestTask extends PeriodicTask {
 	private ArrayList<Long> executionTimes = new ArrayList<>();
 	
 	/**
@@ -11,10 +11,8 @@ public class PeriodicTask extends ScheduledTask {
 	 * @param startTime 	the time the task is executed
 	 * @param interval 		interval in ms at which the task is executed
 	 */
-	public PeriodicTask(long startTime, long interval) {
-		this.interval = interval;
-		this.startTime = startTime;
-		isPeriodic = true;
+	public PeriodicTestTask(long startTime, long interval) {
+		super(startTime, interval);
 	}
 	
 	
@@ -36,5 +34,4 @@ public class PeriodicTask extends ScheduledTask {
 	public ArrayList<Long> getExecutionTimes() {
 		return executionTimes;
 	}
-	
 }
