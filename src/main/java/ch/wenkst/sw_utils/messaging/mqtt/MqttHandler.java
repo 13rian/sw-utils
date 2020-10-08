@@ -103,6 +103,7 @@ public class MqttHandler {
 	 */
 	public void setupClient(String clientId) throws MqttSecurityException, MqttException {
 		this.clientId = clientId;
+		logger.debug("open a connection to the mqtt broker with the clientId: " + clientId);
 		setupClient();
 	}
 	

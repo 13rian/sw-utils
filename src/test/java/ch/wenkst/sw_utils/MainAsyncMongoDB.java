@@ -20,6 +20,7 @@ import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.Updates;
 import com.mongodb.reactivestreams.client.AggregatePublisher;
+import com.mongodb.reactivestreams.client.FindPublisher;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.Success;
 
@@ -102,6 +103,24 @@ public class MainAsyncMongoDB {
 		Utils.sleep(200);
 		
 		dbHandler.find(Person.class, (result, error) ->  {
+			List<Person> persons = (List<Person>) result;
+			
+			if (error != null) {
+				logger.error("query failed: ", error);
+			} else {
+				logger.info("query successful, length: " + result.size());
+			}
+		});
+		
+		
+		// make a query using the generic method to only get one person
+		FindPublisher<BaseEntity> publisher = dbHandler
+				.getCollection(Person.class)
+				.find(new Document())
+				.sort(new Document())
+				.limit(1);
+		
+		dbHandler.find(publisher, (result, error) ->  {
 			List<Person> persons = (List<Person>) result;
 			
 			if (error != null) {

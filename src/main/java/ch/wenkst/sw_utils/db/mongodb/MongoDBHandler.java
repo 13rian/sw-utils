@@ -247,6 +247,20 @@ public class MongoDBHandler {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe((Subscriber<BaseEntity>) subscriber);		
+	}
+	
+	
+	/**
+	 * queries entities in the db from the passed publisher, this opens the options to use all
+	 * of the mongodb library features
+	 * @param publisher 		the find publisher that defines the query to mongodb
+	 * @param resultCallback 	callback that is called with the db result
+	 */
+	public void find(FindPublisher<BaseEntity> publisher, PojoListCallback resultCallback) {		
+		PojoListCallbackSubscriber subscriber = new PojoListCallbackSubscriber((result, error) ->  {
+			resultCallback.onResult(result, error);
+		});
+		publisher.subscribe((Subscriber<BaseEntity>) subscriber);		
 	}	
 
 
@@ -281,6 +295,30 @@ public class MongoDBHandler {
 			}
 		});
 
+		return waitForFuture(future);
+	}	
+	
+	
+	/**
+	 * synchronously queries entities in the db from the passed publisher, this opens the options to use all
+	 * of the mongodb library features
+	 * @param publisher 	the find publisher that defines the query to mongodb
+	 * @return 				the result of the db operation
+	 */
+	public StatusResult findSync(FindPublisher<BaseEntity> publisher) {
+		TimeoutFuture<StatusResult> future = new TimeoutFuture<StatusResult>(dbTimeout);
+		
+		find(publisher, (result, error) ->  {
+			if (error != null) {
+				logger.error("generic pojo db find query failed: ", error);
+				future.complete(StatusResult.error(error.getMessage()));
+
+			} else {
+				logger.debug("generic pojo db find query successful, length: " + result.size());
+				future.complete(StatusResult.success(result));
+			}
+		});	
+		
 		return waitForFuture(future);
 	}	
 
