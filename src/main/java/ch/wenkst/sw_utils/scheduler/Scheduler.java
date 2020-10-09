@@ -112,13 +112,13 @@ public class Scheduler extends BaseThread {
 		if (task instanceof IntervalTask) {
 			task.reschedule();
 		} else {
-			scheduledTasks.remove(task);
+			removeFromTasks(task);
 		}
 		task.onStartTask();
 		
 		if (task instanceof PeriodicTask) {
 			task.reschedule();
-			scheduledTasks.add(task);
+			addToTasks(task);
 		}
 	}
 	
