@@ -18,13 +18,13 @@ import com.google.gson.Gson;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.InsertManyResult;
+import com.mongodb.client.result.InsertOneResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.FindPublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
-import com.mongodb.reactivestreams.client.Success;
-
 import ch.wenkst.sw_utils.db.mongodb.base.BaseEntity;
 import ch.wenkst.sw_utils.db.mongodb.base.EntityInfo;
 import ch.wenkst.sw_utils.db.mongodb.subscriber.value.ValueCallback;
@@ -130,11 +130,11 @@ public class MongoDBHandler {
 	 * @param entity 		the entity to save to the db
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void insert(BaseEntity entity, ValueCallback<Success> resultCallback) {
+	public void insert(BaseEntity entity, ValueCallback<InsertOneResult> resultCallback) {
 		MongoCollection<BaseEntity> collection = getCollection(entity.getClass());
-		Publisher<Success> publisher = collection.insertOne(entity);
+		Publisher<InsertOneResult> publisher = collection.insertOne(entity);
 		
-		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<InsertOneResult> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
 			resultCallback.onResult(result, error);
 		});		
 		publisher.subscribe(subscriber);
@@ -158,15 +158,15 @@ public class MongoDBHandler {
 	 * @param entityList 		the list of entities to save to the db
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void insert(List<? extends BaseEntity> entityList, ValueCallback<Success> resultCallback) {
+	public void insert(List<? extends BaseEntity> entityList, ValueCallback<InsertManyResult> resultCallback) {
 		if (entityList.isEmpty()) {
 			return;
 		}
 
 		MongoCollection<BaseEntity> collection = getCollection(entityList.get(0).getClass());
-		Publisher<Success> publisher = collection.insertMany(entityList);
+		Publisher<InsertManyResult> publisher = collection.insertMany(entityList);
 		
-		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
+		ValueCallbackSubscriber<InsertManyResult> subscriber = new ValueCallbackSubscriber<>((result, error) ->  {
 			resultCallback.onResult(result, error);
 		});		
 		publisher.subscribe(subscriber);
@@ -461,11 +461,11 @@ public class MongoDBHandler {
 	 * @param classObj 			the class of the entity to delete
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void dropCollection(Class<?> classObj, ValueCallback<Success> resultCallback) {
+	public void dropCollection(Class<?> classObj, ValueCallback<Void> resultCallback) {
 		MongoCollection<BaseEntity> collection = getCollection(classObj);
-		Publisher<Success> publisher = collection.drop();		
+		Publisher<Void> publisher = collection.drop();		
 		
-		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
+		ValueCallbackSubscriber<Void> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);
@@ -500,10 +500,10 @@ public class MongoDBHandler {
 	 * drops the used database
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void dropDatabase(ValueCallback<Success> resultCallback) {
-		Publisher<Success> publisher = database.drop();
+	public void dropDatabase(ValueCallback<Void> resultCallback) {
+		Publisher<Void> publisher = database.drop();
 		
-		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
+		ValueCallbackSubscriber<Void> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);
@@ -515,11 +515,11 @@ public class MongoDBHandler {
 	 * @param dbName 			the name of the db to drop
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void dropDatabase(String dbName, ValueCallback<Success> resultCallback) {
+	public void dropDatabase(String dbName, ValueCallback<Void> resultCallback) {
 		MongoDatabase db = getDatabase(dbName);
-		Publisher<Success> publisher = db.drop();
+		Publisher<Void> publisher = db.drop();
 		
-		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
+		ValueCallbackSubscriber<Void> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);
@@ -702,12 +702,12 @@ public class MongoDBHandler {
 	 * @param dbName 			the name of the db to use
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void dropCollection(String collectionName, String dbName, ValueCallback<Success> resultCallback) {
+	public void dropCollection(String collectionName, String dbName, ValueCallback<Void> resultCallback) {
 		MongoDatabase db = getDatabase(dbName);
 		MongoCollection<Document> collection = db.getCollection(collectionName);
-		Publisher<Success> publisher = collection.drop();
+		Publisher<Void> publisher = collection.drop();
 		
-		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
+		ValueCallbackSubscriber<Void> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);
@@ -719,11 +719,11 @@ public class MongoDBHandler {
 	 * @param collectionName 	the name of the collection to drop
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void dropCollection(String collectionName, ValueCallback<Success> resultCallback) {
+	public void dropCollection(String collectionName, ValueCallback<Void> resultCallback) {
 		MongoCollection<Document> collection = database.getCollection(collectionName);
-		Publisher<Success> publisher = collection.drop();
+		Publisher<Void> publisher = collection.drop();
 		
-		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
+		ValueCallbackSubscriber<Void> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);
@@ -843,11 +843,11 @@ public class MongoDBHandler {
 	 * @param collectionName 	the name of the collection for which all indexes are deleted
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void deleteIndexes(String collectionName, ValueCallback<Success> resultCallback) {
+	public void deleteIndexes(String collectionName, ValueCallback<Void> resultCallback) {
 		MongoCollection<Document> collection = database.getCollection(collectionName);
-		Publisher<Success> publisher = collection.dropIndexes();
+		Publisher<Void> publisher = collection.dropIndexes();
 		
-		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
+		ValueCallbackSubscriber<Void> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);
@@ -860,12 +860,12 @@ public class MongoDBHandler {
 	 * @param dbName 			the name of the database to use
 	 * @param resultCallback 	callback that is called with the db result
 	 */
-	public void deleteIndexes(String collectionName, String dbName, ValueCallback<Success> resultCallback) {
+	public void deleteIndexes(String collectionName, String dbName, ValueCallback<Void> resultCallback) {
 		MongoDatabase db = getDatabase(dbName);
 		MongoCollection<Document> collection = db.getCollection(collectionName);
-		Publisher<Success> publisher = collection.dropIndexes();
+		Publisher<Void> publisher = collection.dropIndexes();
 		
-		ValueCallbackSubscriber<Success> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
+		ValueCallbackSubscriber<Void> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
 			resultCallback.onResult(result, error);
 		});
 		publisher.subscribe(subscriber);

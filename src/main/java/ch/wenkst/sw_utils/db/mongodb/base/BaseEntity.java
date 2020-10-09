@@ -4,7 +4,7 @@ import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.mongodb.reactivestreams.client.Success;
+import com.mongodb.client.result.InsertOneResult;
 
 import ch.wenkst.sw_utils.db.mongodb.MongoDBHandler;
 import ch.wenkst.sw_utils.db.mongodb.subscriber.value.ValueCallback;
@@ -49,7 +49,7 @@ public class BaseEntity {
      * saves this entity to the db
      * @param subscriber 	 the subscriber to the insert one publisher
      */
-    public void saveToDB(ValueCallback<Success> resultCallback) {
+    public void saveToDB(ValueCallback<InsertOneResult> resultCallback) {
     	MongoDBHandler dbHandler = MongoDBHandler.getInstance();    	
     	dbHandler.insert(this, resultCallback);
     }

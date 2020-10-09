@@ -22,8 +22,6 @@ import com.mongodb.client.model.Updates;
 import com.mongodb.reactivestreams.client.AggregatePublisher;
 import com.mongodb.reactivestreams.client.FindPublisher;
 import com.mongodb.reactivestreams.client.MongoCollection;
-import com.mongodb.reactivestreams.client.Success;
-
 import ch.wenkst.sw_utils.Utils;
 import ch.wenkst.sw_utils.db.mongodb.DbConnectOptions;
 import ch.wenkst.sw_utils.db.mongodb.MongoDBHandler;
@@ -369,13 +367,13 @@ public class MainAsyncMongoDB {
 		
 		// drop the collection
 		Utils.sleep(200);
-		dbHandler.dropCollection("Person", new PrintResultCallback<Success>("drop-collection"));
+		dbHandler.dropCollection("Person", new PrintResultCallback<Void>("drop-collection"));
 		
 		
 		// drop the database
 		Utils.sleep(200);
 
-        dbHandler.dropDatabase(new PrintResultCallback<Success>("drop-db"));
+        dbHandler.dropDatabase(new PrintResultCallback<Void>("drop-db"));
         
         
         Utils.sleep(200);

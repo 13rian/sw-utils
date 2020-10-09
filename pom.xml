@@ -140,7 +140,7 @@
 		<dependency>
 		    <groupId>org.mongodb</groupId>
 		    <artifactId>mongodb-driver-reactivestreams</artifactId>
-		    <version>1.11.0</version>
+		    <version>4.1.0</version>
 		    <optional>true</optional>
 		</dependency>
 		
