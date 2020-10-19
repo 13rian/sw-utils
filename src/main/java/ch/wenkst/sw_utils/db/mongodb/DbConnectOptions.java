@@ -46,6 +46,7 @@ public class DbConnectOptions {
 			sb.append(password).append("@");
 		}
 		sb.append(host).append(":").append(port);
+//		sb.append("/?retryWrites=false");
 		connectString = sb.toString();
 		return connectString;
 	}

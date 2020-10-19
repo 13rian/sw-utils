@@ -21,6 +21,7 @@ import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.InsertManyResult;
 import com.mongodb.client.result.InsertOneResult;
 import com.mongodb.client.result.UpdateResult;
+import com.mongodb.reactivestreams.client.ClientSession;
 import com.mongodb.reactivestreams.client.FindPublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
@@ -196,7 +197,6 @@ public class MongoDBHandler {
 				future.complete(StatusResult.error(error.getMessage()));
 
 			} else {
-				logger.debug(entityName + ": many pojo documents successfully inserted");
 				future.complete(StatusResult.success(result));
 			}
 		});
@@ -290,7 +290,6 @@ public class MongoDBHandler {
 				future.complete(StatusResult.error(error.getMessage()));
 
 			} else {
-				logger.debug(classObj.getSimpleName() + " pojo db find query successful, length: " + result.size());
 				future.complete(StatusResult.success(result));
 			}
 		});
@@ -314,7 +313,6 @@ public class MongoDBHandler {
 				future.complete(StatusResult.error(error.getMessage()));
 
 			} else {
-				logger.debug("generic pojo db find query successful, length: " + result.size());
 				future.complete(StatusResult.success(result));
 			}
 		});	
@@ -365,7 +363,6 @@ public class MongoDBHandler {
 				future.complete(StatusResult.error("pojo update query failed"));
 
 			} else {
-				logger.debug(classObj.getSimpleName() + ": pojo db update query successful");
 				future.complete(StatusResult.success(result));
 			}
 		});
@@ -443,11 +440,10 @@ public class MongoDBHandler {
 
 		delete(classObj, query, (result, error) ->  {
 			if (error != null) {
-				logger.debug(classObj.getSimpleName() + ": pojo db delete query failed: ", error);
+				logger.error(classObj.getSimpleName() + ": pojo db delete query failed: ", error);
 				future.complete(StatusResult.error("pojo delete query failed"));
 
 			} else {
-				logger.debug(classObj.getSimpleName() + ": pojo delete query successful");
 				future.complete(StatusResult.success(result));
 			}
 		});
@@ -486,7 +482,6 @@ public class MongoDBHandler {
 				future.complete(StatusResult.error(error.getMessage()));
 
 			} else {
-				logger.debug("successfully dropped collection of " + classObj.getName());
 				StatusResult statusResult = StatusResult.success(result);
 				future.complete(statusResult);
 			}
@@ -539,7 +534,6 @@ public class MongoDBHandler {
 				future.complete(StatusResult.error(error.getMessage()));
 
 			} else {
-				logger.debug("successfully dropped database");
 				StatusResult statusResult = StatusResult.success(result);
 				future.complete(statusResult);
 			}
@@ -548,6 +542,47 @@ public class MongoDBHandler {
 		return waitForFuture(future);
 	}
 	
+	
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// 												transaction															 //
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/**
+	 * creates a client session to make transactions
+	 * @param resultCallback 	callback is called with the client session
+	 */
+	public void transactionSession(ValueCallback<ClientSession> resultCallback) {
+		Publisher<ClientSession> clientSessionPublisher = mongoClient.startSession();
+		
+		ValueCallbackSubscriber<ClientSession> subscriber = new ValueCallbackSubscriber<>((clientSession, error) -> {
+//			clientSession.startTransaction(); 
+			resultCallback.onResult(clientSession, error);
+//			clientSession.commitTransaction();
+		});
+		clientSessionPublisher.subscribe(subscriber);
+	}
+	
+	
+	/**
+	 * synchronously creates a client session to make a transaction
+	 * @return		status result with the client session
+	 */
+	public StatusResult transactionSessionSync() {
+		TimeoutFuture<StatusResult> future = new TimeoutFuture<>(dbTimeout);
+
+		transactionSession((result, error) ->  {
+			if (error != null) {
+				logger.error("client session for transaction could not be created: ", error);
+				future.complete(StatusResult.error(error.getMessage()));
+
+			} else {
+				StatusResult statusResult = StatusResult.success(result);
+				future.complete(statusResult);
+			}
+		});
+
+		return waitForFuture(future);
+	}
+
 
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -682,7 +717,6 @@ public class MongoDBHandler {
 				future.complete(StatusResult.error(error.getMessage()));
 
 			} else {
-				logger.debug(collectionName + " json find query successfull");
 				StatusResult statusResult = StatusResult.success(result);
 				future.complete(statusResult);
 			}
@@ -744,7 +778,6 @@ public class MongoDBHandler {
 				future.complete(StatusResult.error(error.getMessage()));
 
 			} else {
-				logger.debug(collectionName + ": successfully dropped collection");
 				StatusResult statusResult = StatusResult.success(result);
 				future.complete(statusResult);
 			}
@@ -828,7 +861,6 @@ public class MongoDBHandler {
 				future.complete(StatusResult.error(error.getMessage()));
 
 			} else {
-				logger.debug(collectionName + " index successfully created");
 				StatusResult statusResult = StatusResult.success(result);
 				future.complete(statusResult);
 			}
@@ -886,7 +918,6 @@ public class MongoDBHandler {
 				future.complete(StatusResult.error(error.getMessage()));
 
 			} else {
-				logger.debug(collectionName + " all indexes successfully created");
 				StatusResult statusResult = StatusResult.success(result);
 				future.complete(statusResult);
 			}
@@ -980,7 +1011,28 @@ public class MongoDBHandler {
 		MongoDatabase db = getDatabase(dbName);
 		return db.getCollection(collectionName); 
 	}
-
+	
+	
+	/**
+	 * creates the bson update from the passed update map
+	 * @param updateMap 	map that contains all the parameters to update
+	 * @return 				bson update that is used for the db query
+	 */
+	public Bson updateMapToBson(Map<String, Object> updateMap) {
+		// remove any db id fields
+		updateMap.remove("id");
+		updateMap.remove("_id");
+		
+		ArrayList<Bson> updateList = new ArrayList<>();		
+		for (Map.Entry<String, Object> entry : updateMap.entrySet()) {
+			Bson update = Updates.set(entry.getKey(), entry.getValue());
+			updateList.add(update);
+		}
+		
+		Bson update = Updates.combine(updateList);
+		return update;
+	}
+	
 	
 	/**
 	 * waits for the passed future to be completed
@@ -1002,23 +1054,28 @@ public class MongoDBHandler {
 	}
 	
 	
+	
 	/**
-	 * creates the bson update from the passed update map
-	 * @param updateMap 	map that contains all the parameters to update
-	 * @return 				bson update that is used for the db query
+	 * execute a db operation
+	 * @param <T>
+	 * @param publisher 	the publisher
+	 * @return
 	 */
-	public Bson updateMapToBson(Map<String, Object> updateMap) {
-		// remove any db id fields
-		updateMap.remove("id");
-		updateMap.remove("_id");
+	public <T> StatusResult executeOperation(Publisher<T> publisher) {
+		TimeoutFuture<StatusResult> future = new TimeoutFuture<>(dbTimeout);
 		
-		ArrayList<Bson> updateList = new ArrayList<>();		
-		for (Map.Entry<String, Object> entry : updateMap.entrySet()) {
-			Bson update = Updates.set(entry.getKey(), entry.getValue());
-			updateList.add(update);
-		}
+		ValueCallbackSubscriber<T> subscriber = new ValueCallbackSubscriber<>((result, error) -> {
+			if (error != null) {
+				logger.error("db operation failed: ", error);
+				future.complete(StatusResult.error(error.getMessage()));
+
+			} else {
+				StatusResult statusResult = StatusResult.success(result);
+				future.complete(statusResult);
+			}
+		});
+		publisher.subscribe(subscriber);
 		
-		Bson update = Updates.combine(updateList);
-		return update;
+		return waitForFuture(future);
 	}
 }

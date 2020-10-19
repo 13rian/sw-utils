@@ -19,7 +19,9 @@ import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.Updates;
+import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.AggregatePublisher;
+import com.mongodb.reactivestreams.client.ClientSession;
 import com.mongodb.reactivestreams.client.FindPublisher;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import ch.wenkst.sw_utils.Utils;
@@ -28,6 +30,7 @@ import ch.wenkst.sw_utils.db.mongodb.MongoDBHandler;
 import ch.wenkst.sw_utils.db.mongodb.base.BaseEntity;
 import ch.wenkst.sw_utils.db.mongodb.subscriber.PrintResultCallback;
 import ch.wenkst.sw_utils.db.mongodb.subscriber.value.ValueCallbackSubscriber;
+import ch.wenkst.sw_utils.miscellaneous.StatusResult;
 
 public class MainAsyncMongoDB {
 	static {
@@ -49,8 +52,7 @@ public class MainAsyncMongoDB {
 			options.setPort(27017);
 			options.setTimeout(10);
 			options.setDbName("AsyncTest");
-			options.setPackageNames(packageNames);
-			
+			options.setPackageNames(packageNames);			
 			dbHandler.connectToDB(options);
 			
 		} catch (Exception e) {
@@ -258,6 +260,32 @@ public class MainAsyncMongoDB {
 				logger.info("json-projection-query successful: " + result);
 			}
 		});
+		
+		
+//		// make a transaction, only works in replica sets
+//		Utils.sleep(200);
+//		StatusResult transactionResult = dbHandler.transactionSessionSync();
+//		if (transactionResult.isSuccess()) {
+//			ClientSession clientSession = transactionResult.getResult();
+//			clientSession.startTransaction();
+//			
+//			MongoCollection<BaseEntity> collection = dbHandler.getCollection(Person.class);
+//			Publisher<UpdateResult> updatePub = collection.updateMany(clientSession, Filters.eq("age", 37), Updates.set("age", 38));
+//			dbHandler.executeOperation(updatePub);
+//			
+//			updatePub = collection.updateMany(clientSession, Filters.eq("age", 37), Updates.set("age", 38));
+//			dbHandler.executeOperation(updatePub);
+//			
+//			updatePub = collection.updateMany(clientSession, Filters.eq("age",57), Updates.set("age", 60));
+//			dbHandler.executeOperation(updatePub);
+//			
+//			clientSession.commitTransaction();
+//			clientSession.close();
+//			
+//		} else {
+//			logger.error("could not create client session for transaction");
+//		}
+		
 		
 		
 		// create indexes
