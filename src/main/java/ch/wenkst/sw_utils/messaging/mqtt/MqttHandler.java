@@ -59,11 +59,11 @@ public class MqttHandler {
 			options.setSocketFactory(sslSocketFactory);
 		}
 		
-		options.setAutomaticReconnect(true);
-		options.setCleanSession(true);
+		options.setAutomaticReconnect(true);					// automatically reconnect after disconnect
+		options.setCleanSession(false);							// to keep the subscriptions after disconnect
 		options.setConnectionTimeout(60);
 		options.setKeepAliveInterval(60);
-		options.setHttpsHostnameVerificationEnabled(false); 		// disable the host name verification
+		options.setHttpsHostnameVerificationEnabled(false); 	// disable the host name verification
 		
 		// set the username and the password
 		if (username != null && password != null) {
@@ -117,26 +117,26 @@ public class MqttHandler {
 	public synchronized void setupClient() throws MqttSecurityException, MqttException {	
 		publisher = new MqttClient(brokerUrl, clientId + "_sub", null);
 		publisher.connect(options);
-		publisher.setCallback(new MqttCallbackHandler(this));
+		publisher.setCallback(new MqttCallbackHandler());
 		
 		subscriber = new MqttClient(brokerUrl, clientId + "_pub", null);
 		subscriber.connect(options);
 	}
 	
 	
-	/**
-	 * reconnects the publisher and the client if the connection to the broker was lost
-	 * @throws MqttSecurityException
-	 * @throws MqttException
-	 */
-	public synchronized void reconnect() throws MqttSecurityException, MqttException {
-		tearDownClient();		
-		setupClient();
-		
-		for (String topic : subsciptions.keySet()) {
-			subscriber.subscribe(topic, subsciptions.get(topic));
-		}
-	}
+//	/**
+//	 * reconnects the publisher and the client if the connection to the broker was lost
+//	 * @throws MqttSecurityException
+//	 * @throws MqttException
+//	 */
+//	public synchronized void reconnect() throws MqttSecurityException, MqttException {
+//		tearDownClient();		
+//		setupClient();
+//		
+//		for (String topic : subsciptions.keySet()) {
+//			subscriber.subscribe(topic, subsciptions.get(topic));
+//		}
+//	}
 	
 	
 	/**
