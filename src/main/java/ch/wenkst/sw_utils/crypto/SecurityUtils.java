@@ -131,8 +131,8 @@ public class SecurityUtils {
 			try {
 				// with this approach it is not necessary to have the bcjsse dependency in the class path
 				Object bc = Class.forName("org.bouncycastle.jsse.provider.BouncyCastleJsseProvider").newInstance();
-				Security.insertProviderAt((Provider) bc, 2);
-				logger.info("successfully registered bouncy castle bcjsse as security provider at position 2.");
+				Security.insertProviderAt((Provider) bc, 1);
+				logger.info("successfully registered bouncy castle bcjsse as security provider at position 1.");
 				
 			} catch (Exception e) {
 				logger.error("failed to register bouncy castle bcjsse as security provider: ", e);
@@ -141,8 +141,8 @@ public class SecurityUtils {
 
 		// insert the bouncy castle provider at position 3 if not already registered
 		if (Security.getProvider(BC) == null) {
-			Security.insertProviderAt(new BouncyCastleProvider(), 3);
-			logger.info("Successfully registered Bouncy Castle BC as security provider at position 3.");
+			Security.insertProviderAt(new BouncyCastleProvider(), 2);
+			logger.info("Successfully registered Bouncy Castle BC as security provider at position 2.");
 		}
 		
 		setSourceOfRandom();
