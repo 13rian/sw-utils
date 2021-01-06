@@ -61,7 +61,7 @@ public class MqttHandler {
 		
 		options.setAutomaticReconnect(true);					// automatically reconnect after disconnect
 		options.setCleanSession(false);							// to keep the subscriptions after disconnect
-		options.setConnectionTimeout(60);
+		options.setConnectionTimeout(30);
 		options.setKeepAliveInterval(60);
 		options.setHttpsHostnameVerificationEnabled(false); 	// disable the host name verification
 		
