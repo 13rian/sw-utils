@@ -194,7 +194,7 @@ public class HttpParser {
 			bodyBytes.add(b);
 
 			// check if the whole body was receives
-			if (bodyBytes.size() == contentLength ) {												
+			if (bodyBytes.size() == contentLength) {												
 				state = State.BODY_RECEIVED;
 			}
 		}
@@ -251,8 +251,7 @@ public class HttpParser {
 			// test if the message is chunked
 			isChunked = isChunked();
 			if (!isChunked) {
-				logger.debug("http message has no content length and is not chunked, assume no body was sent");
-				contentLength = 0;
+				logger.debug("http message has no content length and is not chunked");
 			}
 		}
 	}
@@ -317,6 +316,7 @@ public class HttpParser {
 	 * @return 		the value of the header field or null if the field is not present
 	 */
 	public String getHeaderField(String prop) {
+		prop = prop.toLowerCase();
 		return headerFields.get(prop);
 	}
 

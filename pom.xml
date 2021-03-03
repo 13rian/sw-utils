@@ -19,25 +19,18 @@
 
   	<dependencies>
   		<!-- unit tests -->
-    	<dependency>
-      		<groupId>org.junit.jupiter</groupId>
-      		<artifactId>junit-jupiter-api</artifactId>
-      		<version>5.5.0</version>
-      		<scope>test</scope>
-    	</dependency>
-    
-    	<dependency>
+		<dependency>
+		    <groupId>org.junit.jupiter</groupId>
+		    <artifactId>junit-jupiter-api</artifactId>
+		    <version>5.7.1</version>
+		    <scope>test</scope>
+		</dependency>
+		
+		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-engine</artifactId>
-			<version>5.5.0</version>
+			<version>5.7.1</version>
 			<scope>test</scope>
-		</dependency>
-    
-    	<dependency>
-    		<groupId>org.junit.platform</groupId>
-    		<artifactId>junit-platform-launcher</artifactId>
-    		<version>1.5.0</version>
-    		<scope>test</scope>
 		</dependency>
 		
 		<dependency>
@@ -207,8 +200,18 @@
 		      	</executions>
 		    </plugin>
 		    
+		    <!-- plugin to run the unit tests while building 
+		    <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.2</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.22.2</version>
+            </plugin>
+            -->
 		    
-		    <!-- attach the java doc 
+		    <!-- plugin to attach the javadoc
 		    <plugin>
 		      	<groupId>org.apache.maven.plugins</groupId>
 		      	<artifactId>maven-javadoc-plugin</artifactId>
@@ -221,18 +224,7 @@
 			        </execution>
 		      	</executions>
 		    </plugin>
-		    -->
-    	
-    		<!-- plugin only needed for java 11
-    		<plugin>
-    			<groupId>org.apache.maven.plugins</groupId>
-    			<artifactId>maven-compiler-plugin</artifactId>
-    			<version>3.8.0</version>
-    			<configuration>
-        			<release>${java.version}</release>
-    			</configuration>
-			</plugin>
-			 -->
+		     -->
     	</plugins>
 	</build>
 	
