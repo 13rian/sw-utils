@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ch.wenkst.sw_utils.Utils;
+import ch.wenkst.sw_utils.crypto.SecurityConstants;
 import ch.wenkst.sw_utils.crypto.SecurityUtils;
 import ch.wenkst.sw_utils.crypto.tls.SSLContextGenerator;
 import ch.wenkst.sw_utils.messaging.rabbit_mq.RabbitMQHander;
@@ -42,7 +43,14 @@ public class MainRabbitMQ {
 		Certificate caCert = SecurityUtils.certFromFile(caCertPath);
 		List<Certificate> trustedCerts = new ArrayList<>();
 		trustedCerts.add(caCert);
-		SSLContext sslContext = SSLContextGenerator.createSSLContext(p12FilePath, "pwcelsi", trustedCerts, "TLSv1.2");
+		
+		SSLContext sslContext = null;
+		try {
+			sslContext = SSLContextGenerator.createSSLContext(p12FilePath, "pwcelsi", trustedCerts, SecurityConstants.TLS_1_2);
+		} catch (Exception e) {
+			logger.error("error creating the ssl context: ", e);
+		}
+		
 		RabbitMQHander messageHandler = RabbitMQHander.getInstance();
 		messageHandler.init("192.168.152.128", 5671, "efr", "efrserver", sslContext);
 		

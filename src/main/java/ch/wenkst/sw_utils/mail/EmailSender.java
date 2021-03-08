@@ -9,24 +9,22 @@ import jakarta.activation.DataSource;
 import jakarta.activation.FileDataSource;
 import jakarta.mail.Authenticator;
 import jakarta.mail.BodyPart;
-import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
 import jakarta.mail.PasswordAuthentication;
 import jakarta.mail.Session;
 import jakarta.mail.Transport;
-import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 
 public class EmailSender {
-	private Properties props;				// connection properties
-	private Authenticator authenticator; 	// handles the authentication to the smpt server
-	private Session session; 				// the session to communicate with the mail server
-	private MimeMessage message;			// the email message to send
-	private MimeMultipart multipart;		// multipart for the body and the attachment
-	private String fromEmail; 				// the sender's email address
-	private boolean isDebug; 				// true if debug messages should be logged
+	private Properties props;
+	private Authenticator authenticator;
+	private Session session;
+	private MimeMessage message;
+	private MimeMultipart multipart;
+	private String fromEmail;
+	private boolean isDebug;
 	
 	
 	/**
@@ -66,7 +64,7 @@ public class EmailSender {
 	 * @return
 	 */
 	public EmailSender port(int port) {
-		props.put("mail.smtp.port", port+"");
+		props.put("mail.smtp.port", port + "");
 		return this;
 	}
 	
@@ -141,26 +139,13 @@ public class EmailSender {
 	 * @throws MessagingException
 	 */
 	public EmailSender createBasicMsg(String subject, String... toEmail) throws MessagingException {
-		// create the new message
-		message = new MimeMessage(session); 	// create the mime message
-		
-		// set message headers
-		message.addHeader("Content-type", "text/HTML; charset=UTF-8");
-		message.addHeader("format", "flowed");
-		message.addHeader("Content-Transfer-Encoding", "8bit");
-
-		// set the message properties
-		message.setFrom(new InternetAddress(fromEmail));
-		message.setReplyTo(InternetAddress.parse(fromEmail, false));
-		message.setSubject(subject, "UTF-8");
-		message.setSentDate(new Date());
-		
-		// set the recipients
-		InternetAddress[] recipients = new InternetAddress[toEmail.length];
-		for (int i=0; i<toEmail.length; i++) {
-			recipients[i] = new InternetAddress(toEmail[i]);
-		}
-		message.setRecipients(Message.RecipientType.TO, recipients);
+		message = new EmailMessageBuilder(session)
+				.addDefaultHeaders()
+				.addSender(fromEmail)
+				.addSubject(subject)
+				.addSendDate(new Date())
+				.addRecipients(toEmail)
+				.toMimeMessage();
 		
 		return this;
 	}

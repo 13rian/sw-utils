@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils.miscellaneous;
+package ch.wenkst.sw_utils.natural_sort;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -7,6 +7,8 @@ import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import ch.wenkst.sw_utils.natural_sort.NaturalSortComparator;
 
 public class NaturalSortComparatorTest {
 	
@@ -49,7 +51,9 @@ public class NaturalSortComparatorTest {
 				"roomNumber"
 		};
 				
+		// Collections.sort(testWordList, new NaturalSortComparator(true));
 		Collections.sort(testWordList, new NaturalSortComparator(true));
+		
 		String[] testWordArr = testWordList.toArray(new String[testWordList.size()]);
 		Assertions.assertArrayEquals(testWordArr, sortedWordArr, "sorted words, capital letters ignored");
 		

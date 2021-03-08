@@ -11,14 +11,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * provides several conversion methods. UTF-8 is always used to get the bytes from a String and vice versa
- * character set is important to define how the character are encoded in bytes (e.g. ö can be encoded with one
- * or 2 bytes depending on the character set).
- * binary data can be represented as hex-string or base64 -string. e.g. 0F = 0000 1111,
- * this hex string cannot be converted back with str.getBytes(), since then you have a byte array representation
- * that has an underlying character set, which is not the binary representation you want.
- */
 public class Conversion {
 	private static final Logger logger = LoggerFactory.getLogger(Conversion.class);
 
@@ -34,32 +26,30 @@ public class Conversion {
 	// 												Base64 													   //
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/**
-	 * encodes the input String to Base64
-	 * @param str 			String to encode
-	 * @param withPadding 	true if String should be encoded with a padding (normally padding is used)
-	 * @return	 			Base64 String, that holds the binary representation of the string with utf-8 character set
-	 */
-	public static String strToBase64Str(String str, boolean withPadding) {
-		String result = ""; 
-
-		if (withPadding) {
-			result = Base64.getEncoder().encodeToString(str.getBytes(StandardCharsets.UTF_8));
-
-		} else {
-			result = Base64.getEncoder().withoutPadding().encodeToString(str.getBytes(StandardCharsets.UTF_8));
-		}
-
-		return result;
-	}
-
-
-	/**
 	 * encodes the input String to Base64 with the commonly used padding
 	 * @param str 			String to encode
 	 * @return	 			Base64 String, that holds the binary representation of the string with utf-8 character set
 	 */
 	public static String strToBase64Str(String str) {
-		return Base64.getEncoder().encodeToString(str.getBytes(StandardCharsets.UTF_8));
+		return strToBase64Str(str, true);
+	}
+	
+	
+	/**
+	 * encodes the input string to Base64
+	 * @param str 			String to encode
+	 * @param withPadding 	true if string should be encoded with a padding (normally padding is used)
+	 * @return	 			Base64 String, that holds the binary representation of the string with utf-8 character set
+	 */
+	public static String strToBase64Str(String str, boolean withPadding) {
+		if (withPadding) {
+			return Base64.getEncoder()
+					.encodeToString(str.getBytes(StandardCharsets.UTF_8));
+		} else {
+			return Base64.getEncoder()
+					.withoutPadding()
+					.encodeToString(str.getBytes(StandardCharsets.UTF_8));
+		}
 	}
 
 
@@ -69,11 +59,8 @@ public class Conversion {
 	 * @return	 	a String created from the binary data with character set utf-8
 	 */
 	public static String base64StrToStr(String str) {
-		String result = "";
-		byte [] barr = Base64.getDecoder().decode(str);
-		result = new String(barr, StandardCharsets.UTF_8);
-
-		return result;
+		byte[] barr = Base64.getDecoder().decode(str);
+		return new String(barr, StandardCharsets.UTF_8);
 	}
 
 
@@ -106,15 +93,8 @@ public class Conversion {
 	 * @return	 	the hex String
 	 */
 	public static String strToHexStr(String str) {
-		String result = "";
-
-		// UTF-8 byte representation of string (byte array with utf-8 character set)
 		byte[] myBytes = str.getBytes(StandardCharsets.UTF_8);   
-
-		// get the binary representation of the byte array
-		result = byteArrayToHexStr(myBytes);
-
-		return result;
+		return byteArrayToHexStr(myBytes);
 	}
 
 
@@ -134,9 +114,9 @@ public class Conversion {
 	 * @param barr	 	the byte array to convert
 	 * @return	 		the hex string
 	 */
-	public static String byteArrayToHexStr(byte[] barr) {
+	public static String byteArrayToHexStr(byte[] barr) {		
 		char[] hexChars = new char[barr.length * 2];
-		for ( int j = 0; j < barr.length; j++ ) {
+		for (int j = 0; j < barr.length; j++) {
 			int v = barr[j] & 0xFF;
 			hexChars[j * 2] = hexArray[v >>> 4];
 			hexChars[j * 2 + 1] = hexArray[v & 0x0F];
@@ -171,8 +151,6 @@ public class Conversion {
 	 */
 	public static String intToHexStr(int i, int length) {
 		String result = Integer.toHexString(i).toUpperCase();
-
-		// add the padding
 		result = padLeft(result, '0', length);
 		return result;
 	}
@@ -206,8 +184,6 @@ public class Conversion {
 	 */
 	public static String longToHexStr(long l, int length) {
 		String result = Long.toHexString(l).toUpperCase();
-
-		// add the padding
 		result = padLeft(result, '0', length);
 		return result;
 	}
@@ -285,8 +261,8 @@ public class Conversion {
 
 	/**
 	 * converts an array list of bytes to a byte array
-	 * @param aList 	arrayList to convert
-	 * @return 			the converted byte array
+	 * @param byteList 		list of bytes to convert
+	 * @return 				the converted byte array
 	 */
 	public static byte[] arrayListToByteArray(List<Byte> aList) {
 		byte[] result = new byte[aList.size()];

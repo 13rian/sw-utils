@@ -60,12 +60,7 @@ import ch.wenkst.sw_utils.file.FileUtils;
 public class SecurityUtils {
 	private static final Logger logger = LoggerFactory.getLogger(SecurityUtils.class);
 	
-	public static final String BC = "BC";
-	public static final String BCJSSE = "BCJSSE";
-	public static final String PKCS12 = "PKCS12";
-	public static final String X509 = "X.509";
-	public static final String RSA = "RSA";
-	public static final String EC = "EC";
+
 	
 	
 	public enum KeyType {
@@ -98,11 +93,10 @@ public class SecurityUtils {
 	 * registers the bouncy castle provider as security provider, if it was not registered before
 	 */
 	public static void registerBC() {	
-		// Register the bouncy castle security provider, if not registered yet
-		if (Security.getProvider(BC) == null) {
+		if (!bcProviderRegistered()) {
 			Security.addProvider(new BouncyCastleProvider());
 			setSourceOfRandom();
-			logger.info("Successfully registered Bouncy Castle as crypto provider.");
+			logger.info("successfully registered Bouncy Castle as crypto provider.");
 		}
 	}
 
@@ -111,10 +105,9 @@ public class SecurityUtils {
 	 * unregisters the bouncy castle provider as security provider
 	 */
 	public static void unregisterBC() {
-		// unregister the bouncy castle provider if registered before
-		if (Security.getProvider(BC) != null) {
-			Security.removeProvider(BC);
-			logger.info("Successfully unregistered Bouncy Castle as crypto provider.");
+		if (bcProviderRegistered()) {
+			Security.removeProvider(SecurityConstants.BC);
+			logger.info("successfully unregistered Bouncy Castle as crypto provider.");
 		}
 	}
 
@@ -126,8 +119,7 @@ public class SecurityUtils {
 	 * Note: The BCJSSE provider needs the JCE unlimited strength file installed
 	 */
 	public static void registerBCJSSE() {
-		// insert the bouncy castle JSSE provider at position 2 if not already registered
-		if (Security.getProvider(BCJSSE) == null) {
+		if (!bcjsseProviderRegistered()) {
 			try {
 				// with this approach it is not necessary to have the bcjsse dependency in the class path
 				Object bc = Class.forName("org.bouncycastle.jsse.provider.BouncyCastleJsseProvider").newInstance();
@@ -139,8 +131,7 @@ public class SecurityUtils {
 			}
 		}
 
-		// insert the bouncy castle provider at position 3 if not already registered
-		if (Security.getProvider(BC) == null) {
+		if (!bcProviderRegistered()) {
 			Security.insertProviderAt(new BouncyCastleProvider(), 2);
 			logger.info("Successfully registered Bouncy Castle BC as security provider at position 2.");
 		}
@@ -153,20 +144,26 @@ public class SecurityUtils {
 	 * unregisters both bouncy castle providers BCJSSE and BC
 	 */
 	public static void unregisterBCJSSE() {
-		// unregister the bouncy castle BCJSSE provider if registered before
-		if (Security.getProvider(BCJSSE) != null) {
-			Security.removeProvider(BCJSSE);
+		if (bcjsseProviderRegistered()) {
+			Security.removeProvider(SecurityConstants.BCJSSE);
 			logger.info("Successfully unregistered Bouncy Castle BCJSSE as crypto provider.");
 		}
 
-		// unregister the bouncy castle BC provider if registered before
-		if(Security.getProvider(BC) != null) {
-			Security.removeProvider(BC);
+		if (bcProviderRegistered()) {
+			Security.removeProvider(SecurityConstants.BC);
 			logger.info("Successfully unregistered Bouncy Castle BC as crypto provider.");
 		}
 	}
 
 
+	public static boolean bcProviderRegistered() {
+		return Security.getProvider(SecurityConstants.BC) != null;
+	}
+	
+	
+	public static boolean bcjsseProviderRegistered() {
+		return Security.getProvider(SecurityConstants.BCJSSE) != null;
+	}
 
 
 
@@ -256,10 +253,10 @@ public class SecurityUtils {
 			FileInputStream certInput = new FileInputStream(certFile);
 
 			CertificateFactory certFactory;
-			if (Security.getProvider(BC) == null) {
-				certFactory = CertificateFactory.getInstance(X509, new BouncyCastleProvider());
+			if (bcProviderRegistered()) {
+				certFactory = CertificateFactory.getInstance(SecurityConstants.X509, SecurityConstants.BC);
 			} else {
-				certFactory = CertificateFactory.getInstance(X509, BC);
+				certFactory = CertificateFactory.getInstance(SecurityConstants.X509, new BouncyCastleProvider());
 			}
 			
 			return certFactory.generateCertificate(certInput);
@@ -279,10 +276,10 @@ public class SecurityUtils {
 	public static Certificate certFromDer(byte[] certBytes) {
 		try {
 			CertificateFactory certFactory;
-			if (Security.getProvider(BC) == null) {
-				certFactory = CertificateFactory.getInstance(X509, new BouncyCastleProvider());
+			if (bcProviderRegistered()) {
+				certFactory = CertificateFactory.getInstance(SecurityConstants.X509, SecurityConstants.BC);
 			} else {
-				certFactory = CertificateFactory.getInstance(X509, BC);
+				certFactory = CertificateFactory.getInstance(SecurityConstants.X509, new BouncyCastleProvider());
 			}
 			ByteArrayInputStream is = new ByteArrayInputStream(certBytes); 
 			return certFactory.generateCertificate(is);
@@ -653,19 +650,19 @@ public class SecurityUtils {
 		// key factory for rsa curves
 		KeyFactory keyFactory = null;
 		if (keyType.equals(KeyType.RSA)) {
-			if (Security.getProvider(BC) == null) {
-				keyFactory = KeyFactory.getInstance(RSA, new BouncyCastleProvider());
+			if (Security.getProvider(SecurityConstants.BC) == null) {
+				keyFactory = KeyFactory.getInstance(SecurityConstants.RSA, new BouncyCastleProvider());
 			} else {
-				keyFactory = KeyFactory.getInstance(RSA, BC);
+				keyFactory = KeyFactory.getInstance(SecurityConstants.RSA, SecurityConstants.BC);
 			}
 		}
 
 		// key factory for ec curves
 		else if (keyType.equals(KeyType.EC)) {
-			if (Security.getProvider(BC) == null) {
-				keyFactory = KeyFactory.getInstance(EC, new BouncyCastleProvider());
+			if (bcProviderRegistered()) {
+				keyFactory = KeyFactory.getInstance(SecurityConstants.EC, SecurityConstants.BC);
 			} else {
-				keyFactory = KeyFactory.getInstance(EC, BC);
+				keyFactory = KeyFactory.getInstance(SecurityConstants.EC, new BouncyCastleProvider());
 			}
 		}
 
@@ -759,10 +756,10 @@ public class SecurityUtils {
 	public static PublicKey pubRsaKeyFromPrivKey(PrivateKey rsaPrivateKey) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
 		// get the key factory
 		KeyFactory keyFactory = null;
-		if (Security.getProvider(BC) == null) {
-			keyFactory = KeyFactory.getInstance(RSA, new BouncyCastleProvider());
+		if (bcProviderRegistered()) {
+			keyFactory = KeyFactory.getInstance(SecurityConstants.RSA, SecurityConstants.BC);
 		} else {
-			keyFactory = KeyFactory.getInstance(RSA, BC);
+			keyFactory = KeyFactory.getInstance(SecurityConstants.RSA, new BouncyCastleProvider());
 		}
 
 		RSAPrivateCrtKey privk = (RSAPrivateCrtKey) rsaPrivateKey;
@@ -783,10 +780,10 @@ public class SecurityUtils {
 	public static PublicKey pubEcKeyFromPrivKey(PrivateKey ecPrivateKey) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
 		// get the key factory
 		KeyFactory keyFactory = null;
-		if (Security.getProvider(BC) == null) {
-			keyFactory = KeyFactory.getInstance(EC, new BouncyCastleProvider());
+		if (bcProviderRegistered()) {
+			keyFactory = KeyFactory.getInstance(SecurityConstants.EC, SecurityConstants.BC);
 		} else {
-			keyFactory = KeyFactory.getInstance(EC, BC);
+			keyFactory = KeyFactory.getInstance(SecurityConstants.EC, new BouncyCastleProvider());
 		}	
 
 		ECPrivateKey pkEcKey = (ECPrivateKey) ecPrivateKey;
@@ -816,10 +813,10 @@ public class SecurityUtils {
 	 */
 	public static KeyStore keyStoreFromP12(String path, String password) throws KeyStoreException, NoSuchProviderException, NoSuchAlgorithmException, CertificateException, IOException {
 		KeyStore keyStore;
-		if (Security.getProvider(BC) == null) {
-			keyStore = KeyStore.getInstance(PKCS12, new BouncyCastleProvider());
+		if (bcProviderRegistered()) {
+			keyStore = KeyStore.getInstance(SecurityConstants.PKCS12, SecurityConstants.BC);
 		} else {
-			keyStore = KeyStore.getInstance(PKCS12, BC);
+			keyStore = KeyStore.getInstance(SecurityConstants.PKCS12, new BouncyCastleProvider());
 		}
 
 		File keyFile = new File(path);
@@ -843,11 +840,11 @@ public class SecurityUtils {
 
 		try {
 			// provider of the SSLContext
-			String name = SSLContext.getInstance("TLSv1.2").getProvider().getName();
+			String name = SSLContext.getInstance(SecurityConstants.TLS_1_2).getProvider().getName();
 			builder.append("TLSv1.2 SSLContext Provider: ").append(name).append("\n");
 
 			// provider of the CerificateFactory
-			name = CertificateFactory.getInstance("X.509").getProvider().getName();
+			name = CertificateFactory.getInstance(SecurityConstants.X509).getProvider().getName();
 			builder.append("X.509 CertificateFactory Provider: ").append(name).append("\n");
 
 			// provider of the default KeyStore
@@ -855,7 +852,7 @@ public class SecurityUtils {
 			builder.append("Default KeyStore Provider: ").append(name).append("\n");
 
 			// provider of the PKCS12 KeyStore
-			name = KeyStore.getInstance("PKCS12").getProvider().getName();
+			name = KeyStore.getInstance(SecurityConstants.PKCS12).getProvider().getName();
 			builder.append("PKCS12 KeyStore Provider: ").append(name).append("\n");
 
 			// provider of the KeyManagerFactory

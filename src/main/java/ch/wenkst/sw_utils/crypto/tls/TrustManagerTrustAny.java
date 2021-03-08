@@ -5,9 +5,6 @@ import java.security.cert.X509Certificate;
 
 import javax.net.ssl.X509TrustManager;
 
-/**
- * trust any tls certificate
- */
 public class TrustManagerTrustAny implements X509TrustManager{
     @Override
     public X509Certificate[] getAcceptedIssuers() {

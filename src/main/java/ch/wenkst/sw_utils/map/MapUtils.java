@@ -10,9 +10,6 @@ import com.google.gson.JsonElement;
 
 import ch.wenkst.sw_utils.conversion.Conversion;
 
-/**
- * contains utility methods to handle maps
- */
 public class MapUtils {
 	private static final Logger logger = LoggerFactory.getLogger(MapUtils.class);
 
@@ -241,12 +238,10 @@ public class MapUtils {
 	public static <K, V> boolean containsAllKeys(Map<K, V> map, K... keys) {
 		for (K key : keys) {
 			if (!map.containsKey(key)) {
-				// one of the passed keys is missing return false
 				return false;
 			}
 		}
 		
-		// all keys found in the map
 		return true;
 	}
 	
@@ -269,7 +264,6 @@ public class MapUtils {
 		boolean retVal = true;
 		for (K key : keys) {
 			if (!map.containsKey(key)) {
-				// one of the passed keys is missing return false
 				logger.error(key + ": is missing from the map");
 				retVal = false;
 			}
@@ -352,6 +346,3 @@ public class MapUtils {
 		}
 	}
 }
-
-
-

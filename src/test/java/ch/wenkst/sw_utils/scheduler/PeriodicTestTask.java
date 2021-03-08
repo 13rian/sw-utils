@@ -17,7 +17,7 @@ public class PeriodicTestTask extends PeriodicTask {
 	
 	
 	@Override
-	public void onStartTask() {
+	public void onExecuteTask() {
 		executionTimes.add(System.currentTimeMillis());
 	}
 	

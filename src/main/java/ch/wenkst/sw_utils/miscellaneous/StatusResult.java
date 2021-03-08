@@ -6,9 +6,6 @@ public class StatusResult {
 	protected String errorMsg = ""; 		// the error message if it is an unsuccessful result
 	
 	
-	/**
-	 * constructor for an empty status result object
-	 */
 	protected StatusResult() {
 		
 	}	

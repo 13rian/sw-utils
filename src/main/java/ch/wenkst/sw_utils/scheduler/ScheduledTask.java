@@ -3,37 +3,38 @@ package ch.wenkst.sw_utils.scheduler;
 import java.time.Instant;
 
 public abstract class ScheduledTask {
-	protected long startTime = Instant.now().toEpochMilli(); 	// the time this task is executed
-	protected long interval = 60000; 							// interval in ms to execute periodic/interval tasks
+	protected long startTime = Instant.now().toEpochMilli();
+	protected long interval = 0;
 	
 	
-	ScheduledTask() {
-		
-	}
-	
-	
-	ScheduledTask(long startTime) {
+	public ScheduledTask(long startTime) {
 		this.startTime = startTime;
 	}
 	
 	
-	ScheduledTask(long startTime, long interval) {
+	public ScheduledTask(long startTime, long interval) {
 		this.startTime = startTime;
 		this.interval = interval;
 	}
 	
 	
 	/**
-	 * defines what happens after the task should be started
+	 * called before the task is executed
 	 */
-	public abstract void onStartTask();
+	protected abstract void onStartTask(Scheduler scheduler);
 	
 	
 	/**
-	 * reschedules the task by updating its start time
+	 * defines how the task is executed
 	 */
-	protected abstract void reschedule();
-
+	public abstract void onExecuteTask();
+	
+	
+	/**
+	 * called after tha task has finished
+	 */
+	protected abstract void onTaskFinished(Scheduler scheduler);
+	
 
 	public long getStartTime() {
 		return startTime;

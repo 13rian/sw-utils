@@ -1,7 +1,10 @@
 package ch.wenkst.sw_utils.crypto.tls;
 
+import java.io.IOException;
 import java.security.KeyStore;
-import java.security.Security;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -14,52 +17,26 @@ import javax.net.ssl.X509TrustManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ch.wenkst.sw_utils.crypto.SecurityConstants;
 import ch.wenkst.sw_utils.crypto.SecurityUtils;
 
-
-/**
- * Trust store that handles elliptic curve certificates (brainpool included)
- */
 public class TrustManagerTLS implements X509TrustManager {
 	private static final Logger logger = LoggerFactory.getLogger(TrustManagerTLS.class);
 	
 	private KeyStore trustStore; 
 	private X509TrustManager trustManager;
-	private TrustManagerFactory trustManagerFactory;
 
 	
 	/**
-	 * trust store for the ssl context, if brainpool curves should be included
-	 * the BC and the BCJSSE crypto providers need to be registered
+	 * trust store for the ssl context
+	 * @throws KeyStoreException 
+	 * @throws IOException 
+	 * @throws CertificateException 
+	 * @throws NoSuchAlgorithmException 
 	 */
-	public TrustManagerTLS() {
-		super();
-		
-		try {
-			// create the trust store
-			trustStore = KeyStore.getInstance("JKS");
-			trustStore.load(null); 						// create empty truststore
-
-		} catch (Exception e) {
-			logger.error("unable to create TrustStore: ", e);
-		}
-	}
-	
-	
-	/** 
-	 * adds a certificate to the TrustManager
-	 * @param certpath 		path to the cert-file
-	 * @param alias 		the alias under which the certificate is saved in the trust store, can be null
-	 */
-	public void addCertificate(String certpath, String alias) {
-		try {
-			// load certificate
-			Certificate cert = SecurityUtils.certFromFile(certpath);
-			addCertificate(cert, alias);
-
-		} catch (Exception e) {
-			logger.error("unable to add certificate from " + certpath, e);
-		} 
+	public TrustManagerTLS() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {		
+		trustStore = KeyStore.getInstance(SecurityConstants.JKS);
+		trustStore.load(null);
 	}
 	
 	
@@ -67,37 +44,50 @@ public class TrustManagerTLS implements X509TrustManager {
 	 * adds a certificate to the TrustManager
 	 * @param cert: 	the certificate to add
 	 * @param alias 	the alias under which the certificate is saved in the trust store, can be null
+	 * @throws KeyStoreException 
 	 */
-	public void addCertificate(Certificate cert, String alias) {
-		try {
-			// add the certificate to the truststore
-			if (alias == null) {
-				alias = UUID.randomUUID().toString();
-			}
-			trustStore.setCertificateEntry(alias, cert);
-			
-			// set up trust manager factory to use our trust store
-			if (Security.getProvider("BCJSSE") == null) {
-				trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-			} else {
-				trustManagerFactory = TrustManagerFactory.getInstance("PKIX", "BCJSSE");
-			}
-			trustManagerFactory.init(trustStore);
-
-			// acquire X509 trust manager from factory
-			TrustManager tms[] = trustManagerFactory.getTrustManagers();
-			for (int i = 0; i < tms.length; i++) {
-				if (tms[i] instanceof X509TrustManager) {
-					trustManager = (X509TrustManager) tms[i];
-					break;
-				}
-			}
-
-		} catch (Exception e) {
-			logger.error("unable to add certificate: ", e);
-		} 
+	public void addCertificate(Certificate cert, String alias) throws KeyStoreException {
+		if (alias == null) {
+			alias = UUID.randomUUID().toString();
+		}
+		trustStore.setCertificateEntry(alias, cert);
 	}
-
+	
+	
+	/**
+	 * initializes the trust manager with the trust store that should already contain certificate entries
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchProviderException
+	 * @throws KeyStoreException
+	 */
+	public void initTrustManager() throws NoSuchAlgorithmException, NoSuchProviderException, KeyStoreException {
+		TrustManagerFactory trustManagerFactory = setupTrustManagerFactory();
+		trustManager = x509TrustManager(trustManagerFactory);
+	}
+	
+	
+	private TrustManagerFactory setupTrustManagerFactory() throws NoSuchAlgorithmException, NoSuchProviderException, KeyStoreException {
+		TrustManagerFactory trustManagerFactory;
+		if (SecurityUtils.bcjsseProviderRegistered()) {
+			trustManagerFactory = TrustManagerFactory.getInstance(SecurityConstants.PKIX, SecurityConstants.BCJSSE);
+		} else {
+			trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+		}
+		trustManagerFactory.init(trustStore);
+		return trustManagerFactory;
+	}
+	
+	
+	private X509TrustManager x509TrustManager(TrustManagerFactory trustManagerFactory) {
+		TrustManager tms[] = trustManagerFactory.getTrustManagers();
+		for (int i = 0; i < tms.length; i++) {
+			if (tms[i] instanceof X509TrustManager) {
+				return (X509TrustManager) tms[i];
+			}
+		}
+		logger.error("x509 trust manager could not be created, no instance was found in the trust manager factory");
+		return null;
+	}
 	
 	
 	@Override
@@ -106,7 +96,6 @@ public class TrustManagerTLS implements X509TrustManager {
 			throw new CertificateException("No X509TrustManager in TrustManagerFactory");
 		}
 		
-		// do default verification
 		trustManager.checkClientTrusted(chain, authType);
 	}
 
@@ -116,7 +105,6 @@ public class TrustManagerTLS implements X509TrustManager {
 			throw new CertificateException("No X509TrustManager in TrustManagerFactory");
 		}
 
-		// do default verification
 		trustManager.checkServerTrusted(chain, authType);
 	}
 

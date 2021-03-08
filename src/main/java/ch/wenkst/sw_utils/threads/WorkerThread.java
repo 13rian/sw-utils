@@ -5,31 +5,23 @@ import org.slf4j.LoggerFactory;
 
 import ch.wenkst.sw_utils.Utils;
 
-/**
- * Base class for threads
- * STATE chain: STARTING -&gt; WORKING -&gt; SUSPENDING -&gt; SUSPENDED -&gt; RESUMING -&gt; WORKING -&gt; TERMINATING
- */
 public abstract class WorkerThread extends Thread {
 	private static final Logger logger = LoggerFactory.getLogger(WorkerThread.class);
 
-	// defines the different states of the thread
 	public enum ThreadState {
-		STARTING, WORKING, SUSPENDING, SUSPENDED, RESUMING, TERMINATING, TERMINATED
+		STARTING,
+		WORKING,
+		SUSPENDING,
+		SUSPENDED,
+		RESUMING,
+		TERMINATING,
+		TERMINATED
 	}	
 
-	// volatile is used to indicate that a variable's value will be modified by different threads
-	// only one thread at a time can change the variable (similar to synchronized)
-	protected volatile ThreadState currentState = ThreadState.STARTING;     // defines the current state of the thread
-	protected boolean startSuspended = false;                               // defines weather the thread is started in the suspended state
-	protected boolean stop = false; 										// if set to true the thread stops immediately
+	protected int pollInterval = 1000;
+	protected ThreadState currentState = ThreadState.STARTING;
+	protected boolean running = true;
 	
-	protected int pollInterval = 1000;     		// time in ms at which do work is exeecuted
-
-	private long timeSpanExceptions = 10000;    // defines the time span to count theexceptions
-	private long timeLastException = 0; 		// the time in ms of the last occurred exception
-	private int maxExceptionCount = 20; 		// defines the maximal number of exceptions in the defined time span
-	private int exceptionCount = 0; 			// keeps track of the occured exceptions in the defined time span
-
 
 	/**
 	 * creates the thread with the passed name and a poll interval (interval at which the doWork is executed)
@@ -45,72 +37,55 @@ public abstract class WorkerThread extends Thread {
 
 	@Override
 	public void run() {
-		//boolean stop = false;
-		while (!stop) {
+		while (running) {
 			try {
-				switch (currentState) {
-					case STARTING: {
-						doStartWork();
-						if (!startSuspended) {
-							changeThreadState(ThreadState.WORKING);
-						} else {
-							changeThreadState(ThreadState.SUSPENDED);
-						}
-						break;
-					}
-					case WORKING: {
-						doWork();
-						Utils.sleep(pollInterval);
-						break;
-					}
-					case SUSPENDING: {
-						doSuspendingWork();
-						changeThreadState(ThreadState.SUSPENDED);
-						break;
-					}
-					case SUSPENDED: {
-						doSuspendedWork();
-						Utils.sleep(pollInterval);
-						break;
-					}
-					case RESUMING: {
-						doResumeWork();
-						changeThreadState(ThreadState.WORKING);
-						break;
-					}
-					case TERMINATING: {
-						doTerminateWork();
-						changeThreadState(ThreadState.TERMINATED);
-						break;
-					}
-					case TERMINATED: {
-						stop = true;
-					}
-				}
-
-				// the state terminating/terminated sets the stop value to true and breaks the while loop sets the 
-				if (stop) {
-					break;
-				}
+				executePollingTasks();
 			} catch (Exception e) {
-				logger.error(e.getMessage(), e);
-				updateExceptionCount();
+				logger.error("uncaught exception in implemented WorkerThread methods: ", e);
 			}
 		}
 	}
-
 	
-	/**
-	 * changes the state of the thread
-	 * @param new_State 	the new thread state
-	 */
-	protected synchronized void changeThreadState(ThreadState new_State) {
-		if (currentState != ThreadState.TERMINATING && currentState != ThreadState.TERMINATED) {
-			currentState = new_State;
+	
+	private void executePollingTasks() {
+		switch (currentState) {
+			case STARTING: {
+				doStartWork();
+				updateThreadState(ThreadState.WORKING);
+				break;
+			}
+			case WORKING: {
+				doWork();
+				Utils.sleep(pollInterval);
+				break;
+			}
+			case SUSPENDING: {
+				doSuspendingWork();
+				updateThreadState(ThreadState.SUSPENDED);
+				break;
+			}
+			case SUSPENDED: {
+				doSuspendedWork();
+				Utils.sleep(pollInterval);
+				break;
+			}
+			case RESUMING: {
+				doResumeWork();
+				updateThreadState(ThreadState.WORKING);
+				break;
+			}
+			case TERMINATING: {
+				doTerminateWork();
+				updateThreadState(ThreadState.TERMINATED);
+				break;
+			}
+			case TERMINATED: {
+				running = false;
+			}
 		}
 	}
-
-	// define the abstract method that need to be implemented
+	
+	
 	protected abstract void doStartWork();
 
 	protected abstract void doWork();
@@ -125,89 +100,51 @@ public abstract class WorkerThread extends Thread {
 
 	
 	/**
-	 * Starts the thread in suspended state
+	 * changes the state of the thread
+	 * @param newState 	the new thread state
+	 */
+	private void updateThreadState(ThreadState newState) {
+		if (currentState != ThreadState.TERMINATING && currentState != ThreadState.TERMINATED) {
+			currentState = newState;
+		}
+	}
+
+	
+	/**
+	 * starts the thread in the suspended state
 	 */
 	public void startSuspended() {
-		startSuspended = true;
-		super.start();
+		updateThreadState(ThreadState.SUSPENDED);
+		start();
 	}
 
 	
 	/**
-	 * suspends the thread, meaning: goes from working to suspending to suspended state
+	 * suspends the thread, after that only the suspending work is executed
 	 */
 	public void suspendThread() {
-		changeThreadState(ThreadState.SUSPENDING);
+		updateThreadState(ThreadState.SUSPENDING);
 	}
-
-	public boolean isSuspended() {
-		return currentState == ThreadState.SUSPENDED;
-	}
-
-	public boolean isSuspending() {
-		return currentState == ThreadState.SUSPENDING;
-	}
-
+	
 	
 	/**
-	 * Terminates the thread
-	 */
-	public void terminateThread() {
-		changeThreadState(ThreadState.TERMINATING);
-	}
-
-	public boolean isTerminated() {
-		return currentState == ThreadState.TERMINATING;
-	}
-
-	
-	/**
-	 * Resumes work, meaning goes from suspended into working state
+	 * un-suspends the thread
 	 */
 	public void resumeThread() {
-		changeThreadState(ThreadState.RESUMING);
+		updateThreadState(ThreadState.RESUMING);
 	}
 
-	public boolean isResuming() {
-		return currentState == ThreadState.RESUMING;
-	}
-
-
-
-	/**
-	 * method is called each time an exception occurred. If there are too many uncaught exceptions in the implemented methods
-	 * the thread will stop 
-	 */
-	protected void updateExceptionCount() {
-		if (System.currentTimeMillis() - timeLastException > timeSpanExceptions) {
-			//reset exception count
-			timeLastException = 0;
-			exceptionCount = 0;
-		}
-		timeLastException = System.currentTimeMillis();
-		exceptionCount++;
-		if (exceptionCount >= maxExceptionCount) {
-			logger.error("Too many ("+maxExceptionCount+") uncaught exceptions in last "+timeSpanExceptions+"ms" + " - TERMINATING THREAD");
-			terminateThread();
-		}
-	}
-	
 	
 	/**
-	 * stop the thread at any given time without executing the terminating work, this method can only be triggers from inside
-	 * the thread
+	 * terminates the thread
 	 */
-	protected void stopThreadImmediately() {
-		logger.info("thread was stopped");
-		this.stop = true;
+	public void terminateThread() {
+		updateThreadState(ThreadState.TERMINATING);
 	}
+	
 
 	public int getPollInterval() {
 		return pollInterval;
-	}
-	
-	public void set_PollInterval(int new_PollInterval) {
-		pollInterval = new_PollInterval;
 	}
 
 	public ThreadState getThreadState() {

@@ -2,29 +2,27 @@ package ch.wenkst.sw_utils.crypto.tls;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.security.KeyManagementException;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.SecureRandom;
-import java.security.Security;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.util.List;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import ch.wenkst.sw_utils.crypto.SecurityConstants;
 import ch.wenkst.sw_utils.crypto.SecurityUtils;
 
-/**
- * generates the SSL context if ec brainpool curves should be supported as well the BC and the BCJSSE
- * security provider need to be registered.
- */
 public class SSLContextGenerator {
-	private static final Logger logger = LoggerFactory.getLogger(SSLContextGenerator.class);
-
 	
 	private SSLContextGenerator() {
 		
@@ -32,85 +30,54 @@ public class SSLContextGenerator {
 	
 
 	/**
-	 * sets up the sslScontext for a secure connection, can be used for the server and the client
-	 * @param keyFilePath 		the path to the p12-file containing the private key and the certificate
+	 * sets up the ssl context which can be used for the server or the client from the passed p12-file
+	 * @param p12File 			the path to the p12-file containing the private key and the certificate
 	 * @param keyStorePassword	keyStore password (must be the same as chosen to create the certificate)
 	 * @param trustedCerts		a list of trusted certificates, can be null to trust all
 	 * @param protocol 			the used tls protocol
-	 * @return	 				the SSLContext that is used to create the SSL socket
+	 * @return	 				the SSLContext
+	 * @throws NoSuchProviderException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws IOException 
+	 * @throws CertificateException 
+	 * @throws KeyStoreException 
+	 * @throws UnrecoverableKeyException 
+	 * @throws KeyManagementException 
 	 */
 	public static SSLContext createSSLContext(
-			String keyFilePath,
+			String p12File,
 			String keyStorePassword,
 			List<Certificate> trustedCerts,
-			String protocol) {
-		try {
-			SSLContext sslContext;
-			if (Security.getProvider(SecurityUtils.BCJSSE) == null) {
-				sslContext = SSLContext.getInstance(protocol);
-			} else {
-				sslContext = SSLContext.getInstance(protocol, SecurityUtils.BCJSSE);
-			}
-			
-			// set up Keystore (class to save certificates and private key) and import the client certificate
-			KeyStore keyStore; 								// the pkcs12 format stores the private key and the certificate together
-			if (Security.getProvider(SecurityUtils.BC) == null) {
-				keyStore = KeyStore.getInstance(SecurityUtils.PKCS12);
-			} else {
-				keyStore  = KeyStore.getInstance(SecurityUtils.PKCS12, SecurityUtils.BC);	
-			}
-			
-			File keyFile = new File(keyFilePath);
-			FileInputStream keyInput = new FileInputStream(keyFile);
-			keyStore.load(keyInput, keyStorePassword.toCharArray());
-			keyInput.close();
-			
-			// set up key manager factory to use our key store
-			KeyManagerFactory kmf;
-			if (Security.getProvider(SecurityUtils.BCJSSE) == null) {
-				kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-			} else {
-				kmf = KeyManagerFactory.getInstance("PKIX", SecurityUtils.BCJSSE);
-			}
-			kmf.init(keyStore, keyStorePassword.toCharArray());
+			String protocol)
+					throws NoSuchAlgorithmException, NoSuchProviderException, KeyStoreException, CertificateException, 
+					IOException, UnrecoverableKeyException, KeyManagementException {
 
-			// if any connection should be trusted
-			if (trustedCerts == null) {
-				TrustManager[] trustAllCerts = { new TrustManagerTrustAny() };
-				sslContext.init(kmf.getKeyManagers(), trustAllCerts, new SecureRandom());
-
-			} else {
-
-				// add trusted Certificates (only needed if client authentication is used)
-				TrustManagerTLS trustManager = new TrustManagerTLS();
-				for (Certificate cert : trustedCerts) {
-					trustManager.addCertificate(cert, null);
-				}
-
-				// initialize the SSLContext to work with our key managers.
-				TrustManager[] trustManagers = {trustManager};
-				sslContext.init(kmf.getKeyManagers(), trustManagers, new SecureRandom());
-			}
-			
-			return sslContext;
-
-		} catch (Exception e) {
-			logger.error("error creating ssl context: ", e);
-			return null;
-		}
+		SSLContext sslContext = sslContextInstance(protocol);
+		KeyStore keyStore = keyStoreFromP12File(p12File, keyStorePassword);
+		KeyManagerFactory kmf = keyManagerFactoryInstance(keyStore, keyStorePassword);
+		TrustManager[] trustManagers = createTrustManagers(trustedCerts);
+		sslContext.init(kmf.getKeyManagers(), trustManagers, new SecureRandom());
+		return sslContext;
 	}
 
 
 
 	/**
-	 * sets up the sslScontext for a secure connection, can be used for the server and the client
+	 * sets up the ssl context which can be used for the server or the client from the passed crypto objects
 	 * @param keyStorePassword	keyStore password (must be the same as chosen to create the certificate)
 	 * @param privateKey 		the own private key
 	 * @param ownCert	 		the certificate for the keystore (own certificate)
 	 * @param ownCaCert 		the ca cert of the keystore certificate (ca of the own certificate)
 	 * @param trustedCerts	 	list of trusted certificates, can be null to trust all
 	 * @param protocol 			the used tls protocol
-	 * @return	 				the SSLContext that is used to create the SSL socket
+	 * @return	 				the SSLContext
+	 * @throws NoSuchProviderException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws IOException 
+	 * @throws CertificateException 
+	 * @throws KeyStoreException 
+	 * @throws UnrecoverableKeyException 
+	 * @throws KeyManagementException 
 	 */
 	public static SSLContext createSSLContext(
 			String keyStorePassword,
@@ -118,64 +85,97 @@ public class SSLContextGenerator {
 			Certificate ownCert,
 			Certificate ownCaCert,
 			List<Certificate> trustedCerts,
-			String protocol) {
-		try {
-			SSLContext sslContext;
-			if (Security.getProvider(SecurityUtils.BCJSSE) == null) {
-				sslContext = SSLContext.getInstance(protocol);
-			} else {
-				sslContext = SSLContext.getInstance(protocol, SecurityUtils.BCJSSE);
-			}
+			String protocol)
+					throws NoSuchAlgorithmException, NoSuchProviderException, KeyStoreException, CertificateException,
+					IOException, UnrecoverableKeyException, KeyManagementException {
 
-
-			// set up Keystore (class to save certificates and private key) and import the client certificate
-			KeyStore keyStore; 								// the pkcs12 format stores the private key and the certificate together
-			if (Security.getProvider(SecurityUtils.BC) == null) {
-				keyStore = KeyStore.getInstance(SecurityUtils.PKCS12);
-			} else {
-				keyStore  = KeyStore.getInstance(SecurityUtils.PKCS12, SecurityUtils.BC);	
-			}
-			keyStore.load(null); 
-
-			// add the certificate and entries
-			Certificate[] chain = new Certificate[] { ownCert, ownCaCert };
-//			Certificate[] chain = new Certificate[] { ownCert };  				// does not work        
-			keyStore.setKeyEntry("own-private-key", privateKey, keyStorePassword.toCharArray(), chain);	// store the private key
-
-
-			// set up key manager factory to use our key store
-			KeyManagerFactory kmf;
-			if (Security.getProvider(SecurityUtils.BCJSSE) == null) {
-				kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-			} else {
-				kmf = KeyManagerFactory.getInstance("PKIX", SecurityUtils.BCJSSE);
-			}
-			kmf.init(keyStore, keyStorePassword.toCharArray());
-			
-
-			// if any connection should be trusted
-			if (trustedCerts == null) {
-				TrustManager[] trustAllCerts = { new TrustManagerTrustAny() };
-				sslContext.init(kmf.getKeyManagers(), trustAllCerts, new SecureRandom());
-
-			} else {
-
-				// add trusted Certificates (only needed if client authentication is used)
-				TrustManagerTLS trustManager = new TrustManagerTLS();
-				for (Certificate cert : trustedCerts) {
-					trustManager.addCertificate(cert, null);
-				}
-
-				// initialize the SSLContext to work with our key managers.
-				TrustManager[] trustManagers = {trustManager};
-				sslContext.init(kmf.getKeyManagers(), trustManagers, new SecureRandom());
-			}
-			
-			return sslContext;
-
-		} catch (Exception e) {
-			logger.error("error creating ssl context: ", e);
-			return null;
+		SSLContext sslContext = sslContextInstance(protocol);
+		KeyStore keyStore = keyStoreFromCryptoObjects(privateKey, ownCert, ownCaCert, keyStorePassword);
+		KeyManagerFactory kmf = keyManagerFactoryInstance(keyStore, keyStorePassword);
+		TrustManager[] trustManagers = createTrustManagers(trustedCerts);
+		sslContext.init(kmf.getKeyManagers(), trustManagers, new SecureRandom());
+		return sslContext;
+	}
+	
+	
+	private static SSLContext sslContextInstance(String protocol) throws NoSuchAlgorithmException, NoSuchProviderException {
+		if (SecurityUtils.bcjsseProviderRegistered()) {
+			return SSLContext.getInstance(protocol, SecurityConstants.BCJSSE);
+		} else {
+			return SSLContext.getInstance(protocol);
 		}
+	}
+	
+	
+	private static KeyStore keyStoreFromP12File(String p12File, String keyStorePassword)
+			throws KeyStoreException, NoSuchProviderException, NoSuchAlgorithmException, CertificateException, IOException {
+		KeyStore keyStore = keyStoreInstance();
+		File keyFile = new File(p12File);
+		FileInputStream keyInput = new FileInputStream(keyFile);
+		keyStore.load(keyInput, keyStorePassword.toCharArray());
+		keyInput.close();
+		return keyStore;
+	}
+	
+	
+	private static KeyStore keyStoreFromCryptoObjects(PrivateKey privateKey, Certificate cert, Certificate caCert, String keyStorePassword)
+			throws KeyStoreException, NoSuchProviderException, NoSuchAlgorithmException, CertificateException, IOException {
+		KeyStore keyStore = keyStoreInstance();
+		keyStore.load(null); 
+
+		Certificate[] chain = new Certificate[] { cert, caCert };      
+		keyStore.setKeyEntry("own-private-key", privateKey, keyStorePassword.toCharArray(), chain);
+		return keyStore;
+	}
+	
+	
+	private static KeyStore keyStoreInstance() throws KeyStoreException, NoSuchProviderException {
+		if (SecurityUtils.bcProviderRegistered()) {
+			return KeyStore.getInstance(SecurityConstants.PKCS12, SecurityConstants.BC);
+		} else {
+			return KeyStore.getInstance(SecurityConstants.PKCS12);
+		}
+	}
+	
+	
+	private static KeyManagerFactory keyManagerFactoryInstance(KeyStore keyStore, String keyStorePassword)
+			throws NoSuchAlgorithmException, NoSuchProviderException, UnrecoverableKeyException, KeyStoreException {
+		KeyManagerFactory kmf;
+		if (SecurityUtils.bcjsseProviderRegistered()) {
+			kmf = KeyManagerFactory.getInstance(SecurityConstants.PKIX, SecurityConstants.BCJSSE);
+		} else {
+			kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+		}
+		kmf.init(keyStore, keyStorePassword.toCharArray());
+		return kmf;
+	}
+	
+	
+	private static TrustManager[] createTrustManagers(List<Certificate> trustedCerts)
+			throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, NoSuchProviderException {
+		if (trustedCerts == null) {
+			return trustAllTrustManagers();
+		}
+
+		return trustManagerFromCerts(trustedCerts);
+	}
+	
+	
+	private static TrustManager[] trustAllTrustManagers() {
+		TrustManager[] trustAllCerts = { new TrustManagerTrustAny() };
+		return trustAllCerts;
+	}
+	
+	
+	private static TrustManager[] trustManagerFromCerts(List<Certificate> trustedCerts)
+			throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, NoSuchProviderException {
+		TrustManagerTLS trustManager = new TrustManagerTLS();
+		for (Certificate cert : trustedCerts) {
+			trustManager.addCertificate(cert, null);
+		}
+		trustManager.initTrustManager();
+
+		TrustManager[] trustManagers = {trustManager};
+		return trustManagers;
 	}
 }

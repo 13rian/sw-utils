@@ -12,7 +12,7 @@ public class OneTimeTestTask extends OneTimeTask {
 	}
 
 	@Override
-	public void onStartTask() {
+	public void onExecuteTask() {
 		executedTime = System.currentTimeMillis();
 	}
 

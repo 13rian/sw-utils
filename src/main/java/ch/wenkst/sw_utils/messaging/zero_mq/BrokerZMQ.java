@@ -40,6 +40,7 @@ public class BrokerZMQ extends BaseThread {
 	 * @param backendProtocol 		protocol of the backend, e.g. tcp, ipc
 	 */
 	public BrokerZMQ(String frontendHost, int frontendPort, String frontendProtocol, String backendHost, int backendPort, String backendProtocol) {
+		super(100);
 		this.frontendHost = frontendHost;
 		this.frontendPort = frontendPort;
 		this.frontendProtocol = frontendProtocol;

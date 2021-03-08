@@ -18,9 +18,6 @@ import org.slf4j.LoggerFactory;
 
 import ch.wenkst.sw_utils.conversion.Conversion;
 
-/**
- * holds a collection of frequently used methods
- */
 public class Utils {
 	private static final Logger logger = LoggerFactory.getLogger(Utils.class);
 	
@@ -163,17 +160,13 @@ public class Utils {
 	 * @return 				true if no property is missing, and false if one property is not present
 	 */
 	public static boolean allPropsPresent(Properties props, String... property) {
-		boolean allPresent = true;
-		
-		// check if all properties are present
 		for (String prop : property) {
 			if (!props.containsKey(prop)) {
-				System.err.println("missing property in the logger-config prooperties file");
-				allPresent = false;
+				return false;
 			}
 		}
 		
-		return allPresent;
+		return true;
 	}
 	
 	
@@ -186,8 +179,7 @@ public class Utils {
 	public static boolean ipReachable(String ip, int timeout) {
 		try {
 			InetAddress address = InetAddress.getByName(ip);
-			boolean reachable = address.isReachable(timeout);
-			return reachable;
+			return address.isReachable(timeout);
 
 		} catch (Exception e) {
 			logger.error("error testing for the ip " + ip, e);

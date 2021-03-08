@@ -4,20 +4,21 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
+
 import ch.wenkst.sw_utils.threads.BaseThread;
 
 
 public class Scheduler extends BaseThread {
-	private Executor executor = null; 										// executes the tasks asynchronously 
-	private ArrayList<ScheduledTask> scheduledTasks = new ArrayList<>(); 	// holds all scheduled tasks
+	private Executor executor = null;
+	private List<ScheduledTask> scheduledTasks = new ArrayList<>();
 	
 	
 	/**
 	 * one thread that handles all tasks by periodically checking if the startTime is passed
 	 */
 	public Scheduler() {
-		super();
-		pollInterval = 1000;
+		super(1000);
 		setName("scheduler");
 	}
 	
@@ -25,8 +26,7 @@ public class Scheduler extends BaseThread {
 	/**
 	 * initializes the scheduler
 	 * @param pollInterval 		poll interval for the thread
-	 * @param executor 			thread pool: call the onStartTask method asynchronously,
-	 * 							null: call the onStartTask method synchronously
+	 * @param executor 			executor for concurrent task executions, can be null if all tasks should be executed synchronously
 	 */
 	public void init(int pollInterval, Executor executor) {
 		this.pollInterval = pollInterval;
@@ -93,14 +93,9 @@ public class Scheduler extends BaseThread {
 	private List<ScheduledTask> tasksToStart() {
 		long currentTime = Instant.now().toEpochMilli();
 		
-		List<ScheduledTask> tasksToStart = new ArrayList<>();
-		for (ScheduledTask task : scheduledTasks) {
-			if (currentTime >= task.getStartTime()) {
-				tasksToStart.add(task);
-			}
-		}
-		
-		return tasksToStart;
+		return scheduledTasks.stream()
+				.filter((task) -> currentTime >= task.getStartTime())
+				.collect(Collectors.toList());
 	}
 	
 	
@@ -109,28 +104,20 @@ public class Scheduler extends BaseThread {
 	 * @param task
 	 */
 	private void executeTask(ScheduledTask task) {
-		if (task instanceof IntervalTask) {
-			task.reschedule();
-		} else {
-			removeFromTasks(task);
-		}
-		task.onStartTask();
-		
-		if (task instanceof PeriodicTask) {
-			task.reschedule();
-			addToTasks(task);
-		}
+		task.onStartTask(this);
+		task.onExecuteTask();
+		task.onTaskFinished(this);
 	}
 	
 	
 	@Override
 	public void startWork() {
-		// nothing to do		
+	
 	}
 	
 	@Override
 	public void terminateWork() {
-		// nothing to do		
+				
 	}
 	
 	

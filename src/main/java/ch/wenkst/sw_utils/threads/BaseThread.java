@@ -10,17 +10,10 @@ public abstract class BaseThread extends Thread {
 	
 	private boolean running = true;
 	protected int pollInterval = 0;
-
-	/**
-	 * simple polling thread that has a default polling interval of 100ms
-	 */
-	public BaseThread() {
-		pollInterval = 100;
-	}
 	
 	
 	/**
-	 * simple polling thread with the passed poll interval
+	 * simple polling thread
 	 * @param pollInterval 		poll interval in ms
 	 */
 	public BaseThread(int pollInterval) {
@@ -31,21 +24,25 @@ public abstract class BaseThread extends Thread {
 	@Override
 	public void run() {
 		try {
-			startWork();
-
-			while (running) {	
-				doWork();	 	
-
-				if (pollInterval > 0) {
-					Utils.sleep(pollInterval);
-				}
-			}
-
-			terminateWork();
-			
+			executePollingTasks();
 		} catch (Exception e) {
 			logger.error("uncaught exception in implemented BaseThread methods: ", e);
 		}
+	}
+	
+	
+	private void executePollingTasks() {
+		startWork();
+
+		while (running) {	
+			doWork();	 	
+
+			if (pollInterval > 0) {
+				Utils.sleep(pollInterval);
+			}
+		}
+
+		terminateWork();
 	}
 	
 	
