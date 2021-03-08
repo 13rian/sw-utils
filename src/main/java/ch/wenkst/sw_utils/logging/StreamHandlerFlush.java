@@ -5,12 +5,12 @@ import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 import java.util.logging.StreamHandler;
 
-/**
- * defines a stream handler that is flushed immediately after the 
- */
 public class StreamHandlerFlush extends StreamHandler {
+	/**
+	 * defines a stream handler that is flushed immediately after the a new record is added to the log
+	 */
 	public StreamHandlerFlush() {
-		super();
+		
 	}
 	
 	public StreamHandlerFlush(OutputStream out, Formatter formatter) {
@@ -25,5 +25,4 @@ public class StreamHandlerFlush extends StreamHandler {
 		super.publish(record);
 		flush();
     }
-
 }

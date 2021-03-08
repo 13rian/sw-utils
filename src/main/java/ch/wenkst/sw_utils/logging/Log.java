@@ -2,8 +2,10 @@ package ch.wenkst.sw_utils.logging;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
@@ -34,25 +36,26 @@ import ch.wenkst.sw_utils.Utils;
  * <li> file.log.max.count 		the maximal number of log file that are writtens
  */
 public class Log {
-	// flag that indicates if the logger is initialized or not
 	private static boolean isInitialized = false;
-	
-	private Logger logger = null; 					// jul logger instance
-	
-	// contains a map with all the Log instances
-	private static HashMap<String, Log> loggerMap = new HashMap<>();
-			
-			
+
+	private Logger logger = null;
+
+	private static Map<String, Log> loggerInstanceMap = new HashMap<>();
+
+
+	private static final String consoleDateFormat = "HH:mm:ss.SSS";
+	private static final String fileDateFromat = "dd.MM.yyyy HH:mm:ss.SSS"; 
+
+
 	/**
 	 * private constructor to create a new logger instance
 	 * @param name 	the name of the logger
 	 */
 	private Log(String name) {
-		// this method returns the same logger instance if called twice with the same name
 		logger = Logger.getLogger(name);
 	}
-	
-	
+
+
 	/**
 	 * returns a Log instance if the log with the passed name was not used. if the Log instance
 	 * with the passed name was already used the same instance will be returned
@@ -60,15 +63,14 @@ public class Log {
 	 * @return
 	 */
 	public static Log getLogger(String name) {
-		// initialize the logger if not already initialized
 		if (!isInitialized) {
 			initLogger();
 		}
-		
+
 		return getLogInstance(name);
 	}
-	
-	
+
+
 	/**
 	 * returns a Log instance if the log with the passed name was not used. if the Log instance
 	 * with the passed name was already used the same instance will be returned	 
@@ -79,8 +81,8 @@ public class Log {
 		String name = clazz.getSimpleName();
 		return getLogger(name);
 	}
-	
-	
+
+
 	/**
 	 * returns a new log instance if the log instance with the passed name was not used so far.
 	 * if the log instance with the passed name was already used it will be returned
@@ -88,44 +90,40 @@ public class Log {
 	 * @return
 	 */
 	private static Log getLogInstance(String name) {
-		Log log = loggerMap.get(name);
+		Log log = loggerInstanceMap.get(name);
 		if (log == null) {
 			log = new Log(name);
-			loggerMap.put(name, log);
+			loggerInstanceMap.put(name, log);
 			return log;
-		
 		} 
-		
+
 		return log;
 	}
-	
 
-	
+
+
 	/**
 	 * initializes the logger if the path to the logger configuration file is defined as a
 	 * system property (logger.config.file.path)
 	 */
 	private static void initLogger() {
-		// check if the path of the properties file is set in the system properties
 		String loggerConfigFile = System.getProperty("swutils.logger.config.file.path");
 		if (loggerConfigFile == null) {
 			initDefaultLogger();
 			return;
 		}
-		
+
 		initLogger(loggerConfigFile);
 	}
-	
-	
+
+
 	/**
 	 * initializes the logger form the passed properties config file
 	 * @param loggerConfigFile
 	 */
 	public static void initLogger(String loggerConfigFile) {
-		// remove all pre-configured handlers from the logger 
 		removeAllHandlers();
-		
-		// open the properties file
+
 		Properties props = new Properties();	
 		try (InputStream loggerConfig = new FileInputStream(loggerConfigFile) ) {
 			props.load(loggerConfig);	
@@ -136,169 +134,187 @@ public class Log {
 			initDefaultLogger();
 			return;
 		}
-		
+
 		initLogger(props);
 	}
-	
-	
+
+
 	/**
 	 * initializes the logger from the passed properties
 	 * @param props		properties with the logger configuration
 	 */
 	public static void initLogger(Properties props) {
-		// ----------------------------- initialize the console logger
-		// get the console level
-		String consoleLevelStr = props.getProperty("console.log.level");
-		if (consoleLevelStr == null) {
-			System.err.println("console.log.level not configured");
-			initDefaultLogger();
-			return;
-		}
-		Level consoleLevel = levelFromString(consoleLevelStr);
-		if (consoleLevel == null) {
-			System.err.println("console.log.level " + consoleLevelStr + " is not a valid level");
-			initDefaultLogger();
-			return;
-		}
-		
-		// get the flag if the line number should be logged to the console
-		String consoleLogLineStr = props.getProperty("console.log.logline");
-		boolean consoleLogLine;
-		if (consoleLogLineStr == null) {
-			consoleLogLine = true;
-		} else {
-			try {
-				consoleLogLine = Boolean.parseBoolean(consoleLogLineStr);
-			} catch (Exception e) {
-				System.err.println("error parsing the console.log.logline, activate the line number log");
-				consoleLogLine = true;
-			}
-		}
-		
-        // add the new console handler to log to the console
-		Logger rootLogger = Logger.getLogger("");
-        StreamHandlerFlush consoleHandler = new StreamHandlerFlush(System.out, new ConsoleFormatter(consoleLogLine));
-        consoleHandler.setLevel(consoleLevel);
-        rootLogger.addHandler(consoleHandler);
-		
-		
-		// ------------------------------- initialize the file logger
-		// get the path of the log file
-        String logFilePath = props.getProperty("file.log.path");
-        if (logFilePath == null) {
-        	System.err.println("log file path not not configured, ignore file logger");
-        	return;
-        }
-        
-        
-        // ensure that all the directories of the logFilePath are created
-        logFilePath = System.getProperty("user.dir") + File.separator + logFilePath; 
-		File logFile = new File(logFilePath);
-		File parentDir = logFile.getParentFile();
-		parentDir.mkdirs();
-        
-        // get the file level
-		String fileLevelStr = props.getProperty("file.log.level");
-		Level fileLevel = Level.INFO;
-		if (fileLevelStr == null) {
-			System.err.println("file log level not configured, set the level to info");
-		} else {
-			fileLevel = levelFromString(consoleLevelStr);
-			if (fileLevel == null) {
-				System.err.println("file log level " + fileLevelStr + " is not a valid level, set file level to info");
-				fileLevel = Level.INFO;
-			}
-		}
-		
-		// get the flag if the line number should be logged
-		String fileLogLineStr = props.getProperty("file.log.logline");
-		boolean fileLogLine;
-		if (fileLogLineStr == null) {
-			fileLogLine = true;
-		} else {
-			try {
-				fileLogLine = Boolean.parseBoolean(fileLogLineStr);
-			} catch (Exception e) {
-				System.err.println("error parsing the file.log.logline, activate the line number log");
-				fileLogLine = true;
-			}
-		}
-        
-        
-        // get the size limit and the file count and create the file handler
-		FileHandler fileHandler;
-        String fileSizeStr = props.getProperty("file.log.max.size");
-        String fileCountStr = props.getProperty("file.log.max.count");
-        try {
-        	if (fileSizeStr == null || fileSizeStr == null) {
-        		fileHandler = new FileHandler(logFilePath, true);
+		try {
+			setupConsoleLogger(props);
+			setupFileLogger(props);
+			isInitialized = true;
 
-        	} else {
-        		try {
-        			int fileSize = Integer.parseInt(fileSizeStr);
-        			int fileCount = Integer.parseInt(fileCountStr);
-        			fileHandler = new FileHandler(logFilePath, fileSize, fileCount, true);
-
-        		} catch (Exception e) {
-        			System.err.println("error parsing the file.log.max.size and the file.log.max.count, file rolling over deactivated");
-        			fileHandler = new FileHandler(logFilePath, true);
-        		}
-        	}
-        
-        } catch (Exception e) {
-        	System.err.print("error setting up the file handler for the logger");
-        	e.printStackTrace();
-        	initDefaultLogger();
-        	return;
-        }
-        
-        // configure the file handler
-        fileHandler.setFormatter(new FileFormatter(fileLogLine));
-        fileHandler.setLevel(fileLevel);
-        rootLogger.addHandler(fileHandler);
-        
-        
-        // set the level of the root logger
-        rootLogger.setLevel(Level.FINEST);
-        
-        isInitialized = true;
+		} catch (LogInitializationException e) {
+			System.err.println("logger could not be initialized, reason: " + e.getMessage() + " initialize the default logger");
+			initDefaultLogger();
+		}
 	}
 	
 	
+	private static void setupConsoleLogger(Properties props) throws LogInitializationException {
+		Level logLevel = extractConsoleLevel(props);
+		boolean isLogLine = extractIsLogLineNumberInConsole(props);
+		addConsoleLogHandler(logLevel, isLogLine);
+	}
+	
+	
+	private static Level extractConsoleLevel(Properties props) throws LogInitializationException {
+		if (!props.containsKey("console.log.level")) {
+			throw new LogInitializationException("console.log.level not configured");
+		}
+		
+		String consoleLevelStr = props.getProperty("console.log.level");
+		Level consoleLevel = levelFromString(consoleLevelStr);
+		if (consoleLevel == null) {
+			throw new LogInitializationException(consoleLevel + " is not a valid log level");
+		}
+		return consoleLevel;
+	}
+	
+	
+	private static boolean extractIsLogLineNumberInConsole(Properties props) {
+		if (!props.containsKey("console.log.logline")) {
+			return true;
+		}
+		
+		String logLineStr = props.getProperty("console.log.logline");
+		try {
+			return Boolean.parseBoolean(logLineStr);
+		} catch (Exception e) {
+			System.err.println("error parsing the console.log.logline, activate the line number log");
+			return true;
+		}
+	}
+	
+	
+	private static void addConsoleLogHandler(Level logLevel, boolean logLineNumber) {
+		Logger rootLogger = Logger.getLogger("");
+		PrettyLogFormatter formatter = new PrettyLogFormatter(logLineNumber, consoleDateFormat);
+		StreamHandlerFlush consoleHandler = new StreamHandlerFlush(System.out, formatter);
+		consoleHandler.setLevel(logLevel);
+		rootLogger.addHandler(consoleHandler);
+	}
+	
+	
+	private static void setupFileLogger(Properties props) {
+		try {
+			String logFilePath = setupLogFile(props);
+			Level fileLevel = extractFileLogLevel(props);
+			boolean fileLogLine = extractIsLogLineNumberInFile(props);
+			FileHandler fileHandler = setupFileHandler(props, logFilePath);
+			addFileLogHandler(fileHandler, fileLevel, fileLogLine);
+
+		} catch (Exception e) {
+			System.err.println("file logger could not be initialized");
+			e.printStackTrace();
+		}
+	}
+	
+	
+	private static String setupLogFile(Properties props) throws LogInitializationException {
+		if (!props.containsKey("file.log.path")) {
+			throw new LogInitializationException("file.log.path not configured");
+		}
+		
+		String logFilePath = props.getProperty("file.log.path");
+		logFilePath = Utils.getWorkDir() + File.separator + logFilePath; 
+		File logFile = new File(logFilePath);
+		File parentDir = logFile.getParentFile();
+		parentDir.mkdirs();
+		return logFilePath;
+	}
+	
+	
+	private static Level extractFileLogLevel(Properties props) {
+		if (!props.containsKey("file.log.level")) {
+			System.err.println("file log level not configured, set the level to info");
+			return Level.INFO;
+		}
+		
+		String fileLevelStr = props.getProperty("file.log.level");
+		Level fileLevel = levelFromString(fileLevelStr);
+		if (fileLevel == null) {
+			System.err.println("file log level " + fileLevelStr + " is not a valid level, set file level to info");
+			return Level.INFO;
+		}
+		
+		return fileLevel;
+	}
+	
+	
+	
+	private static boolean extractIsLogLineNumberInFile(Properties props) {
+		try {
+			String fileLogLineStr = props.getProperty("file.log.logline");
+			return Boolean.parseBoolean(fileLogLineStr);
+			
+		} catch (Exception e) {
+			System.err.println("error parsing the file.log.logline, activate the line number log");
+			return true;
+		}
+	}
+	
+	
+	private static FileHandler setupFileHandler(Properties props, String logFilePath) throws SecurityException, IOException {
+		if (!props.containsKey("file.log.max.size") || !props.containsKey("file.log.max.count")) {
+			return new FileHandler(logFilePath, true);
+		}
+
+		try {
+			String fileSizeStr = props.getProperty("file.log.max.size");
+			int fileSize = Integer.parseInt(fileSizeStr);
+			String fileCountStr = props.getProperty("file.log.max.count");
+			int fileCount = Integer.parseInt(fileCountStr);
+			return new FileHandler(logFilePath, fileSize, fileCount, true);
+
+		} catch (Exception e) {
+			System.err.println("error parsing the file.log.max.size and the file.log.max.count, file rolling over deactivated");
+			return new FileHandler(logFilePath, true);
+		}
+	}
+	
+	
+	private static void addFileLogHandler(FileHandler fileHandler, Level logLevel, boolean logLineNumber) {
+		Logger rootLogger = Logger.getLogger("");
+		fileHandler.setFormatter(new PrettyLogFormatter(logLineNumber, fileDateFromat));
+		fileHandler.setLevel(logLevel);
+		rootLogger.addHandler(fileHandler);
+		rootLogger.setLevel(Level.FINEST);
+	}
+
+
 	/**
 	 * initializes the default logger, no log file is written and the level of the console log is info
 	 */
 	private static void initDefaultLogger() {
 		System.err.println("initialize the default logger, only console log-level is set to info");
-		
-		// remove all pre-configured handlers from the logger 
 		removeAllHandlers();
-		
 		Logger rootLogger = Logger.getLogger("");
-        StreamHandlerFlush consoleHandler = new StreamHandlerFlush(System.out, new ConsoleFormatter(true));
-        consoleHandler.setLevel(Level.INFO);
-        rootLogger.addHandler(consoleHandler);
-        
-        // set the level of the root logger
-        rootLogger.setLevel(Level.FINEST);
-        
-        isInitialized = true;
+		StreamHandlerFlush consoleHandler = new StreamHandlerFlush(System.out, new PrettyLogFormatter(true, consoleDateFormat));
+		consoleHandler.setLevel(Level.INFO);
+		rootLogger.addHandler(consoleHandler);
+		rootLogger.setLevel(Level.FINEST);
+		isInitialized = true;
 	}
-	
-	
+
+
 	/**
 	 * removes all handlers form the logger
 	 */
 	private static void removeAllHandlers() {
-		// remove the default console handler
 		Logger rootLogger = Logger.getLogger("");
 		for (Handler handler : rootLogger.getHandlers()) {
 			rootLogger.removeHandler(handler);
 		}
 	}
 
-	
-	
+
+
 	/**
 	 * sets the level of the logger
 	 * @param level 	level of the logger to set
@@ -306,8 +322,8 @@ public class Log {
 	public void setLevel(Level level) {
 		logger.setLevel(level);
 	}
-	
-	
+
+
 	/**
 	 * disables the logger of the passed names, note that if you disable org.test, org.test.test1 will also be disabled
 	 * @param names 	the names of the logger to disable
@@ -318,73 +334,73 @@ public class Log {
 			bcLogger.setLevel(Level.OFF);
 		}
 	}
-	
-		
-	
+
+
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 									simply log one message 													  //
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	public void finest(String msg) {
 		logger.finest(msg);
 	}
-	
+
 	public void finer(String msg) {
 		logger.finer(msg);
 	}
-	
+
 	public void fine(String msg) {
 		logger.fine(msg);
 	}
-	
+
 	public void config(String msg) {
 		logger.config(msg);
 	}
-	
+
 	public void info(String msg) {
 		logger.info(msg);
 	}
-	
+
 	public void warning(String msg) {
 		logger.warning(msg);
 	}
-	
+
 	public void severe(String msg) {
 		logger.severe(msg);
 	}
-	
-	
+
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 									log the stack trace as well												  //
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	public void finest(String msg, Throwable th) {
 		logger.finest(msg + Utils.exceptionToString(th));
 	}
-	
+
 	public void finer(String msg, Throwable th) {
 		logger.finer(msg + Utils.exceptionToString(th));
 	}
-	
+
 	public void fine(String msg, Throwable th) {
 		logger.fine(msg + Utils.exceptionToString(th));
 	}
-	
+
 	public void config(String msg, Throwable th) {
 		logger.config(msg + Utils.exceptionToString(th));
 	}
-	
+
 	public void info(String msg, Throwable th) {
 		logger.info(msg + Utils.exceptionToString(th));
 	}
-	
+
 	public void warning(String msg, Throwable th) {
 		logger.warning(msg + Utils.exceptionToString(th));
 	}
-	
+
 	public void severe(String msg, Throwable th) {
 		logger.severe(msg + Utils.exceptionToString(th));
 	}
-	
-	
+
+
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	// 									helper methods 											 //
 	///////////////////////////////////////////////////////////////////////////////////////////////
@@ -396,32 +412,32 @@ public class Log {
 	private static Level levelFromString(String levelStr) {
 		String level = levelStr.toLowerCase().trim();
 		switch (level) {
-			case "off" :
-				return Level.OFF;
-		
-			case "finest" :
-				return Level.FINEST;
-			
-			case "finer" :
-				return Level.FINER;
-				
-			case "fine" :
-				return Level.FINE;
-				
-			case "config" :
-				return Level.CONFIG;
-				
-			case "info" :
-				return Level.INFO;
-				
-			case "warning" :
-				return Level.WARNING;
-				
-			case "severe" :
-				return Level.SEVERE;
-				
-			default : 
-				return null;
+		case "off" :
+			return Level.OFF;
+
+		case "finest" :
+			return Level.FINEST;
+
+		case "finer" :
+			return Level.FINER;
+
+		case "fine" :
+			return Level.FINE;
+
+		case "config" :
+			return Level.CONFIG;
+
+		case "info" :
+			return Level.INFO;
+
+		case "warning" :
+			return Level.WARNING;
+
+		case "severe" :
+			return Level.SEVERE;
+
+		default : 
+			return null;
 		}
 	}
 }
