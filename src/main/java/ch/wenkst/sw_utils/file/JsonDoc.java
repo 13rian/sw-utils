@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -170,7 +170,7 @@ public class JsonDoc {
 	 */
 	public void removeElementByName(JsonElement parent, String tag) {
 		try {
-			parent.getAsJsonObject().remove(tag); 				// remove the element form the parent
+			parent.getAsJsonObject().remove(tag);
 		
 		} catch (Exception e) {
 			logger.error("failed to remove the element with tag name " + tag, e);
@@ -229,7 +229,7 @@ public class JsonDoc {
 	 * @param tag 			tag name of the property that is added
 	 * @param valuesArr 	the array value of the element
 	 */
-	public void addArray(JsonElement parent, String tag, ArrayList<Object> valuesArr) {
+	public void addArray(JsonElement parent, String tag, List<Object> valuesArr) {
 		JsonArray jsonArr = new JsonArray();
 		
 		for (Object value : valuesArr) {
@@ -589,5 +589,4 @@ public class JsonDoc {
 			return new boolean[0];
 		}
 	}
-
 }

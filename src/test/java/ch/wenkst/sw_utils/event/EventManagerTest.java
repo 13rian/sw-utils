@@ -45,8 +45,8 @@ public class EventManagerTest {
 		SyncEventManager eventManager2 = new SyncEventManager("event2");
 
 		// create the listeners and register them
-		EventListener listener1 = new EventListener(50);
-		EventListener listener2 = new EventListener(100);
+		TestEventListener listener1 = new TestEventListener(50);
+		TestEventListener listener2 = new TestEventListener(100);
 		
 		// register 2 listeners for 2 events
 		eventManager1.register(listener1);
@@ -101,8 +101,8 @@ public class EventManagerTest {
 		
 		
 		// create the listeners and register them
-		EventListener listener1 = new EventListener(50);
-		EventListener listener2 = new EventListener(100);
+		TestEventListener listener1 = new TestEventListener(50);
+		TestEventListener listener2 = new TestEventListener(100);
 		
 		// register 2 listeners for 2 events
 		eventManager1.register(listener1);
@@ -174,8 +174,8 @@ public class EventManagerTest {
 		SyncSameEventEventManager eventManager2 = new SyncSameEventEventManager("event2", executor);
 		
 		// create the listeners and register them
-		EventListener listener1 = new EventListener(50);
-		EventListener listener2 = new EventListener(100);
+		TestEventListener listener1 = new TestEventListener(50);
+		TestEventListener listener2 = new TestEventListener(100);
 		
 		// register 2 listeners for 2 events
 		eventManager1.register(listener1);

@@ -39,8 +39,8 @@ public class EventBoardTest {
 		
 		
 		// create the listeners and register them
-		EventListener listener1 = new EventListener(50);
-		EventListener listener2 = new EventListener(100);
+		TestEventListener listener1 = new TestEventListener(50);
+		TestEventListener listener2 = new TestEventListener(100);
 		
 		// register 2 listeners for 2 events
 		eventBoard.registerListener("event1", listener1);
@@ -100,8 +100,8 @@ public class EventBoardTest {
 		
 		
 		// create the listeners and register them
-		EventListener listener1 = new EventListener(50);
-		EventListener listener2 = new EventListener(100);
+		TestEventListener listener1 = new TestEventListener(50);
+		TestEventListener listener2 = new TestEventListener(100);
 		
 		// register 2 listeners for 2 events
 		eventBoard.registerListener("event1", listener1);
@@ -182,8 +182,8 @@ public class EventBoardTest {
 		
 		
 		// create the listeners and register them
-		EventListener listener1 = new EventListener(50);
-		EventListener listener2 = new EventListener(100);
+		TestEventListener listener1 = new TestEventListener(50);
+		TestEventListener listener2 = new TestEventListener(100);
 		
 		// register 2 listeners for 2 events
 		eventBoard.registerListener("event1", listener1);

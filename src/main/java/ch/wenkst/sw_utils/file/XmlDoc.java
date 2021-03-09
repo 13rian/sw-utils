@@ -316,8 +316,6 @@ public class XmlDoc {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		factory.setNamespaceAware(isNamespaceAware);			
 		DocumentBuilder builder = factory.newDocumentBuilder();
-
-		// load the input xml document from the passed file
 		document = builder.parse(new File(fileName));	
 	}
 
@@ -379,7 +377,6 @@ public class XmlDoc {
 		factory.setNamespaceAware(isNamespaceAware);
 		DocumentBuilder builder = factory.newDocumentBuilder();
 
-		// load the input xml document from the input stream
 		document = builder.parse(is);
 	}
 
@@ -402,23 +399,18 @@ public class XmlDoc {
 	 * @return 				the nth child element or null if there are not enough child elements
 	 */
 	public Element getChildElement(Element parent, int nElement) {
-		// a node does not have to be an element, only return the elements
 		NodeList children = parent.getChildNodes();
-		int elementCount = 0; 								// the number of child elements found in the parent
+		int elementCount = 0;
 		for (int i=0; i<children.getLength(); i++) {
 			Node node = children.item(i);
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
-				// check if the nth element was found
 				if (elementCount == nElement) {
 					return (Element) node;
 				}
-
-				// increase the counter
 				elementCount++;
 			}
 		} 
 
-		// the nth element was not found, return null
 		logger.error("not enough child elements found");
 		return null;		
 	}
@@ -430,13 +422,10 @@ public class XmlDoc {
 	 * @return 				an array list of child elements,  or an empty array if the parent has no children
 	 */
 	public List<Element> getChildElements(Element parent) {
-		// a node does not have to be an element, only return the elements
-		// save all elements in a list
 		NodeList children = parent.getChildNodes();
-		List<Element> elements = new ArrayList<>();   // to save all elements
+		List<Element> elements = new ArrayList<>();
 		for (int i=0; i<children.getLength(); i++) {
 			Node node = children.item(i);
-			// only add the elements to the array list
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
 				elements.add((Element) node);
 			}
@@ -602,10 +591,8 @@ public class XmlDoc {
 		Element parentElement = element;
 		Element childElement = null;
 		for (String tag : tags) {
-			// read the element by ignoring the name space
 			childElement = getChildElementByNameNS(parentElement, "*", tag, 0);
 			
-			// try to read the element without ignoring the namespace
 			if (childElement == null) {
 				childElement = getChildElementByName(parentElement, tag, 0);
 			}

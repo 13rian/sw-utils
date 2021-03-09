@@ -1,11 +1,12 @@
 package ch.wenkst.sw_utils.event;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 
 import ch.wenkst.sw_utils.Utils;
 
-public class EventListener implements IListener {
+public class TestEventListener implements EventListener {
 	private int processTime = 10; 			// duration in ms to simulate some processing time
 	
 	private ArrayList<ProcessedEvent> receivedEvents = new ArrayList<>(); 	// list of the received parameters
@@ -15,7 +16,7 @@ public class EventListener implements IListener {
 	 * event that simulates some processing time after the event is received
 	 * @param processTime 	fake processing time in ms
 	 */
-	public EventListener(int processTime) {
+	public TestEventListener(int processTime) {
 		this.processTime = processTime;
 	}
 	
@@ -28,6 +29,8 @@ public class EventListener implements IListener {
 		synchronized (receivedEvents) {
 			receivedEvents.add(new ProcessedEvent(System.currentTimeMillis(), param));
 		}
+		
+		System.out.println("event received " + eventName + " time" + Instant.now().toEpochMilli());
 		
 		// simulate some processing time
 		Utils.sleep(processTime);

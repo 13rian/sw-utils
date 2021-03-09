@@ -4,60 +4,38 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import ch.wenkst.sw_utils.event.managers.EventManager;
+import ch.wenkst.sw_utils.event.managers.EventManagerFactory;
 
-import ch.wenkst.sw_utils.event.managers.AsyncEventManager;
-import ch.wenkst.sw_utils.event.managers.IEventManager;
-import ch.wenkst.sw_utils.event.managers.SyncEventManager;
-import ch.wenkst.sw_utils.event.managers.SyncSameEventEventManager;
-
-
-/**
- * represents a singleton instance that handles all eventsListeners and fires all events
- */
 public class EventBoard {
-	private static final Logger logger = LoggerFactory.getLogger(EventBoard.class);
-	
-	// define the constants for the different modes how the listeners are informed after an event is fired
-	public static final int MODE_SYNC = 0; 				// synchronous in the order the listeners were registered
-	public static final int MODE_SYNC_SAME_EVENT = 1;	// different events asynchronous, same event synchronous
-	public static final int MODE_ASYNC = 2; 			// completely asynchronous
-	
-	private int opertionMode = -1; 										// defines how the listeners are informed after an event was fired
-	private ConcurrentHashMap<String, IEventManager> eventManagerMap;   // holds all event manager, key: eventName, val: eventManager 
-	private Executor threadPool = null; 								// thread pool if the events should be handled asynchronously
+	private EventOperationMode opertionMode = EventOperationMode.SYNC;
+	private Map<String, EventManager> eventManagerMap = new ConcurrentHashMap<>();;
+	private Executor executor;
 	
 	
 	/**
 	 * constructor for synchronous event handling
 	 */
 	public EventBoard() {
-		opertionMode = MODE_SYNC;
 		
-		// initialize the eventManager map
-		eventManagerMap = new ConcurrentHashMap<>();
 	}
 	
 	
 	/**
 	 * constructor for asynchronous event handling
-	 * @param threadPool 		an Executor that is used for the asynchronous events, the same thread pool can be used
+	 * @param executor 			an Executor that is used for the asynchronous events, the same thread pool can be used
 	 * 					  		in multiple EventManager instances since calling the execute() method is thread save.
 	 * @param isSameEventAsync	true: every event handled asynchronously
 	 * 							false: different events asynchronous, same event synchronous
 	 */
-	public EventBoard(Executor threadPool, boolean isSameEventAsync) {
+	public EventBoard(Executor executor, boolean isSameEventAsync) {
 		if (isSameEventAsync) {
-			opertionMode = MODE_ASYNC;
+			opertionMode = EventOperationMode.ASYNC;
 		} else {
-			opertionMode = MODE_SYNC_SAME_EVENT;
+			opertionMode = EventOperationMode.SYNC_SAME_EVENT;
 		}
 		
-		this.threadPool = threadPool;
-				
-		// initialize the eventManager map
-		eventManagerMap = new ConcurrentHashMap<>();
+		this.executor = executor;
 	}
 
 
@@ -68,23 +46,13 @@ public class EventBoard {
 	 * @param listener	 	the listener to register
 	 * @return 				instance of the registered listener
 	 */
-	public IListener registerListener(String eventName, IListener listener) {
-		IEventManager eventManager = eventManagerMap.get(eventName);
+	public EventListener registerListener(String eventName, EventListener listener) {
+		EventManager eventManager = eventManagerMap.get(eventName);
 		if (eventManager == null) {
-			// event manager does not exist yet
-			if (opertionMode == MODE_SYNC) {
-				eventManager = new SyncEventManager(eventName);
-			} else if (opertionMode == MODE_SYNC_SAME_EVENT) {
-				eventManager = new SyncSameEventEventManager(eventName, threadPool);
-			} else {
-				eventManager = new AsyncEventManager(eventName, threadPool);
-			}
-			
-			// put the new eventManager to the map
+			eventManager = EventManagerFactory.getEventManager(opertionMode, eventName, executor);
 			eventManagerMap.put(eventName, eventManager);			
 		}
 		
-		// register the listener in the eventManager
 		eventManager.register(listener);	
 		return listener;
 	}
@@ -96,15 +64,11 @@ public class EventBoard {
 	 * @param eventName	    the name of the event the listener should no more listen to
 	 * @param listener		the listener to unregister
 	 */
-	public void removeListener(IListener listener, String eventName) {
-		IEventManager eventManager = eventManagerMap.get(eventName);
+	public void removeListener(EventListener listener, String eventName) {
+		EventManager eventManager = eventManagerMap.get(eventName);
 		if (eventManager != null) {
 			eventManager.unregister(listener);
-			
-			// if the event manager has no listeners registered, remove it from the map
-			if (!eventManager.hasListeners()) {
-				eventManagerMap.remove(eventName);
-			}
+			removeNoListenerEventManager(eventManager);
 		} 
 	}
 	
@@ -113,17 +77,17 @@ public class EventBoard {
 	 * unregisters the passed listeners form all events. It will non longer be informed if any event is fired
 	 * @param listener 	the listener to unregister
 	 */
-	public void removeListener(IListener listener) {
-		for (Map.Entry<String, IEventManager> entry : eventManagerMap.entrySet()) {
-			String event = entry.getKey();
-			IEventManager eventManager = entry.getValue();
-			
+	public void removeListener(EventListener listener) {
+		for (EventManager eventManager : eventManagerMap.values()) {
 			eventManager.unregister(listener);
-
-			// if the event manager has no listeners registered, remove it from the map
-			if (!eventManager.hasListeners()) {
-				eventManagerMap.remove(event);
-			}
+			removeNoListenerEventManager(eventManager);
+		}
+	}
+	
+	
+	private void removeNoListenerEventManager(EventManager eventManager) {
+		if (!eventManager.hasListeners()) {
+			eventManagerMap.remove(eventManager.getEventName());
 		}
 	}
 	
@@ -134,16 +98,9 @@ public class EventBoard {
 	 * @param params 		parameter object that is used to call the handleEvent() method of the listeners
 	 */
 	public void fireEvent(String eventName, Object params) {
-		IEventManager eventManager = eventManagerMap.get(eventName);
-		
+		EventManager eventManager = eventManagerMap.get(eventName);
 		if (eventManager != null) {
 			eventManager.fire(params);
-		} else {
-			logger.debug("no listeners registered for event: " + eventName);
 		}
 	}
 }
-
-
-
-

@@ -14,15 +14,11 @@ import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.io.Serializable;
 import java.nio.charset.Charset;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -31,16 +27,11 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ch.wenkst.sw_utils.file.visitors.DeleteFileVisitor;
+import ch.wenkst.sw_utils.file.visitors.MergeFileVisitor;
+
 public class FileUtils {
 	private static final Logger logger = LoggerFactory.getLogger(FileUtils.class);
-
-	// define the constants to recursively copy a directory
-	public enum CopyDirMode {
-		COMPLETE_REPLACE, 			// the directory is completely replaced
-		NO_REPLACE, 				// if the directory already exists it will not be replaced
-		MERGE_REPLACE, 				// the directories will be merged, files that already exist will be replace
-		MERGE_NO_REPLACE 			// the directories will be merged, files that already exist will not be replace
-	}
 	
 	
 	private FileUtils() {
@@ -278,7 +269,6 @@ public class FileUtils {
 		Path sourcePath = Paths.get(srcFilePath);
 		Path destinationPath = Paths.get(destFilePath);
 
-		// create the parent directory if it does not already exist
 		Files.createDirectories(destinationPath.getParent());
 
 		if (replaceExisting) {
@@ -301,7 +291,6 @@ public class FileUtils {
 		Path sourcePath = Paths.get(srcFilePath);
 		Path destinationPath = Paths.get(destFilePath);
 
-		// create the parent directory if it does not already exist
 		Files.createDirectories(destinationPath.getParent());
 
 		if (replaceExisting) {
@@ -319,7 +308,6 @@ public class FileUtils {
 	 * @throws IOException 
 	 */
 	public static void deleteFile(String filePath) throws IOException {
-		// check if the file exists
 		if (!Files.exists(Paths.get(filePath))) {
 			return;
 		}
@@ -341,7 +329,6 @@ public class FileUtils {
 	 * @throws IOException 
 	 */
 	public static void copyDir(String srcDir, String destDir, CopyDirMode copyDirMode) throws IOException {
-		// check if the destination directory already exists, do not follow symbolic links
 		boolean dirExists = Files.exists(Paths.get(destDir), new LinkOption[] {LinkOption.NOFOLLOW_LINKS});
 
 		// if the directory should not be replaced, check if it exists
@@ -356,14 +343,14 @@ public class FileUtils {
 		}
 
 		// create the instance of the copy visitor
-		MergeFileVisitor copyVisitor = null;
+		MergeFileVisitor copyVisitor;
+		Path destDirPath = Paths.get(destDir);
 		if (copyDirMode.equals(CopyDirMode.MERGE_NO_REPLACE)) {
-			copyVisitor = new MergeFileVisitor(false);
+			copyVisitor = new MergeFileVisitor(false, destDirPath);
 		} else {
-			copyVisitor = new MergeFileVisitor(true);
+			copyVisitor = new MergeFileVisitor(true, destDirPath);
 		}			
 
-		copyVisitor.cursor = Paths.get(destDir);
 		Files.walkFileTree(Paths.get(srcDir), copyVisitor);
 	}
 
@@ -387,8 +374,8 @@ public class FileUtils {
 	 * @throws IOException 
 	 */
 	public static void deleteDirContent(String dir) throws IOException {
-		deleteDir(dir); 			// delete the directory
-		new File(dir).mkdirs(); 	// recreate the directory
+		deleteDir(dir);
+		new File(dir).mkdirs();
 	}
 
 
@@ -553,90 +540,6 @@ public class FileUtils {
 			return fileName.substring(0, fileName.lastIndexOf("."));
 		} else {
 			return fileName;
-		}
-	}
-
-
-
-	/**
-	 * the file visitor that is needed in order to copy a directory recursively
-	 * files that already exist in the destination will be replaced
-	 */
-	private static class MergeFileVisitor implements FileVisitor<Path> {
-		private boolean replaceFiles = true;
-		private boolean isFirst = true; 	// true if no file was copied yet in this directory
-		private Path cursor; 				// destination path
-
-		private MergeFileVisitor(boolean replaceFiles) {
-			this.replaceFiles = replaceFiles;
-		}
-
-		@Override
-		public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-			// Move path forward
-			if (!isFirst) {
-				// but not for the first time since cursor is already in there
-				Path target = cursor.resolve(dir.getName(dir.getNameCount() - 1));
-				cursor = target;
-			}
-
-			// only copy the directory if it does not already exist
-			boolean dirExists = Files.exists(cursor, new LinkOption[] {LinkOption.NOFOLLOW_LINKS});
-			if (!dirExists) {
-				Files.copy(dir, cursor, StandardCopyOption.COPY_ATTRIBUTES);
-			}
-
-			isFirst = false;
-			return FileVisitResult.CONTINUE;
-		}
-
-		@Override
-		public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-			Path target = cursor.resolve(file.getFileName());
-
-			if (replaceFiles) {
-				// replace the file in the destination directory
-				Files.copy(file, target, StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
-			} else {
-				boolean fileExists = Files.exists(target, new LinkOption[] {LinkOption.NOFOLLOW_LINKS});
-				if (!fileExists) {
-					Files.copy(file, target, StandardCopyOption.COPY_ATTRIBUTES);
-				}
-			}				
-
-			return FileVisitResult.CONTINUE;
-		}
-
-		@Override
-		public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-			throw exc;
-		}
-
-		@Override
-		public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-			// move the cursor backwards
-			Path target = cursor.getParent();
-			cursor = target;
-			return FileVisitResult.CONTINUE;
-		}
-	};	
-
-
-
-	/**
-	 * the file visitor that is used to recursively delete a directory
-	 */
-	private static class DeleteFileVisitor extends SimpleFileVisitor<Path> {
-		@Override
-		public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-			Files.delete(file);
-			return FileVisitResult.CONTINUE;
-		}
-
-		@Override
-		public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-			Files.delete(dir);
-			return FileVisitResult.CONTINUE;
 		}
 	}
 }

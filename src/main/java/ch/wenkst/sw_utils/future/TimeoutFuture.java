@@ -13,7 +13,7 @@ public class TimeoutFuture<T> {
 
 		
 	/**
-	 * A Wrapper for a future that is completed with null after the passed timeout expired.
+	 * a Wrapper for a future that is completed with null after the passed timeout expired.
 	 * @param timeout		the timeout of the future in ms
 	 */
 	public TimeoutFuture(long timeout) {

@@ -15,8 +15,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import ch.wenkst.sw_utils.file.FileUtils.CopyDirMode;
-
 
 public class FileUtilsTest {
 	private static String fileUtilsDir = null; 		// the directory containing the file handler test files
