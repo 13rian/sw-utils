@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import ch.wenkst.sw_utils.date.holiday.CountryCode;
+
 public class DateUtilsTest {
 	
 	/**
@@ -165,22 +167,22 @@ public class DateUtilsTest {
 	@DisplayName("holiday in switzerland")
 	public void holidayInSwitzerlandTest() {
 		// test all holidays 
-		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("01.01.2017", "dd.MM.yyyy")), "01.01.2017 is ch holiday");
-		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("02.01.2017", "dd.MM.yyyy")), "02.01.2017 is ch holiday");
-		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("14.04.2017", "dd.MM.yyyy")), "14.04.2017 is ch holiday");
-		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("17.04.2017", "dd.MM.yyyy")), "17.04.2017 is ch holiday");
-		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("01.05.2017", "dd.MM.yyyy")), "01.05.2017 is ch holiday");
-		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("25.05.2017", "dd.MM.yyyy")), "25.05.2017 is ch holiday");
-		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("05.06.2017", "dd.MM.yyyy")), "06.06.2017 is ch holiday");
-		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("01.08.2017", "dd.MM.yyyy")), "01.08.2017 is ch holiday");
-		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("25.12.2017", "dd.MM.yyyy")), "25.12.2017 is ch holiday");
-		Assertions.assertTrue(DateUtils.isHoliday("ch", DateUtils.strToDate("26.12.2017", "dd.MM.yyyy")), "26.12.2017 is ch holiday");
+		Assertions.assertTrue(DateUtils.isHoliday(CountryCode.CH, DateUtils.strToDate("01.01.2017", "dd.MM.yyyy")), "01.01.2017 is ch holiday");
+		Assertions.assertTrue(DateUtils.isHoliday(CountryCode.CH, DateUtils.strToDate("02.01.2017", "dd.MM.yyyy")), "02.01.2017 is ch holiday");
+		Assertions.assertTrue(DateUtils.isHoliday(CountryCode.CH, DateUtils.strToDate("14.04.2017", "dd.MM.yyyy")), "14.04.2017 is ch holiday");
+		Assertions.assertTrue(DateUtils.isHoliday(CountryCode.CH, DateUtils.strToDate("17.04.2017", "dd.MM.yyyy")), "17.04.2017 is ch holiday");
+		Assertions.assertTrue(DateUtils.isHoliday(CountryCode.CH, DateUtils.strToDate("01.05.2017", "dd.MM.yyyy")), "01.05.2017 is ch holiday");
+		Assertions.assertTrue(DateUtils.isHoliday(CountryCode.CH, DateUtils.strToDate("25.05.2017", "dd.MM.yyyy")), "25.05.2017 is ch holiday");
+		Assertions.assertTrue(DateUtils.isHoliday(CountryCode.CH, DateUtils.strToDate("05.06.2017", "dd.MM.yyyy")), "06.06.2017 is ch holiday");
+		Assertions.assertTrue(DateUtils.isHoliday(CountryCode.CH, DateUtils.strToDate("01.08.2017", "dd.MM.yyyy")), "01.08.2017 is ch holiday");
+		Assertions.assertTrue(DateUtils.isHoliday(CountryCode.CH, DateUtils.strToDate("25.12.2017", "dd.MM.yyyy")), "25.12.2017 is ch holiday");
+		Assertions.assertTrue(DateUtils.isHoliday(CountryCode.CH, DateUtils.strToDate("26.12.2017", "dd.MM.yyyy")), "26.12.2017 is ch holiday");
 		
 		// test some non-holidays
-		Assertions.assertFalse(DateUtils.isHoliday("ch", DateUtils.strToDate("03.03.2017", "dd.MM.yyyy")), "03.03.2017 is not ch holiday");
-		Assertions.assertFalse(DateUtils.isHoliday("ch", DateUtils.strToDate("15.08.2017", "dd.MM.yyyy")), "15.08.2017 is not ch holiday");
-		Assertions.assertFalse(DateUtils.isHoliday("ch", DateUtils.strToDate("01.11.2017", "dd.MM.yyyy")), "03.10.2017 is not ch holiday");
-		Assertions.assertFalse(DateUtils.isHoliday("ch", DateUtils.strToDate("24.12.2017", "dd.MM.yyyy")), "24.12.2017 is not ch holiday");
+		Assertions.assertFalse(DateUtils.isHoliday(CountryCode.CH, DateUtils.strToDate("03.03.2017", "dd.MM.yyyy")), "03.03.2017 is not ch holiday");
+		Assertions.assertFalse(DateUtils.isHoliday(CountryCode.CH, DateUtils.strToDate("15.08.2017", "dd.MM.yyyy")), "15.08.2017 is not ch holiday");
+		Assertions.assertFalse(DateUtils.isHoliday(CountryCode.CH, DateUtils.strToDate("01.11.2017", "dd.MM.yyyy")), "03.10.2017 is not ch holiday");
+		Assertions.assertFalse(DateUtils.isHoliday(CountryCode.CH, DateUtils.strToDate("24.12.2017", "dd.MM.yyyy")), "24.12.2017 is not ch holiday");
 	}
 	
 	
@@ -191,22 +193,22 @@ public class DateUtilsTest {
 	@DisplayName("holiday in germany")
 	public void holidayInGermanyTest() {
 		// test all holidays 	
-		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("01.01.2017", "dd.MM.yyyy")), "01.01.2017 is de holiday");
-		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("14.04.2017", "dd.MM.yyyy")), "14.04.2017 is de holiday");
-		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("17.04.2017", "dd.MM.yyyy")), "17.04.2017 is de holiday");
-		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("01.05.2017", "dd.MM.yyyy")), "01.05.2017 is de holiday");
-		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("05.06.2017", "dd.MM.yyyy")), "05.06.2017 is de holiday");
-		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("25.05.2017", "dd.MM.yyyy")), "25.05.2017 is de holiday");
-		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("03.10.2017", "dd.MM.yyyy")), "03.10.2017 is de holiday");
-		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("24.12.2017", "dd.MM.yyyy")), "24.12.2017 is de holiday");
-		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("25.12.2017", "dd.MM.yyyy")), "25.12.2017 is de holiday");
-		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("26.12.2017", "dd.MM.yyyy")), "26.12.2017 is de holiday");
-		Assertions.assertTrue(DateUtils.isHoliday("de", DateUtils.strToDate("31.12.2017", "dd.MM.yyyy")), "31.12.2017 is de holiday");
+		Assertions.assertTrue(DateUtils.isHoliday(CountryCode.DE, DateUtils.strToDate("01.01.2017", "dd.MM.yyyy")), "01.01.2017 is de holiday");
+		Assertions.assertTrue(DateUtils.isHoliday(CountryCode.DE, DateUtils.strToDate("14.04.2017", "dd.MM.yyyy")), "14.04.2017 is de holiday");
+		Assertions.assertTrue(DateUtils.isHoliday(CountryCode.DE, DateUtils.strToDate("17.04.2017", "dd.MM.yyyy")), "17.04.2017 is de holiday");
+		Assertions.assertTrue(DateUtils.isHoliday(CountryCode.DE, DateUtils.strToDate("01.05.2017", "dd.MM.yyyy")), "01.05.2017 is de holiday");
+		Assertions.assertTrue(DateUtils.isHoliday(CountryCode.DE, DateUtils.strToDate("05.06.2017", "dd.MM.yyyy")), "05.06.2017 is de holiday");
+		Assertions.assertTrue(DateUtils.isHoliday(CountryCode.DE, DateUtils.strToDate("25.05.2017", "dd.MM.yyyy")), "25.05.2017 is de holiday");
+		Assertions.assertTrue(DateUtils.isHoliday(CountryCode.DE, DateUtils.strToDate("03.10.2017", "dd.MM.yyyy")), "03.10.2017 is de holiday");
+		Assertions.assertTrue(DateUtils.isHoliday(CountryCode.DE, DateUtils.strToDate("24.12.2017", "dd.MM.yyyy")), "24.12.2017 is de holiday");
+		Assertions.assertTrue(DateUtils.isHoliday(CountryCode.DE, DateUtils.strToDate("25.12.2017", "dd.MM.yyyy")), "25.12.2017 is de holiday");
+		Assertions.assertTrue(DateUtils.isHoliday(CountryCode.DE, DateUtils.strToDate("26.12.2017", "dd.MM.yyyy")), "26.12.2017 is de holiday");
+		Assertions.assertTrue(DateUtils.isHoliday(CountryCode.DE, DateUtils.strToDate("31.12.2017", "dd.MM.yyyy")), "31.12.2017 is de holiday");
 		
 		// test some non-holidays
-		Assertions.assertFalse(DateUtils.isHoliday("de", DateUtils.strToDate("03.03.2017", "dd.MM.yyyy")), "03.03.2017 is not de holiday");
-		Assertions.assertFalse(DateUtils.isHoliday("de", DateUtils.strToDate("01.08.2017", "dd.MM.yyyy")), "01.08.2017 is not de holiday");
-		Assertions.assertFalse(DateUtils.isHoliday("de", DateUtils.strToDate("01.11.2017", "dd.MM.yyyy")), "01.11.2017 is not de holiday");
-		Assertions.assertFalse(DateUtils.isHoliday("de", DateUtils.strToDate("06.12.2017", "dd.MM.yyyy")), "06.12.2017 is not de holiday");
+		Assertions.assertFalse(DateUtils.isHoliday(CountryCode.DE, DateUtils.strToDate("03.03.2017", "dd.MM.yyyy")), "03.03.2017 is not de holiday");
+		Assertions.assertFalse(DateUtils.isHoliday(CountryCode.DE, DateUtils.strToDate("01.08.2017", "dd.MM.yyyy")), "01.08.2017 is not de holiday");
+		Assertions.assertFalse(DateUtils.isHoliday(CountryCode.DE, DateUtils.strToDate("01.11.2017", "dd.MM.yyyy")), "01.11.2017 is not de holiday");
+		Assertions.assertFalse(DateUtils.isHoliday(CountryCode.DE, DateUtils.strToDate("06.12.2017", "dd.MM.yyyy")), "06.12.2017 is not de holiday");
 	}
 }

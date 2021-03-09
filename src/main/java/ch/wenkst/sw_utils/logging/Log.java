@@ -96,7 +96,7 @@ public class Log {
 	 * initializes the logger form the passed properties config file
 	 * @param loggerConfigFile
 	 */
-	public static void initLogger(String loggerConfigFile) {
+	public static void initFromFile(String loggerConfigFile) {
 		new LogConfigurator().initFromFile(loggerConfigFile);
 		isInitialized = true;
 	}

@@ -6,7 +6,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
@@ -14,19 +13,12 @@ import java.util.TimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * holds some methods to handle dates and holidays
- */
+import ch.wenkst.sw_utils.date.holiday.CountryCode;
+import ch.wenkst.sw_utils.date.holiday.Holidays;
+import ch.wenkst.sw_utils.date.holiday.HolidaysFactory;
+
 public class DateUtils {
 	private static final Logger logger = LoggerFactory.getLogger(DateUtils.class);
-	
-	private static final String EUROPEAN_DATE_FORMAT = "dd.MM.yyyy";
-
-	// static list of holiday dates (is only initialized once when it it is used for the first time)
-	private static ArrayList<Calendar> chHolidayList = null;
-	private static ArrayList<Calendar> deHolidayList = null;
-	private static int holidayListYearCH = 0; 							// the year of the ch holiday list
-	private static int holidayListYearDE = 0; 							// the year of the de holiday list
 	
 	
 	private DateUtils() {
@@ -87,7 +79,7 @@ public class DateUtils {
 		try {
 			Date date = new Date(timestamp); 
 			SimpleDateFormat jdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-			jdf.setTimeZone(TimeZone.getDefault()); 		// get the time zone of the computer
+			jdf.setTimeZone(TimeZone.getDefault());
 			result = jdf.format(date);
 
 		} catch (Exception e) {
@@ -165,11 +157,9 @@ public class DateUtils {
 	 * @return 				true if the passed timestamp is from today
 	 */
 	public static boolean isTimestampToday(long timestamp) {
-		// create a calendar instance for today
 		Calendar today = Calendar.getInstance();     
 		today.setTime(new Date());
 		
-		// create the calendar instance of the passed timestamp
 		Calendar dateToTest = Calendar.getInstance();
 		dateToTest.setTimeInMillis(timestamp);
 		
@@ -199,7 +189,6 @@ public class DateUtils {
 	 * @return				unix time in ms of the passed date string or 0 if an error occurred
 	 */
 	public static long parseDate(String dateStr, String[] patterns) {
-		// check if the passed pattern contain legal arguments
 		SimpleDateFormat[] knownSdf = new SimpleDateFormat[patterns.length];
 		try {
 			for (int i=0; i<patterns.length; i++) {
@@ -222,18 +211,15 @@ public class DateUtils {
 	 * @return				unix time in ms of the passed date string or 0 if an error occurred
 	 */
 	public static long parseDate(String dateStr, SimpleDateFormat[] knownSdf) {
-		// try to  parse the passed date
 		for (SimpleDateFormat sdf : knownSdf) {
 			try {
-				// try to parse the date
 				return sdf.parse(dateStr).getTime();
 
 			} catch (ParseException pe) {
-				// do nothing and test the next pattern
+
 			}
 		}
 
-		// no pattern matches
 		logger.error("date string could not be parsed, just return 0");
 		return 0;
 	}
@@ -251,26 +237,22 @@ public class DateUtils {
 	 */
 	public static Calendar easterDate(int year) {
 		int a = year % 19;
-		int b = (int)Math.floor(year/100.0);
+		int b = (int) Math.floor(year/100.0);
 		int c = year % 100;
-		int d = (int)Math.floor(b/4.0);
+		int d = (int) Math.floor(b/4.0);
 		int e = b % 4;
-		int f = (int)Math.floor((b+8)/25.0);
-		int g = (int)Math.floor((b-f+1)/3.0);
+		int f = (int) Math.floor((b+8)/25.0);
+		int g = (int) Math.floor((b-f+1)/3.0);
 		int h = (19*a + b - d - g + 15) % 30;
-		int i = (int)Math.floor(c/4.0);
+		int i = (int) Math.floor(c/4.0);
 		int k = c % 4;
 		int l = (32 + 2*e + 2*i - h - k) % 7;
-		int m = (int)Math.floor((a + 11*h + 22*l)/451.0);
+		int m = (int) Math.floor((a + 11*h + 22*l)/451.0);
 
-		// get the day and the month
-		int month = (int)Math.floor((h + l - 7*m + 114)/31.0); 
+		int month = (int) Math.floor((h + l - 7*m + 114)/31.0); 
 		int day = ((h + l - 7*m + 114) % 31) + 1;
-
-
-		// get a date instance with the Easter Sunday
 		String dateStr = day + "." + month + "." + year;
-		return strToDate(dateStr, EUROPEAN_DATE_FORMAT);
+		return strToDate(dateStr, DateFormats.europeanDate);
 	}
 
 
@@ -280,163 +262,8 @@ public class DateUtils {
 	 * @param date			the date that is tested
 	 * @return 				true if the passed date is a holiday, false otherwise
 	 */
-	public static synchronized boolean isHoliday(String countryCode, Calendar date) {
-		// create the holiday list if not already done
-		boolean isSuccessfullyCreated = createHolidayList(countryCode, date.get(Calendar.YEAR));
-		if (!isSuccessfullyCreated) {
-			logger.error("failed to create the holiday list");
-			return false;
-		}
-
-		// get the correct to use for the comparison depending on the country code
-		ArrayList<Calendar> holidayList = null;
-		if (countryCode.equalsIgnoreCase("ch")) {
-			holidayList = chHolidayList;
-		} else if (countryCode.equalsIgnoreCase("de")) {
-			holidayList = deHolidayList;
-		} else {
-			logger.error("country code "+ countryCode + " not implemented");
-			return false;
-		}
-
-		// loop to the list to compare the passed date
-		for (Calendar holidayDate : holidayList) {
-			if(areDatesEqual(holidayDate, date)) {
-				return true;
-			};
-		}
-
-		// no holiday from the list matches
-		return false;
-
-	}
-
-
-	/**
-	 * fills the static holiday lists of Switzerland and Germany, if it was not built yet.
-	 * returns true if the list was successfully created
-	 * @param countryCode 	ch (Switzerland), de (Germany)
-	 * @param year  		the year of the holiday
-	 * @return 				true if the holiday list was created successfully, false if it could not be created
-	 */
-	private static boolean createHolidayList(String countryCode, int year) {
-		// check if the desired holiday list was already calculated
-		if (countryCode.equalsIgnoreCase("ch")) {
-			if (chHolidayList != null && year == holidayListYearCH) {
-				return true;
-			}
-
-		} else if (countryCode.equalsIgnoreCase("de")) {
-			if (deHolidayList != null && year == holidayListYearDE) {
-				return true;
-			}
-
-		} else {
-			logger.error("country code " + countryCode + " not implemeted");
-			return false;
-		}
-
-
-		// Moving holidays
-		// Ostersonntag
-		Calendar osterSonnatg = easterDate(year);
-
-		// Ostermontag (Ostersonntag+1)
-		Calendar ostermontag = Calendar.getInstance();
-		ostermontag.setTime(osterSonnatg.getTime());
-		ostermontag.add(Calendar.DATE, 1);
-
-		// Karfreitag (Ostersonntag-2)
-		Calendar karfreitag = Calendar.getInstance();
-		karfreitag.setTime(osterSonnatg.getTime());
-		karfreitag.add(Calendar.DATE, -2);
-
-		// Himmelfahrt (Ostersonntag+39)
-		Calendar himmelfahrt = Calendar.getInstance();
-		himmelfahrt.setTime(osterSonnatg.getTime());
-		himmelfahrt.add(Calendar.DATE, 39);
-
-		// Pfingstmontag (Ostersonntag+50)
-		Calendar pfingstmontag = Calendar.getInstance();
-		pfingstmontag.setTime(osterSonnatg.getTime());
-		pfingstmontag.add(Calendar.DATE, 50);
-
-
-		// fix holidays
-		// Neujahrstag
-		Calendar neujahrstag = strToDate("01.01."+year, EUROPEAN_DATE_FORMAT);
-
-		// Tag der Arbeit
-		Calendar tagDerArbeit = strToDate("01.05."+year, EUROPEAN_DATE_FORMAT);
-
-		// Erster Weihnachtstag
-		Calendar ersterWeihnachtstag = strToDate("25.12."+year, EUROPEAN_DATE_FORMAT);
-
-
-		// specific for ch
-		if (countryCode.toLowerCase().equals("ch")) {
-			// Stephanstag
-			Calendar stephanstag = strToDate("26.12."+year, EUROPEAN_DATE_FORMAT);
-
-			// Berchtholdstag
-			Calendar berchtholdstag = strToDate("02.01."+year, EUROPEAN_DATE_FORMAT);
-
-			// Nationalfeiertag
-			Calendar nationalfeiertag = strToDate("01.08."+year, EUROPEAN_DATE_FORMAT);
-
-
-			// add all holiday dates to the list
-			chHolidayList = new ArrayList<>();
-			chHolidayList.add(osterSonnatg);
-			chHolidayList.add(ostermontag);
-			chHolidayList.add(karfreitag);
-			chHolidayList.add(himmelfahrt);
-			chHolidayList.add(pfingstmontag);
-			chHolidayList.add(neujahrstag);
-			chHolidayList.add(tagDerArbeit);
-			chHolidayList.add(ersterWeihnachtstag);
-			chHolidayList.add(stephanstag);
-			chHolidayList.add(berchtholdstag);
-			chHolidayList.add(nationalfeiertag);
-
-			// set the year
-			holidayListYearCH = year;
-		}
-
-		// specific for de
-		else if (countryCode.equalsIgnoreCase("de")) {
-			// Tag der Deutschen Einheit
-			Calendar tagDerDeutschenEinheit = strToDate("03.10."+year, EUROPEAN_DATE_FORMAT);	
-
-			// Weihnachtstag
-			Calendar weihnachtstag = strToDate("24.12."+year, EUROPEAN_DATE_FORMAT);
-
-			// Zweiter Weihnachtstag
-			Calendar zweiterWeihnachtstag = strToDate("26.12."+year, EUROPEAN_DATE_FORMAT);
-
-			// Silvester
-			Calendar silvester = strToDate("31.12."+year, EUROPEAN_DATE_FORMAT);
-
-
-			// add all holiday dates to the list
-			deHolidayList = new ArrayList<>();
-			deHolidayList.add(osterSonnatg);
-			deHolidayList.add(ostermontag);
-			deHolidayList.add(karfreitag);
-			deHolidayList.add(himmelfahrt);
-			deHolidayList.add(pfingstmontag);
-			deHolidayList.add(neujahrstag);
-			deHolidayList.add(tagDerArbeit);
-			deHolidayList.add(ersterWeihnachtstag);
-			deHolidayList.add(tagDerDeutschenEinheit);
-			deHolidayList.add(weihnachtstag);
-			deHolidayList.add(zweiterWeihnachtstag);
-			deHolidayList.add(silvester);
-
-			// set the year
-			holidayListYearDE = year;
-		}
-
-		return true;
+	public static synchronized boolean isHoliday(CountryCode countryCode, Calendar date) {
+		Holidays holidays = HolidaysFactory.getHolidays(countryCode);
+		return holidays.isHoliday(date);
 	}
 }

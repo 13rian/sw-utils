@@ -29,7 +29,7 @@ public class Main_SWUtils {
 		log.severe("severe test");
 	
 		String loggerConfig = "resource" + File.separator + "log" + File.separator + "log_config.properties";
-		Log.initLogger(loggerConfig);
+		Log.initFromFile(loggerConfig);
 		log.config("config log");
 		log.info("info log");
 		log.severe("severe test");
