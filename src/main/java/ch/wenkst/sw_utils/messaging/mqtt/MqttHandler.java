@@ -5,8 +5,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
@@ -19,16 +17,14 @@ import org.slf4j.LoggerFactory;
 public class MqttHandler {
 	private static final Logger logger = LoggerFactory.getLogger(MqttHandler.class);
 	
-	protected String brokerUrl; 				// the url to the mqtt broker
-	protected MqttConnectOptions options; 		// mqtt connection configuration
+	protected String brokerUrl;
+	protected String clientId;
+	protected MqttConnectOptions connectOptions;
+	private Map<String, IMqttMessageListener> subsciptions;
 	
 	// note: only one client could be used but is seems that it is not possible to publish a message in a listener with the same client
-	private MqttClient publisher; 				// mqtt client to publish messages
-	private MqttClient subscriber; 				// mqtt client to subscribe to messages
-
-	protected String clientId; 					// the id of the client
-	
-	private Map<String, IMqttMessageListener> subsciptions; 		// all subscriptions, key: topic, value: listener
+	private MqttClient publisher;
+	private MqttClient subscriber;
 	
 	
 	/**
@@ -48,30 +44,13 @@ public class MqttHandler {
 	 */
 	public void init(String brokerUrl, SSLContext sslContext, String username, String password) {
 		this.brokerUrl = brokerUrl;
-	
-		
-		// create the connect options
-		options = new MqttConnectOptions();
-		
-		// set the ssl server socket factory for tls encryption
-		if (sslContext != null) {
-			SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
-			options.setSocketFactory(sslSocketFactory);
-		}
-		
-		options.setAutomaticReconnect(true);					// automatically reconnect after disconnect
-		options.setCleanSession(false);							// to keep the subscriptions after disconnect
-		options.setConnectionTimeout(30);
-		options.setKeepAliveInterval(60);
-		options.setHttpsHostnameVerificationEnabled(false); 	// disable the host name verification
-		
-		// set the username and the password
-		if (username != null && password != null) {
-			options.setUserName(username);
-			options.setPassword(password.toCharArray());
-		}
+		connectOptions = createConnectOptions(sslContext, username, password);
 	}
 	
+	protected MqttConnectOptions createConnectOptions(SSLContext sslContext, String username, String password) {
+		MqttConnectionConfig mqttConnectionConfig = new MqttConnectionConfig();
+		return mqttConnectionConfig.createConnectOptions(sslContext, username, password);
+	}
 	
 	
 	/**
@@ -81,7 +60,7 @@ public class MqttHandler {
 	public boolean isReachable() {
 		try {
 			MqttClient testPublisher = new MqttClient(brokerUrl,  UUID.randomUUID().toString(), null);
-			testPublisher.connect(options);
+			testPublisher.connect(connectOptions);
 			testPublisher.disconnect();
 			testPublisher.close();
 			logger.debug("mqtt broker is reachable, broker url: " + brokerUrl);
@@ -116,27 +95,12 @@ public class MqttHandler {
 	 */
 	public synchronized void setupClient() throws MqttSecurityException, MqttException {	
 		publisher = new MqttClient(brokerUrl, clientId + "_sub", null);
-		publisher.connect(options);
+		publisher.connect(connectOptions);
 		publisher.setCallback(new MqttCallbackHandler());
 		
 		subscriber = new MqttClient(brokerUrl, clientId + "_pub", null);
-		subscriber.connect(options);
+		subscriber.connect(connectOptions);
 	}
-	
-	
-//	/**
-//	 * reconnects the publisher and the client if the connection to the broker was lost
-//	 * @throws MqttSecurityException
-//	 * @throws MqttException
-//	 */
-//	public synchronized void reconnect() throws MqttSecurityException, MqttException {
-//		tearDownClient();		
-//		setupClient();
-//		
-//		for (String topic : subsciptions.keySet()) {
-//			subscriber.subscribe(topic, subsciptions.get(topic));
-//		}
-//	}
 	
 	
 	/**
@@ -158,26 +122,20 @@ public class MqttHandler {
 	 * closes all connections to the mqtt broker
 	 */
 	public synchronized void tearDownClient() {
+		disconnectMqttClient(publisher);
+		disconnectMqttClient(subscriber);
+	}
+	
+	
+	private void disconnectMqttClient(MqttClient mqttClient) {
 		try {
-			if (publisher.isConnected()) {
-				publisher.disconnect();
+			if (mqttClient.isConnected()) {
+				mqttClient.disconnect();
 			}
-			
-			publisher.close();
+			mqttClient.close();
 			
 		} catch (Exception e) {
-			logger.error("error closing the connection of the mqtt publisher: ", e);
-		}
-
-		try {
-			if (subscriber.isConnected()) {
-				subscriber.disconnect();
-			}
-			
-			subscriber.close();
-			
-		} catch (Exception e) {
-			logger.error("error closing the connection of the mqtt subscriber: ", e);
+			logger.error("error closing mqtt client connection: ", e);
 		}
 	}
 		
@@ -210,6 +168,6 @@ public class MqttHandler {
 	}
 
 	public MqttConnectOptions getOptions() {
-		return options;
+		return connectOptions;
 	}
 }

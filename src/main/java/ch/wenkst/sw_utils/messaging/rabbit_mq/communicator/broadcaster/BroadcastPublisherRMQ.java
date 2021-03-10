@@ -1,75 +1,24 @@
 package ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.broadcaster;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.rabbitmq.client.BuiltinExchangeType;
-import ch.wenkst.sw_utils.messaging.rabbit_mq.RabbitMQHander;
-import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.CommunicatorBase;
-import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.MessageRMQ;
 
-public class BroadcastPublisherRMQ extends CommunicatorBase {
-	private static final Logger logger = LoggerFactory.getLogger(BroadcastPublisherRMQ.class);  
-	
-	// name of the exchange, any queue can be bound to this exchange and receive messages, this way messages are
-	// not just sent to one named queue
-	private String exchangeName = "";  		 
-	
+import ch.wenkst.sw_utils.messaging.rabbit_mq.ConnectionConfigRMQ;
+import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.PublisherBase;
+
+public class BroadcastPublisherRMQ extends PublisherBase {
 
 	/**
 	 * publishes a message that is broadcasted to all consumers that listen for the declared exchange
-	 * @param mqHandler 	handler that manages the interaction with rabbitMQ
-	 * @param exchangeName 	name of the exchange, any queue can be bound to this exchange and receive messages
+	 * @param exchangeName 		name of the exchange, any queue can be bound to this exchange and receive messages
 	 */
-	public BroadcastPublisherRMQ(RabbitMQHander mqHandler, String exchangeName) {
-		super(mqHandler);
-		this.exchangeName = exchangeName;	
+	public BroadcastPublisherRMQ(String exchangeName) {
+		super(exchangeName);
 	}
-	
-	
-	/**
-	 * declares a new exchange and bind a temporary queue to it, that is removed after the client disconnected 
-	 */
-	public void declareExchange() {
-		declareExchange(durable, autoDelete);
-	}	
-	
-	
-	/**
-	 * declares a new exchange and bind a temporary queue to it, that is removed after the client disconnected 
-	 * @param durable 		true if we are declaring a durable queue (the queue will survive a server restart) 
-	 * @param autoDelete	true if we are declaring an autodelete queue (server will delete it when no longer in use)
-	 */
-	public void declareExchange(boolean durable, boolean autoDelete) {
-		this.durable = durable;
-		this.autoDelete = autoDelete;
-		
-		try {
-			// declare the new exchange, fanout means it is sent to all queues that are bound to this exchange
-			channel.exchangeDeclare(exchangeName, BuiltinExchangeType.FANOUT, durable, autoDelete, null);
-			
-			logger.info("successfully declared a new exchange " + exchangeName);
 
-		} catch (Exception e) {
-			logger.error("error declaring the new exchange " + exchangeName + ": ", e);
-		}
-	}	
-	
-	
-	/**
-	 * broadcasts a message to all listening consumers on a defines exchange
-	 * @param message 			the message to send
-	 * @return 					true if the message was successfully published, false if an error occurred
-	 */
-	public boolean publishMessage(MessageRMQ message) {
-		try {
-			// publish the message on the exchange, the temporary queue is used
-			channel.basicPublish(exchangeName, "", message.getProperties(), message.getBody());
-			return true;
-			
-		} catch (Exception e) {
-			logger.error("error broadcasting message on exchangeName " + exchangeName + ": ", e);
-			return false;
-		}
+
+	@Override
+	public void setup(ConnectionConfigRMQ connectionConfig) {
+		connect(connectionConfig);
+		declareExchange(BuiltinExchangeType.FANOUT);
 	}
 }

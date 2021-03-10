@@ -10,11 +10,9 @@ import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.MessageProperties;
 
 public class MessageRMQ {	
-	protected byte[] body; 								// the message body
-	protected Map<String, Object> headerProperties;		// header properties of the message
-	protected Envelope envelope; 						// group of parameters used for AMQP's Basic methods
-	
-	// ampq ampq properties properties
+	protected byte[] body;
+	protected Map<String, Object> headerProperties;
+	protected Envelope envelope;
 	protected AMQP.BasicProperties properties = MessageProperties.TEXT_PLAIN;; 			
 
 	

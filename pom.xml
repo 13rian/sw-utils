@@ -65,7 +65,7 @@
 		</dependency>
 		
 		<!-- needed to use the log4j2 logger, slf4j outputs are redirected to log4j2 
-			 another login framework can be chosen in order to use the library
+			 another login framework can be chosen in order to use the library -->
 		<dependency>
     		<groupId>org.apache.logging.log4j</groupId>
    	 		<artifactId>log4j-slf4j18-impl</artifactId>
@@ -86,7 +86,7 @@
       		<version>2.11.1</version>
       		<scope>test</scope>
     	</dependency>
-    	-->
+
     	
     	<!-- redirect the log messages to jul for test purposes -->
     	<dependency>
@@ -110,21 +110,21 @@
 		<dependency>
       		<groupId>org.bouncycastle</groupId>
       		<artifactId>bcprov-jdk15on</artifactId>
-      		<version>1.61</version>
+      		<version>1.68</version>
       		<optional>true</optional>
 		</dependency>
 	
 		<dependency>
       		<groupId>org.bouncycastle</groupId>
       		<artifactId>bcpkix-jdk15on</artifactId>
-      		<version>1.61</version>
+      		<version>1.68</version>
       		<optional>true</optional>
 		</dependency>
 	
 		<dependency>
       		<groupId>org.bouncycastle</groupId>
       		<artifactId>bctls-jdk15on</artifactId>
-      		<version>1.60</version>
+      		<version>1.68</version>
       		<optional>true</optional>
 		</dependency>
 	

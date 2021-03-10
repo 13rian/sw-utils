@@ -7,132 +7,40 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.BuiltinExchangeType;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.DefaultConsumer;
-import com.rabbitmq.client.Envelope;
 
-import ch.wenkst.sw_utils.messaging.rabbit_mq.RabbitMQHander;
-import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.CommunicatorBase;
-import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.IMessageReceiver;
-import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.MessageRMQ;
+import ch.wenkst.sw_utils.messaging.rabbit_mq.ConnectionConfigRMQ;
+import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.ConsumerBase;
+import ch.wenkst.sw_utils.messaging.rabbit_mq.communicator.MessageReceiver;
 
-public class RoutingConsumerRMQ extends CommunicatorBase {
+public class RoutingConsumerRMQ extends ConsumerBase {
 	private static final Logger logger = LoggerFactory.getLogger(RoutingConsumerRMQ.class);
-
-	// name of the exchange, any queue can be bound to this exchange and receive messages, this way messages are
-	// not just sent to one named queue
-	private String exchangeName = "";
-	private String queueName = "";				// the name of the temporary queue (exists until the client disconnects)
-	private List<String> routingKeys = null; 	// list of routing keys, only messages with routing keys in this list are received 
-
-	// holds the user defined method to handle a received message
-	private IMessageReceiver messageReceiver = null; 		
+	
+	private List<String> routingKeys;
 
 
 	/**
 	 * consumes all messages that were broadcasted on the defined exchange
-	 * @param mqHandler 			handler that manages the interaction with rabbitMQ
-	 * @param exchangeName 			name of the exchange on which all messages are received, regardless of the publisher
+	 * @param exchangeName 			name of the exchange, multiple queues can bind to a named exchange
 	 * @param routingKeys 			list of routing keys, only messages with routing keys in this list are received
 	 * @param messageReceiver   	holds the user defined method to handle a received message
 	 */
-	public RoutingConsumerRMQ(RabbitMQHander mqHandler, String exchangeName, List<String> routingKeys, IMessageReceiver messageReceiver) {
-		super(mqHandler);
+	public RoutingConsumerRMQ(String exchangeName, List<String> routingKeys, MessageReceiver messageReceiver) {
+		super(messageReceiver, exchangeName);
 
-		this.exchangeName = exchangeName;
 		this.routingKeys = routingKeys;
-		this.messageReceiver = messageReceiver;
 		
 		if (routingKeys == null) {
 			routingKeys = new ArrayList<>();
 		}
 	}
 
-
-	/**
-	 * declares a new queue 
-	 */
-	public void declareExchange() {
-		declareExchange(durable, autoDelete);
-	}
 	
-	
-	/**
-	 * declares a new queue 
-	 * @param durable 		true if we are declaring a durable queue (the queue will survive a server restart) 
-	 * @param autoDelete	true if we are declaring an autodelete queue (server will delete it when no longer in use)
-	 */
-	public void declareExchange(boolean durable, boolean autoDelete) {
-		this.durable = durable;
-		this.autoDelete = autoDelete;
-		
-		try {
-			// declare the new exchange, direct: a message goes to the queues whose binding key exactly matches
-			// the routing key of the message.
-			channel.exchangeDeclare(exchangeName, BuiltinExchangeType.DIRECT, durable, autoDelete, null);
-
-			// create a temporary queue that is removed after the client disconnects
-			String queueName = channel.queueDeclare().getQueue();
-
-			// bind the queue to all the defined routing keys
-			for(String routingKey : routingKeys) {
-				channel.queueBind(queueName, exchangeName, routingKey);
-			}
-
-			logger.info("successfully declared a new exchange " + exchangeName);
-
-		} catch (Exception e) {
-			logger.error("error declaring the new exchange " + exchangeName + ": ", e);
-		}
-	}
-
-
-
-	/**
-	 * registers a worker, which means that only one worker that is not busy gets the message, if all are busy
-	 * the messages are queued
-	 */
-	public void registerConsumer() {
-		try {
-			// define the consumer
-			BroadcastReceiver consumer = new BroadcastReceiver(channel);
-
-			// turn on the auto-acknowledge, any message is accepted
-			boolean autoAck = true;
-			channel.basicConsume(queueName, autoAck, consumer);
-
-		} catch (Exception e) {
-			logger.error("error registering a worker consumer: ", e);
-		}
-	}
-
-
-
-
-	/**
-	 * defines a listener that listens for incoming messages
-	 */
-	private class BroadcastReceiver extends DefaultConsumer {
-
-		public BroadcastReceiver(Channel channel) {
-			super(channel);
-		}
-
-		@Override
-		public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
-			// call the user defined method to handle the message, no acknowledge needed, since many receivers can 
-			// listen for the same exchange
-			try {	
-				MessageRMQ message = new MessageRMQ(body, envelope, properties);
-				messageReceiver.handleMessage(message);
-
-			} catch (Exception e) {
-				logger.error("error handling worker message: ", e);
-			}
-		}
-
+	@Override
+	public void setup(ConnectionConfigRMQ connectionConfig) {
+		connect(connectionConfig);
+		declareExchange(BuiltinExchangeType.DIRECT, routingKeys);
+		registerConsumer();
 	}
 
 
@@ -141,10 +49,13 @@ public class RoutingConsumerRMQ extends CommunicatorBase {
 	 * in the list are received 
 	 * @param routingKey 	routing key to add
 	 */
-	public void addToRoutingKeys(String routingKey) {
+	public synchronized void addToRoutingKeys(String routingKey) {
 		routingKeys.add(routingKey);
-
-		// bind the queue to the newly added routing key
+		bindRoutingKeyToQueue(routingKey);
+	}
+	
+	
+	private void bindRoutingKeyToQueue(String routingKey) {
 		try {
 			channel.queueBind(queueName, exchangeName, routingKey);
 		} catch (IOException e) {
@@ -158,26 +69,28 @@ public class RoutingConsumerRMQ extends CommunicatorBase {
 	 * in the list are received 
 	 * @param routingKey 	routing key to remove
 	 */
-	public void removeFromRoutingKeys(String routingKey) {
-		String keyToRemove = null;
-		for (String key : routingKeys) {
+	public synchronized void removeFromRoutingKeys(String routingKey) {
+		routingKeys.removeIf((key) -> {
 			if (key.equals(routingKey)) {
-				keyToRemove = key;
+				unbindChannelFromRoutingKey(routingKey);
+				return true;
 			}
-		}
-
-		if (keyToRemove != null) {
-			routingKeys.remove(keyToRemove);
-			
-			// unbind the queue to the newly added routing key
-			try {
-				channel.queueUnbind(queueName, exchangeName, routingKey);
-			} catch (IOException e) {
-				logger.error("error unbinding the queue to the routing key: " + routingKey + ": ", e);
-			}
+			return false;
+		});
+	}
+	
+	
+	private void unbindChannelFromRoutingKey(String routingKey) {
+		try {
+			channel.queueUnbind(queueName, exchangeName, routingKey);
+		} catch (IOException e) {
+			logger.error("error unbinding the queue to the routing key: " + routingKey + ": ", e);
 		}
 	}
 
+
+	@Override
+	protected boolean isAutoAcknowledgeMessage() {
+		return true;
+	}
 }
-
-

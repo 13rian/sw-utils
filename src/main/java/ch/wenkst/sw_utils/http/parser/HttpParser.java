@@ -16,19 +16,19 @@ public class HttpParser {
 	private static final Logger logger = LoggerFactory.getLogger(HttpParser.class);
 
 
-	private List<Byte> proccessedBytes = new ArrayList<>();			// holds the processed bytes of the http message, it is used as a temporary buffer
-	protected String firstLine = ""; 								// the first line of the http message
-	protected Map<String, String> headerFields = null; 				// holds all header field properties
-	private int contentLength = -1; 								// the content length header property
-	private List<Byte> chunkBytes = new ArrayList<>(); 				// holds the bytes of one body chunk
-	private List<Byte> bodyBytes = new ArrayList<>(); 				// holds the bytes of the body
+	private List<Byte> proccessedBytes = new ArrayList<>();
+	protected String firstLine = "";
+	protected Map<String, String> headerFields = null;
+	private int contentLength = -1;
+	private List<Byte> chunkBytes = new ArrayList<>();
+	private List<Byte> bodyBytes = new ArrayList<>();
 	private ParsingState state = ParsingState.NONE;
 	
 
 	// indicates if the server usded the chunked encoding (length \r\n chunk length \r\n chunk 0, 0 indicates the end of the received chunks)
 	// the length is encoded as hex
 	private boolean isChunked = false; 								
-	private int chunkLength = -1; 									// length of a body chunk if the transfer encoding  is set to chunked
+	private int chunkLength = -1;
 
 
 
