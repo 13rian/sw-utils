@@ -2,21 +2,16 @@ package ch.wenkst.sw_utils.http.builder;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.Map;
+import ch.wenkst.sw_utils.conversion.Conversion;
+import ch.wenkst.sw_utils.http.HttpConstants;
 
 public class HttpBuilder {
-	protected String firstLine = ""; 							    // defines the first line of the http message, either the request or the response line
-	protected HashMap<String,String> headerProperties = null; 		// header fields of the request
-	protected byte[] bodyBytes = new byte[0]; 						// the body as bytes
-	private static final String CRLF = "\r\n";
+	protected String firstLine = "";
+	protected HashMap<String, String> headerProperties = null;
+	protected byte[] bodyBytes = new byte[0];
+
 	
-
-
-	/**
-	 * holds methods to build a http message
-	 */
 	public HttpBuilder() {
-		// define the header properties that are always present
 		headerProperties = new HashMap<>();
 		headerProperties.put("connection", "keep-alive");
 		headerProperties.put("accept", "*/*");
@@ -31,7 +26,7 @@ public class HttpBuilder {
 	 * @param value		value of the header property	
 	 * @return 			this object
 	 */
-	public HttpBuilder setHeaderProperty(String key, String value) {
+	public HttpBuilder headerProperty(String key, String value) {
 		key = key.toLowerCase();
 		headerProperties.put(key, value);
 
@@ -45,8 +40,8 @@ public class HttpBuilder {
 	 * @param body 		body as String
 	 * @return 			this object
 	 */
-	public HttpBuilder setBody(String body) {
-		return setBody(body.getBytes());
+	public HttpBuilder body(String body) {
+		return body(body.getBytes());
 	}
 	
 	
@@ -56,13 +51,10 @@ public class HttpBuilder {
 	 * @param body 		body as byte array
 	 * @return 			this object	
 	 */
-	public HttpBuilder setBody(byte[] body) {
+	public HttpBuilder body(byte[] body) {
 		this.bodyBytes = body;
-
-		// set the content length property
 		String bodyLength = String.valueOf(bodyBytes.length);
 		headerProperties.put("content-length", bodyLength);
-
 		return this;
 	}
 	
@@ -72,58 +64,36 @@ public class HttpBuilder {
 	 * @return 		byte array of the http request
 	 */
 	public byte[] toByteArr() {
-		// create the string that defines the http message without a body
-		StringBuilder stringBuilder = new StringBuilder();
-		
-		// the request/status line
-		stringBuilder.append(firstLine);
-		stringBuilder.append(CRLF);
-		
-		// the header properties
-		for (Map.Entry<String, String> entry : headerProperties.entrySet()) {
-		    String key = entry.getKey();
-		    String value = entry.getValue();
-		    
-		    stringBuilder.append(key);
-			stringBuilder.append(": ");
-			stringBuilder.append(value);
-			stringBuilder.append(CRLF);
-		}
-		
-		// add the empty line before the body
-		stringBuilder.append(CRLF);
-		
-		
-		// covert to bytes
-		byte[] headerBytes = stringBuilder.toString().getBytes(StandardCharsets.US_ASCII);
-		
-		
-		
-		// concatenate the header bytes and the body bytes to get create the full http message
-        byte[] httpMessageBytes = new byte[headerBytes.length + bodyBytes.length];
-        System.arraycopy(headerBytes, 0, httpMessageBytes, 0, headerBytes.length);
-        System.arraycopy(bodyBytes, 0, httpMessageBytes, headerBytes.length, bodyBytes.length);
-            
-        return httpMessageBytes;
+		byte[] requestTargetBytes = requestTarget().getBytes(StandardCharsets.US_ASCII);
+		byte[] headerBytes = header().getBytes(StandardCharsets.US_ASCII);
+		return Conversion.concatArrays(requestTargetBytes, headerBytes, bodyBytes);
 	}
 	
 	
-	/**
-	 * returns the byte array representing the http request  
-	 */
+	private String requestTarget() {
+		return firstLine + HttpConstants.CRLF;
+	}
+	
+	
+	private String header() {
+		StringBuilder stringBuilder = new StringBuilder();
+
+		headerProperties.entrySet()
+				.stream()
+				.forEach((entry) -> {
+					stringBuilder.append(entry.getKey());
+					stringBuilder.append(": ");
+					stringBuilder.append(entry.getValue());
+					stringBuilder.append(HttpConstants.CRLF);
+				});
+		
+		stringBuilder.append(HttpConstants.CRLF);
+		return stringBuilder.toString();
+	}
+	
+	
 	public String toString() {
 		byte[] httpMessageBytes = toByteArr();
 		return new String(httpMessageBytes, StandardCharsets.US_ASCII);
 	}
-
-
-
 }
-
-
-
-
-
-
-
-

@@ -10,22 +10,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ch.wenkst.sw_utils.conversion.Conversion;
+import ch.wenkst.sw_utils.http.HttpConstants;
 
 public class HttpParser {
 	private static final Logger logger = LoggerFactory.getLogger(HttpParser.class);
 
-	// possible states of the http parser 
-	public enum State {
-		NONE,
-		FIRST_LINE_RECEIVED,
-		HEADER_RECEIVED,
-		CHUNK_LENGTH_RECEIVED,
-		BODY_RECEIVED}
-	private State state = State.NONE;
-
-	private static final byte CARRIAGE_RETURN_BYTE = (byte) '\r'; 	// define the newline byte
-	private static final byte LINE_FEED_BYTE = (byte) '\n'; 		// define the newline byte
-	private static final String PROTOCOL = "HTTP/1.1"; 				// defines the http protocol
 
 	private List<Byte> proccessedBytes = new ArrayList<>();			// holds the processed bytes of the http message, it is used as a temporary buffer
 	protected String firstLine = ""; 								// the first line of the http message
@@ -33,6 +22,8 @@ public class HttpParser {
 	private int contentLength = -1; 								// the content length header property
 	private List<Byte> chunkBytes = new ArrayList<>(); 				// holds the bytes of one body chunk
 	private List<Byte> bodyBytes = new ArrayList<>(); 				// holds the bytes of the body
+	private ParsingState state = ParsingState.NONE;
+	
 
 	// indicates if the server usded the chunked encoding (length \r\n chunk length \r\n chunk 0, 0 indicates the end of the received chunks)
 	// the length is encoded as hex
@@ -96,22 +87,32 @@ public class HttpParser {
 	 * @param b	byte to process
 	 */
 	private void processFirstLineByte(byte b) {
-		if (b != LINE_FEED_BYTE) {
-			proccessedBytes.add(b);
-
+		if (b == HttpConstants.LINE_FEED_BYTE) {
+			parseFirstLine();
 		} else {
-			// extract the line
-			byte[] bytesLine = Conversion.arrayListToByteArray(proccessedBytes);
-			String line = new String(bytesLine, StandardCharsets.US_ASCII);
-			line = line.trim();
-
-			// check if the the line contains the protocol
-			if (line.contains(PROTOCOL)) {
-				firstLine = line;
-				state = State.FIRST_LINE_RECEIVED;
-			}
-
-			proccessedBytes.clear();
+			proccessedBytes.add(b);
+		}
+	}
+	
+	
+	private void parseFirstLine() {
+		String line = processedBytesToString();
+		extractFirstLineStatus(line);
+		proccessedBytes.clear();
+	}
+	
+	
+	private String processedBytesToString() {
+		byte[] bytesLine = Conversion.arrayListToByteArray(proccessedBytes);
+		String line = new String(bytesLine, StandardCharsets.US_ASCII);
+		return line.trim();
+	}
+	
+	
+	private void extractFirstLineStatus(String line) {
+		if (line.contains(HttpConstants.PROTOCOL)) {
+			firstLine = line;
+			state = ParsingState.FIRST_LINE_RECEIVED;
 		}
 	}
 	
@@ -121,34 +122,39 @@ public class HttpParser {
 	 * @param b		byte to process
 	 */
 	private void processHeaderByte(byte b) {
-		if (b != LINE_FEED_BYTE) {
-			proccessedBytes.add(b);
-
+		if (b == HttpConstants.LINE_FEED_BYTE) {
+			parseHeaderLine();
 		} else {
-			// extract the line
-			byte[] bytesLine = Conversion.arrayListToByteArray(proccessedBytes);
-			String line = new String(bytesLine, StandardCharsets.US_ASCII);
-			line = line.trim();
-
-			if (line.isEmpty()) {
-				// empty line found, extract the content length
-				extractContentLength();
-
-				// change the state of the parser
-				if (contentLength == 0) {
-					state = State.BODY_RECEIVED;
-				} else {
-					state = State.HEADER_RECEIVED;
-				} 							
-
-			} else {
-				// line is not empty, add it to the header fields list
-				String[] parts = line.split(":");
-				headerFields.put(parts[0].trim().toLowerCase(), parts[1].trim());
-			}			
-
-			proccessedBytes.clear(); 	
+			proccessedBytes.add(b);
 		}
+	}
+	
+	
+	private void parseHeaderLine() {
+		String line = processedBytesToString();
+		if (line.isEmpty()) {
+			dealWithEmptyHeaderLine();	
+		} else {
+			extractHeaderField(line);
+		}			
+		proccessedBytes.clear(); 
+	}
+	
+	
+	private void dealWithEmptyHeaderLine() {
+		extractContentLength();
+		checkForChunkedMessages();
+		if (contentLength == 0) {
+			state = ParsingState.BODY_RECEIVED;
+		} else {
+			state = ParsingState.HEADER_RECEIVED;
+		} 	
+	}
+	
+	
+	private void extractHeaderField(String line) {
+		String[] parts = line.split(":");
+		headerFields.put(parts[0].trim().toLowerCase(), parts[1].trim());
 	}
 	
 	
@@ -158,45 +164,47 @@ public class HttpParser {
 	 */
 	private void processBodyByte(byte b) {
 		if (isChunked) {
-			// handle chunked http messages, read out the length of the first chunk
-			if (b != LINE_FEED_BYTE) {
-				proccessedBytes.add(b);
-
-			} else {
-				// extract the line
-				byte[] bytesLine = Conversion.arrayListToByteArray(proccessedBytes);
-				String line = new String(bytesLine, StandardCharsets.US_ASCII);
-				line = line.trim();
-
-				// ignore empty lines that occur after each chunk
-				if (!line.isEmpty()) {
-
-					// extract the chunk length, which is hexadecimal
-					chunkLength = Integer.parseInt(line, 16);
-
-					// clear the buffer
-					proccessedBytes.clear(); 
-
-					// change the state
-					if (chunkLength == 0) {
-						// a chunk length of 0 means that the complete body was received
-						state = State.BODY_RECEIVED;
-					} else {
-						// not the full body is parsed, continue to read out the bytes
-						state = State.CHUNK_LENGTH_RECEIVED;
-					}
-				}
-			}
+			processChunkSizeByte(b);
 
 
 		} else {
-			// handle non-chunked http messages
-			bodyBytes.add(b);
-
-			// check if the whole body was receives
-			if (bodyBytes.size() == contentLength) {												
-				state = State.BODY_RECEIVED;
-			}
+			processRegularBodyByte(b);
+		}
+	}
+	
+	
+	private void processChunkSizeByte(byte b) {
+		if (b == HttpConstants.LINE_FEED_BYTE) {			
+			parseChunkSize();
+		} else {
+			proccessedBytes.add(b);
+		}
+	}
+	
+	
+	private void parseChunkSize() {
+		String line = processedBytesToString();
+		if (!line.isEmpty()) {
+			chunkLength = Integer.parseInt(line, 16);
+			proccessedBytes.clear(); 
+			updateStateFromCurrentChunkLength();
+		}
+	}
+	
+	
+	private void updateStateFromCurrentChunkLength() {
+		if (chunkLength == 0) {
+			state = ParsingState.BODY_RECEIVED;			// a chunk length of 0 means that the complete body was received
+		} else {
+			state = ParsingState.CHUNK_LENGTH_RECEIVED;
+		}
+	}
+	
+	
+	private void processRegularBodyByte(byte b) {
+		bodyBytes.add(b);
+		if (bodyBytes.size() == contentLength) {												
+			state = ParsingState.BODY_RECEIVED;
 		}
 	}
 	
@@ -207,13 +215,10 @@ public class HttpParser {
 	 */
 	private void processChunkedBodyByte(byte b) {
 		chunkBytes.add(b);
-
-		// check if the whole chunk was received
 		if (chunkBytes.size() == chunkLength) {
-			// adds all chunk bytes to the body bytes
 			bodyBytes.addAll(chunkBytes);
 			chunkBytes.clear();
-			state = State.HEADER_RECEIVED;
+			state = ParsingState.HEADER_RECEIVED;
 		}
 	}
 	
@@ -225,15 +230,17 @@ public class HttpParser {
 	 */
 	private void processAfterBodyBytes(byte b) {
 		// in the chunked encoding the last chunk is ended with \r\n, therefore only print the error if there is some other data
-		if (b != CARRIAGE_RETURN_BYTE && b != LINE_FEED_BYTE) {
+		if (noNewLineByte(b)) {
 			logger.error("more than the full http-content was received");
 		}
 	}
-
-
-	/**
-	 * extracts the content length from the header properties
-	 */
+	
+	
+	private boolean noNewLineByte(byte b) {
+		return b != HttpConstants.CARRIAGE_RETURN_BYTE && b != HttpConstants.LINE_FEED_BYTE;
+	}	
+	
+	
 	private void extractContentLength() {
 		String contentLengthStr = headerFields.get("content-length");
 		try {
@@ -243,12 +250,13 @@ public class HttpParser {
 		} catch (Exception e) {
 			logger.error("error parsing the content length header field: ", e);
 		}
-
-		// log an error if the content length is missing
+	}
+	
+	
+	private void checkForChunkedMessages() {
 		if (contentLength < 0) {
 			logger.debug("content length was not found in the header");
 
-			// test if the message is chunked
 			isChunked = isChunked();
 			if (!isChunked) {
 				logger.debug("http message has no content length and is not chunked");
@@ -273,7 +281,7 @@ public class HttpParser {
 	 * @return 		true if the http message is complete, false otherwise
 	 */
 	public boolean isComplete() {
-		return state == State.BODY_RECEIVED;
+		return state == ParsingState.BODY_RECEIVED;
 	}
 
 
@@ -282,7 +290,7 @@ public class HttpParser {
 	 * reinitializes the parser after a full request was received
 	 */
 	public void clearAfterFullMessage() {
-		state = State.NONE;
+		state = ParsingState.NONE;
 
 		headerFields = new HashMap<>();  				
 		contentLength = -1; 				
@@ -298,13 +306,13 @@ public class HttpParser {
 	 * @return 		true if the request could be parsed (i. e. a at least header was received), false if not
 	 */
 	public boolean fullMessageReceived() {
-		if (state == State.HEADER_RECEIVED) {
+		if (state == ParsingState.HEADER_RECEIVED) {
 			proccessedBytes.clear();
-			state = State.BODY_RECEIVED;
+			state = ParsingState.BODY_RECEIVED;
 			return true;
 
 		} else {
-			logger.error("fullMessageReceived called but the state is not " + State.BODY_RECEIVED.toString());
+			logger.error("fullMessageReceived called but the state is not " + ParsingState.BODY_RECEIVED.toString());
 			return false;
 		}
 	}

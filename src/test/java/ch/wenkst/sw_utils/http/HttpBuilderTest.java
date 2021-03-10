@@ -1,5 +1,7 @@
 package ch.wenkst.sw_utils.http;
 
+import java.net.MalformedURLException;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,16 +13,17 @@ public class HttpBuilderTest {
 
 	/**
 	 * create a http request
+	 * @throws MalformedURLException 
 	 */
 	@Test
 	@DisplayName("http request")
-	public void httpRequest() {
+	public void httpRequest() throws MalformedURLException {
 		HttpRequestBuilder reqBuilder = new HttpRequestBuilder();
 		
 		reqBuilder.preparePost("https://wenkst/v1/")
-		.setHeaderProperty("Content-Type", "text/plain")
-		.setHeaderProperty("Authorization", "Some secret code")
-		.setBody("This is the html request body with no deep meaning");
+		.headerProperty("Content-Type", "text/plain")
+		.headerProperty("Authorization", "Some secret code")
+		.body("This is the html request body with no deep meaning");
 		
 		String request = reqBuilder.toString();
 		Assertions.assertTrue(request.contains("POST /v1/ HTTP/1.1"));
@@ -39,9 +42,9 @@ public class HttpBuilderTest {
 		HttpResponseBuilder respBuilder = new HttpResponseBuilder();
 
 		respBuilder.status(403)
-		.setHeaderProperty("Content-Type", "text/plain")
-		.setHeaderProperty("Authorization", "Some secret code")
-		.setBody("you have no access to this page");
+		.headerProperty("Content-Type", "text/plain")
+		.headerProperty("Authorization", "Some secret code")
+		.body("you have no access to this page");
 		
 		String response = respBuilder.toString();
 		Assertions.assertTrue(response.contains("HTTP/1.1 403 Forbidden"));
@@ -49,5 +52,4 @@ public class HttpBuilderTest {
 		Assertions.assertTrue(response.contains("authorization"));
 		Assertions.assertTrue(response.contains("you have no access to this page"));
 	}
-	
 }

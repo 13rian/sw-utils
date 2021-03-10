@@ -8,18 +8,9 @@ import ch.wenkst.sw_utils.Utils;
 public abstract class WorkerThread extends Thread {
 	private static final Logger logger = LoggerFactory.getLogger(WorkerThread.class);
 
-	public enum ThreadState {
-		STARTING,
-		WORKING,
-		SUSPENDING,
-		SUSPENDED,
-		RESUMING,
-		TERMINATING,
-		TERMINATED
-	}	
 
 	protected int pollInterval = 1000;
-	protected ThreadState currentState = ThreadState.STARTING;
+	protected WorkerThreadState currentState = WorkerThreadState.STARTING;
 	protected boolean running = true;
 	
 
@@ -51,7 +42,7 @@ public abstract class WorkerThread extends Thread {
 		switch (currentState) {
 			case STARTING: {
 				doStartWork();
-				updateThreadState(ThreadState.WORKING);
+				updateThreadState(WorkerThreadState.WORKING);
 				break;
 			}
 			case WORKING: {
@@ -61,7 +52,7 @@ public abstract class WorkerThread extends Thread {
 			}
 			case SUSPENDING: {
 				doSuspendingWork();
-				updateThreadState(ThreadState.SUSPENDED);
+				updateThreadState(WorkerThreadState.SUSPENDED);
 				break;
 			}
 			case SUSPENDED: {
@@ -71,12 +62,12 @@ public abstract class WorkerThread extends Thread {
 			}
 			case RESUMING: {
 				doResumeWork();
-				updateThreadState(ThreadState.WORKING);
+				updateThreadState(WorkerThreadState.WORKING);
 				break;
 			}
 			case TERMINATING: {
 				doTerminateWork();
-				updateThreadState(ThreadState.TERMINATED);
+				updateThreadState(WorkerThreadState.TERMINATED);
 				break;
 			}
 			case TERMINATED: {
@@ -103,8 +94,8 @@ public abstract class WorkerThread extends Thread {
 	 * changes the state of the thread
 	 * @param newState 	the new thread state
 	 */
-	private void updateThreadState(ThreadState newState) {
-		if (currentState != ThreadState.TERMINATING && currentState != ThreadState.TERMINATED) {
+	private void updateThreadState(WorkerThreadState newState) {
+		if (currentState != WorkerThreadState.TERMINATING && currentState != WorkerThreadState.TERMINATED) {
 			currentState = newState;
 		}
 	}
@@ -114,7 +105,7 @@ public abstract class WorkerThread extends Thread {
 	 * starts the thread in the suspended state
 	 */
 	public void startSuspended() {
-		updateThreadState(ThreadState.SUSPENDED);
+		updateThreadState(WorkerThreadState.SUSPENDED);
 		start();
 	}
 
@@ -123,7 +114,7 @@ public abstract class WorkerThread extends Thread {
 	 * suspends the thread, after that only the suspending work is executed
 	 */
 	public void suspendThread() {
-		updateThreadState(ThreadState.SUSPENDING);
+		updateThreadState(WorkerThreadState.SUSPENDING);
 	}
 	
 	
@@ -131,7 +122,7 @@ public abstract class WorkerThread extends Thread {
 	 * un-suspends the thread
 	 */
 	public void resumeThread() {
-		updateThreadState(ThreadState.RESUMING);
+		updateThreadState(WorkerThreadState.RESUMING);
 	}
 
 	
@@ -139,7 +130,7 @@ public abstract class WorkerThread extends Thread {
 	 * terminates the thread
 	 */
 	public void terminateThread() {
-		updateThreadState(ThreadState.TERMINATING);
+		updateThreadState(WorkerThreadState.TERMINATING);
 	}
 	
 
@@ -147,7 +138,7 @@ public abstract class WorkerThread extends Thread {
 		return pollInterval;
 	}
 
-	public ThreadState getThreadState() {
+	public WorkerThreadState getThreadState() {
 		return currentState;
 	}
 }

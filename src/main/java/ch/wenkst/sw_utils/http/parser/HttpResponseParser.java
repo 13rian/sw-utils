@@ -1,9 +1,8 @@
 package ch.wenkst.sw_utils.http.parser;
 
 public class HttpResponseParser extends HttpParser {
-	// status information of the response
-	private int status = -1; 				// status of the http message
-	private String statusTxt = null; 		// the reason phrase of the status e.g. OK for status 200
+	private int status = -1;
+	private String statusTxt = null;
 
 
 	/**
@@ -12,33 +11,15 @@ public class HttpResponseParser extends HttpParser {
 	public HttpResponseParser() {
 		super();
 	}
-
-
-	/**
-	 * extracts the status code and phrase from the status line
-	 */
-	private void parseStatusLine() {
-		// get the http status
-		String[] parts = firstLine.split(" ");
-		status = Integer.parseInt(parts[1]);
-		
-		// get the http status text
-		statusTxt = "";
-		for (int i=2; i<parts.length; i++) {
-			statusTxt = statusTxt + parts[i] + " ";
-		}
-		statusTxt = statusTxt.trim();
-	}
 	
 	
 	/**
 	 * returns true if no error status was received (all statuses with 200)
 	 * @return 		true if the http status is a 200 status, false otherwise
 	 */
-	public boolean isPositiveStatus() {
+	public boolean isSuccessStatus() {
 		return (int) Math.floor(getStatus()/100) == 2;
 	}
-
 
 
 	public int getStatus() {
@@ -56,6 +37,18 @@ public class HttpResponseParser extends HttpParser {
 		}
 		
 		return statusTxt;
+	}
+	
+	
+	private void parseStatusLine() {
+		String[] parts = firstLine.split(" ");
+		status = Integer.parseInt(parts[1]);
+		
+		statusTxt = "";
+		for (int i=2; i<parts.length; i++) {
+			statusTxt = statusTxt + parts[i] + " ";
+		}
+		statusTxt = statusTxt.trim();
 	}
 	
 	
