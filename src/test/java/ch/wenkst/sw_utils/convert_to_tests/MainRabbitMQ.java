@@ -2,7 +2,10 @@ package ch.wenkst.sw_utils.convert_to_tests;
 
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.security.NoSuchProviderException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,7 +36,7 @@ public class MainRabbitMQ {
 
 	private static final Logger logger = LoggerFactory.getLogger(MainRabbitMQ.class);
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws FileNotFoundException, CertificateException, NoSuchProviderException {
 
 		// non-encrypted connections to the rabbitMQ server
 		// RabbitMQHander messageHandler = new RabbitMQHander("23.97.156.162", "efr", "efrserver");
