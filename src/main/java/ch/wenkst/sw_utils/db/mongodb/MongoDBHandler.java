@@ -26,10 +26,11 @@ import com.mongodb.reactivestreams.client.FindPublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
-import ch.wenkst.sw_utils.db.mongodb.base.BaseEntity;
-import ch.wenkst.sw_utils.db.mongodb.base.EntityInfo;
+
 import ch.wenkst.sw_utils.db.mongodb.subscriber.value.ValueCallback;
 import ch.wenkst.sw_utils.db.mongodb.subscriber.value.ValueCallbackSubscriber;
+import ch.wenkst.sw_utils.db.mongodb.entity.BaseEntity;
+import ch.wenkst.sw_utils.db.mongodb.entity.EntityInfo;
 import ch.wenkst.sw_utils.db.mongodb.subscriber.list.DocumentListCallbackSubscriber;
 import ch.wenkst.sw_utils.db.mongodb.subscriber.list.PojoListCallback;
 import ch.wenkst.sw_utils.db.mongodb.subscriber.list.PojoListCallbackSubscriber;
@@ -81,7 +82,7 @@ public class MongoDBHandler {
 			options.createConnectString();
 		}		
 
-		long timeout = options.getTimeout();
+		
 		String connectString = options.getConnectString();
 		String dbName = options.getDbName();
 		if (dbName == null) {
@@ -91,15 +92,17 @@ public class MongoDBHandler {
 		logger.info("connect to db " + dbName + ", connection string: " + connectString);
 		
 		mongoClient = options.createMongClient();
-
-		
-		// wait for the db to establish the connection
+		waitForConnection(options);
+		database = mongoClient.getDatabase(dbName);
+	}
+	
+	
+	private void waitForConnection(DbConnectOptions options) throws InterruptedException, ExecutionException, TimeoutException, DbConnectException {
+		long timeout = options.getConnectTimeoutInSecs();
 		Throwable throwable = options.getConnectionFuture().get(timeout, TimeUnit.SECONDS);
 		if (throwable != null) {
 			throw new DbConnectException(throwable.getMessage());
-		}		
-
-		database = mongoClient.getDatabase(dbName);
+		}
 	}
 
 
@@ -233,12 +236,8 @@ public class MongoDBHandler {
 	 * @param resultCallback 	callback that is called with the db result
 	 */
 	public <T, U> void find(Class<?> classObj, Bson query, Bson sort, PojoListCallback resultCallback) {
-		if (query == null) {
-			query = new Document();
-		}
-		if (sort == null) {
-			sort = new Document();
-		}
+		query = newDocumentIfNull(query);
+		sort = newDocumentIfNull(sort);
 
 		MongoCollection<BaseEntity> collection = getCollection(classObj);
 		FindPublisher<BaseEntity> publisher = collection.find(query).sort(sort);
@@ -379,7 +378,7 @@ public class MongoDBHandler {
 	 * @return					the status result of the db operation
 	 */
 	public StatusResult insertOrUpdateSync(Bson findQuery, Map<String, Object> updateMap, Class<?> classObj) {
-		// check if the device already exists in the db
+		// check if the entity already exists in the db
 		StatusResult result = findSync(classObj, findQuery, null);
 		if (!result.isSuccess()) {
 			logger.error("error executing find pojo, reason: " + result.getErrorMsg());
@@ -671,15 +670,9 @@ public class MongoDBHandler {
 	 * @param resultCallback 	callback that is called with the db result
 	 */
 	private void findJson(MongoCollection<Document> collection, Bson query, Bson sort, Bson projection, ValueCallback<String> resultCallback) {
-		if (query == null) {
-			query = new Document();
-		}
-		if (sort == null) {
-			sort = new Document();
-		}
-		if (projection == null) {
-			projection = new Document();
-		}
+		query = newDocumentIfNull(query);
+		sort = newDocumentIfNull(sort);
+		projection = newDocumentIfNull(projection);
 
 		FindPublisher<Document> publisher = collection.find(query).sort(sort).projection(projection);
 		
@@ -688,6 +681,15 @@ public class MongoDBHandler {
 			resultCallback.onResult(jsonList, error);
 		});
 		publisher.subscribe(subscriber);
+	}
+	
+	
+	private Bson newDocumentIfNull(Bson bson) {
+		if (bson == null) {
+			return new Document();
+		} else {
+			return bson;
+		}
 	}
 
 
@@ -938,7 +940,6 @@ public class MongoDBHandler {
 	 */
 	private synchronized MongoDatabase getDatabase(String dbName) {
 		if (!dbMap.containsKey(dbName)) {
-			// database not used so far, create a new object
 			MongoDatabase db = mongoClient.getDatabase(dbName);
 			dbMap.put(dbName, db);
 			return db;
@@ -947,39 +948,38 @@ public class MongoDBHandler {
 			return dbMap.get(dbName);
 		}
 	}
-
-
+	
+	
 	/**
 	 * returns the collection that can be used to make queries
 	 * if the EntityInfo annotation is missing the db name from the connect method is used
 	 * and the classname is used for the collection name
 	 * @param classObj 		the class of the db entity
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public MongoCollection<BaseEntity> getCollection(Class classObj) {
-		EntityInfo entityInfo = (EntityInfo) classObj.getAnnotation(EntityInfo.class);
-		String dbName = ""; 
-		String collectionName = "";
-		if (entityInfo != null) {
-			dbName = entityInfo.db();
-			collectionName = entityInfo.collection();
-		}
-
-
-		// if the collection name is not specified take the class name 
-		if (collectionName.isEmpty()) {
-			collectionName = classObj.getSimpleName();
-		}
-
-		// define the database to use
-		MongoDatabase db = null;
-		if (dbName.isEmpty()) {
-			db = database;
-		} else {
-			db = getDatabase(dbName);
-		}
-
+	public MongoCollection<BaseEntity> getCollection(Class<?> classObj) {
+		String collectionName = collectionNameFromClass(classObj);
+		MongoDatabase db = dbFromClass(classObj);
 		return getCollection(collectionName, classObj, db);
+	}
+	
+	
+	private String collectionNameFromClass(Class<?> classObj) {
+		EntityInfo entityInfo = (EntityInfo) classObj.getAnnotation(EntityInfo.class);
+		if (entityInfo == null || entityInfo.collection().isBlank()) {
+			return classObj.getSimpleName();
+		} else {
+			return entityInfo.collection();
+		}
+	}
+	
+	
+	private MongoDatabase dbFromClass(Class<?> classObj) {
+		EntityInfo entityInfo = (EntityInfo) classObj.getAnnotation(EntityInfo.class);
+		if (entityInfo == null || entityInfo.db().isBlank()) {
+			return database;
+		} else {
+			return getDatabase(entityInfo.db());
+		}
 	}
 
 

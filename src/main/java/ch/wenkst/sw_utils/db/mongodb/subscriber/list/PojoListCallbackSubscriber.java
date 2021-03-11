@@ -1,6 +1,8 @@
 package ch.wenkst.sw_utils.db.mongodb.subscriber.list;
 
-public class PojoListCallbackSubscriber extends PojoListSubscriber {
+import ch.wenkst.sw_utils.db.mongodb.entity.BaseEntity;
+
+public class PojoListCallbackSubscriber extends ListSubscriber<BaseEntity> {
 	private PojoListCallback callback;
 	
 	public PojoListCallbackSubscriber(PojoListCallback callback) {

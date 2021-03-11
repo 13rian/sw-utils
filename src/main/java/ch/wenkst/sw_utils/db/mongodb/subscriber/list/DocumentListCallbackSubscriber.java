@@ -1,9 +1,11 @@
 package ch.wenkst.sw_utils.db.mongodb.subscriber.list;
 
-public class DocumentListCallbackSubscriber extends DocumentListSubscriber {
-	private DocumentListCallback callback;
+import org.bson.Document;
+
+public class DocumentListCallbackSubscriber extends ListSubscriber<Document> {
+	private DocumentListResultCallback callback;
 	
-	public DocumentListCallbackSubscriber(DocumentListCallback callback) {
+	public DocumentListCallbackSubscriber(DocumentListResultCallback callback) {
 		this.callback = callback;
 	}
 			

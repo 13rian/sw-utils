@@ -5,26 +5,17 @@ import org.slf4j.LoggerFactory;
 
 import ch.wenkst.sw_utils.db.mongodb.subscriber.value.ValueCallback;
 
-/**
- * Subscriber that only prints out an error if one occurs
- * @param <T>
- */
 public class PrintResultCallback<T> implements ValueCallback<T> {
 	private static final Logger logger = LoggerFactory.getLogger(PrintResultCallback.class);
 	
-	protected String name;						// the name to identify this request
+	protected String name;
 		
 	
-	/**
-	 * base subscriber for a reactive stream mongodb operation
-	 */
 	public PrintResultCallback() {
 		name = "";
 	}
 	
-	/**
-	 * base subscriber for a reactive stream mongodb operation
-	 */
+
 	public PrintResultCallback(String name) {
 		this.name = name;
 	}

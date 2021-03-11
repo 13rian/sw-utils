@@ -14,14 +14,14 @@ import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoClients;
 
 public class DbConnectOptions {
-	private String host;							// host of the db server
-	private int port = -1;							// port of the db server
-	private int timeout = 10;						// connect timeout in seconds
-	private String username;						// username, if the db is authenticated
-	private String password;						// password, if the db is authenticated
-	private String dbName;							// the name of the db to connect to
-	private String[] packageNames = new String[0];	// the package names of the db entities
-	private String connectString; 					// defines the connect string for mongodb
+	private String host;
+	private int port = 27017;
+	private int connectTimeoutInSecs = 30;
+	private String username;
+	private String password;
+	private String dbName;
+	private String[] packageNames = new String[0];
+	private String connectString;
 	
 	private CodecRegistry pojoCodecRegistry;		// codes to read and write pojos to the db
 	
@@ -53,24 +53,27 @@ public class DbConnectOptions {
 	
 	
 	/**
+	 * creates the mongo client
+	 * @return
+	 */
+	protected MongoClient createMongClient() {
+		createCodecRegistry();
+		MongoStatusListener statusListener = createStatusListener();	
+		MongoClientSettings settings = createMongoClientSettings(statusListener);
+		return MongoClients.create(settings);
+	}
+	
+	
+	/**
 	 * creates the code registry that is needed to insert and read pojos from mongodb
 	 * before using the driver with java objects a CodecRegistry needs to be configured. This includes codecs that
 	 * handle the translation to and form bson for the java objects. 
 	 * This combines the default codec registry, with the PojoCodecProvider configured to automatically create PojoCodecs
 	 * @return 		the codec registry that is needed for pojo
 	 */
-	protected CodecRegistry createCodecRegistry() {
-		CodecProvider provider;
-		if (packageNames == null || packageNames.length == 0) {
-			// use the default codec provider
-			provider = PojoCodecProvider.builder().automatic(true).build();
-
-		} else {
-			// use the registered db models of the passed packages. initially the codec uses reflection but later
-			// the setter and getters are used if the exist
-			provider = PojoCodecProvider.builder().register(packageNames).build();
-		}
-		
+	private CodecRegistry createCodecRegistry() {
+		CodecProvider provider = createcodecProvider();
+				
 		pojoCodecRegistry = CodecRegistries.fromRegistries(
 				CodecRegistries.fromProviders(provider),
 				MongoClients.getDefaultCodecRegistry());
@@ -79,35 +82,84 @@ public class DbConnectOptions {
 	}
 	
 	
-	/**
-	 * creates the mongo client
-	 * @return
-	 */
-	protected MongoClient createMongClient() {
-		createCodecRegistry();
+	private CodecProvider createcodecProvider() {
+		if (!packagesSet()) {
+			return PojoCodecProvider.builder().automatic(true).build();
 
-
-		// create the listener for the mongo server description
+		} else {
+			// use the registered db models of the passed packages. initially the codec uses reflection but later
+			// the setter and getters are used if the exist
+			return PojoCodecProvider.builder().register(packageNames).build();
+		}
+	}
+	
+	
+	private boolean packagesSet() {
+		return packageNames != null && packageNames.length != 0;
+	}
+	
+	
+	private MongoStatusListener createStatusListener() {
 		connectionFuture = new CompletableFuture<>();
-		MongoStatusListener statusListener = new MongoStatusListener(connectionFuture);
-
-
-		// configure the mongo client	
-		MongoClientSettings settings = MongoClientSettings.builder()
+		return new MongoStatusListener(connectionFuture);
+	}
+	
+	
+	private MongoClientSettings createMongoClientSettings(MongoStatusListener statusListener) {
+		return MongoClientSettings.builder()
 				.codecRegistry(pojoCodecRegistry)
 				.applyConnectionString(new ConnectionString(connectString))
 				//                .applyToClusterSettings(builder -> {
 				//	                builder.hosts(hosts); 		
 				//	             })
 				.applyToSocketSettings(builder -> {
-					builder.connectTimeout(timeout, TimeUnit.SECONDS);
+					builder.connectTimeout(connectTimeoutInSecs, TimeUnit.SECONDS);
 				})
 				.applyToServerSettings(builder -> {
 					builder.addServerListener(statusListener);
 				})
 				.build();
-
-		return MongoClients.create(settings);
+	}
+	
+	
+	public DbConnectOptions host(String host) {
+		this.host = host;
+		return this;
+	}
+	
+	public DbConnectOptions port(int port) {
+		this.port = port;
+		return this;
+	}
+	
+	public DbConnectOptions connectTimeoutInSecs(int connectTimeoutInSecs) {
+		this.connectTimeoutInSecs = connectTimeoutInSecs;
+		return this;
+	}
+	
+	public DbConnectOptions username(String username) {
+		this.username = username;
+		return this;
+	}
+	
+	public DbConnectOptions password(String password) {
+		this.password = password;
+		return this;
+	}
+	
+	public DbConnectOptions dbName(String dbName) {
+		this.dbName = dbName;
+		return this;
+	}
+	
+	public DbConnectOptions packageNames(String[] packageNames) {
+		this.packageNames = packageNames;
+		return this;
+	}
+	
+	public DbConnectOptions connectString(String connectString) {
+		this.connectString = connectString;
+		return this;
 	}
 	
 	
@@ -115,64 +167,33 @@ public class DbConnectOptions {
 		return host;
 	}
 	
-	public void setHost(String host) {
-		this.host = host;
-	}
-	
 	public int getPort() {
 		return port;
 	}
 	
-	public void setPort(int port) {
-		this.port = port;
+	public int getConnectTimeoutInSecs() {
+		return connectTimeoutInSecs;
 	}
 	
-	public int getTimeout() {
-		return timeout;
-	}
-	
-	public void setTimeout(int timeout) {
-		this.timeout = timeout;
-	}
 	
 	public String getUsername() {
 		return username;
 	}
-	
-	public void setUsername(String username) {
-		this.username = username;
-	}
-	
+
 	public String getPassword() {
 		return password;
-	}
-	
-	public void setPassword(String password) {
-		this.password = password;
 	}
 	
 	public String getDbName() {
 		return dbName;
 	}
 	
-	public void setDbName(String dbName) {
-		this.dbName = dbName;
-	}
-	
 	public String[] getPackageNames() {
 		return packageNames;
-	}
-	
-	public void setPackageNames(String[] packageNames) {
-		this.packageNames = packageNames;
 	}
 
 	public String getConnectString() {
 		return connectString;
-	}
-
-	public void setConnectString(String connectString) {
-		this.connectString = connectString;
 	}
 
 	public CodecRegistry getPojoCodecRegistry() {

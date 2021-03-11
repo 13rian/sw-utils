@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils;
+package ch.wenkst.sw_utils.convert_to_tests;
 
 
 import java.util.Arrays;
@@ -19,18 +19,15 @@ import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.Updates;
-import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.AggregatePublisher;
-import com.mongodb.reactivestreams.client.ClientSession;
 import com.mongodb.reactivestreams.client.FindPublisher;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import ch.wenkst.sw_utils.Utils;
 import ch.wenkst.sw_utils.db.mongodb.DbConnectOptions;
 import ch.wenkst.sw_utils.db.mongodb.MongoDBHandler;
-import ch.wenkst.sw_utils.db.mongodb.base.BaseEntity;
+import ch.wenkst.sw_utils.db.mongodb.entity.BaseEntity;
 import ch.wenkst.sw_utils.db.mongodb.subscriber.PrintResultCallback;
 import ch.wenkst.sw_utils.db.mongodb.subscriber.value.ValueCallbackSubscriber;
-import ch.wenkst.sw_utils.miscellaneous.StatusResult;
 
 public class MainAsyncMongoDB {
 	static {
@@ -47,12 +44,13 @@ public class MainAsyncMongoDB {
 		String[] packageNames = {Person.class.getPackage().getName()};
 		
 		try {
-			DbConnectOptions options = new DbConnectOptions();
-			options.setHost("192.168.5.128");
-			options.setPort(27017);
-			options.setTimeout(10);
-			options.setDbName("AsyncTest");
-			options.setPackageNames(packageNames);			
+			DbConnectOptions options = new DbConnectOptions()
+					.host("192.168.5.128")
+					.port(27017)
+					.connectTimeoutInSecs(10)
+					.dbName("AsyncTest")
+					.packageNames(packageNames);
+			
 			dbHandler.connectToDB(options);
 			
 		} catch (Exception e) {

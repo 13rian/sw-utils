@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils.db.mongodb.base;
+package ch.wenkst.sw_utils.db.mongodb.entity;
 
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -16,7 +16,7 @@ public class BaseEntity {
 
     /**
      * models the base class for the entity in the db
-     * care: arrays are not supported, use list instead
+     * care: array properties are not supported, use lists instead
      */
     public BaseEntity() {
     	id = new ObjectId().toHexString();

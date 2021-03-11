@@ -1,10 +1,11 @@
-package ch.wenkst.sw_utils;
+package ch.wenkst.sw_utils.convert_to_tests;
 
 import java.io.File;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ch.wenkst.sw_utils.Utils;
 import ch.wenkst.sw_utils.db.sqlite.SQLiteDBHandler;
 
 public class MainSQLite {

@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils;
+package ch.wenkst.sw_utils.convert_to_tests;
 
 public class Data {
 	public String name;

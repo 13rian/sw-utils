@@ -9,11 +9,7 @@ import org.reactivestreams.Subscription;
 public abstract class ListSubscriber<T> implements Subscriber<T> {	
 	protected final List<T> result;				// result list of the db
 	protected Exception error = null; 			// the first error that occurred
-	protected volatile boolean completed; 		// true if the stream is completed, false otherwise
 
-	/**
-	 * base subscriber for a reactive stream mongodb operation
-	 */
 	public ListSubscriber() {
 		result = new ArrayList<>();
 	}
@@ -34,17 +30,5 @@ public abstract class ListSubscriber<T> implements Subscriber<T> {
 			error = new Exception(t);
 		}
 		onComplete();
-	}	
-
-	public List<T> getResult() {
-		return result;
-	}
-
-	public Throwable getError() {
-		return error;
-	}
-
-	public boolean isCompleted() {
-		return completed;
 	}
 }

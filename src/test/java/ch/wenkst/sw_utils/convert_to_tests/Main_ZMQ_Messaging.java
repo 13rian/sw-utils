@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils;
+package ch.wenkst.sw_utils.convert_to_tests;
 
 
 import java.nio.charset.StandardCharsets;

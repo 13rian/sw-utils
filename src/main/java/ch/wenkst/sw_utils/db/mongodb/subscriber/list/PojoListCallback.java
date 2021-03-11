@@ -2,7 +2,7 @@ package ch.wenkst.sw_utils.db.mongodb.subscriber.list;
 
 import java.util.List;
 
-import ch.wenkst.sw_utils.db.mongodb.base.BaseEntity;
+import ch.wenkst.sw_utils.db.mongodb.entity.BaseEntity;
 
 @FunctionalInterface
 public interface PojoListCallback {

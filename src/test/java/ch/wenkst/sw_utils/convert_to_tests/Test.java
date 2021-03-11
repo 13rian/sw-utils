@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils;
+package ch.wenkst.sw_utils.convert_to_tests;
 import ch.wenkst.sw_utils.logging.Log;
 
 public class Test {

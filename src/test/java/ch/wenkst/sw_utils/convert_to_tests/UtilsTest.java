@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils;
+package ch.wenkst.sw_utils.convert_to_tests;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import ch.wenkst.sw_utils.Utils;
 
 public class UtilsTest {
 	private static ThreadPoolExecutor executor = null;

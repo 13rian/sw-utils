@@ -1,10 +1,10 @@
-package ch.wenkst.sw_utils;
+package ch.wenkst.sw_utils.convert_to_tests;
 
 
 import org.bson.types.ObjectId;
 
-import ch.wenkst.sw_utils.db.mongodb.base.BaseEntity;
-import ch.wenkst.sw_utils.db.mongodb.base.EntityInfo;
+import ch.wenkst.sw_utils.db.mongodb.entity.BaseEntity;
+import ch.wenkst.sw_utils.db.mongodb.entity.EntityInfo;
 
 @EntityInfo(collection="Person")
 public final class Person extends BaseEntity {

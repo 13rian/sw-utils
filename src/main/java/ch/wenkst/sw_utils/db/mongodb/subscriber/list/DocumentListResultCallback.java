@@ -5,7 +5,7 @@ import java.util.List;
 import org.bson.Document;
 
 @FunctionalInterface
-public interface DocumentListCallback {
+public interface DocumentListResultCallback {
 	/**
 	 * Called when the operation completes.
 	 * @param dbResults 	the result of the operation, is null if an error occurred
