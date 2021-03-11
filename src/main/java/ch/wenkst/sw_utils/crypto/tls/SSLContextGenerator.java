@@ -19,8 +19,8 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
+import ch.wenkst.sw_utils.crypto.CryptoProvider;
 import ch.wenkst.sw_utils.crypto.SecurityConstants;
-import ch.wenkst.sw_utils.crypto.SecurityUtils;
 
 public class SSLContextGenerator {
 	
@@ -99,7 +99,7 @@ public class SSLContextGenerator {
 	
 	
 	private static SSLContext sslContextInstance(String protocol) throws NoSuchAlgorithmException, NoSuchProviderException {
-		if (SecurityUtils.bcjsseProviderRegistered()) {
+		if (CryptoProvider.bcjsseProviderRegistered()) {
 			return SSLContext.getInstance(protocol, SecurityConstants.BCJSSE);
 		} else {
 			return SSLContext.getInstance(protocol);
@@ -130,7 +130,7 @@ public class SSLContextGenerator {
 	
 	
 	private static KeyStore keyStoreInstance() throws KeyStoreException, NoSuchProviderException {
-		if (SecurityUtils.bcProviderRegistered()) {
+		if (CryptoProvider.bcProviderRegistered()) {
 			return KeyStore.getInstance(SecurityConstants.PKCS12, SecurityConstants.BC);
 		} else {
 			return KeyStore.getInstance(SecurityConstants.PKCS12);
@@ -141,7 +141,7 @@ public class SSLContextGenerator {
 	private static KeyManagerFactory keyManagerFactoryInstance(KeyStore keyStore, String keyStorePassword)
 			throws NoSuchAlgorithmException, NoSuchProviderException, UnrecoverableKeyException, KeyStoreException {
 		KeyManagerFactory kmf;
-		if (SecurityUtils.bcjsseProviderRegistered()) {
+		if (CryptoProvider.bcjsseProviderRegistered()) {
 			kmf = KeyManagerFactory.getInstance(SecurityConstants.PKIX, SecurityConstants.BCJSSE);
 		} else {
 			kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());

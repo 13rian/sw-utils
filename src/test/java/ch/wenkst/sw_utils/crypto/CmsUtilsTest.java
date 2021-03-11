@@ -27,7 +27,7 @@ public class CmsUtilsTest {
 	
 	@BeforeAll
 	public void registerBcPRovider() throws UnrecoverableKeyException, KeyStoreException, NoSuchProviderException, NoSuchAlgorithmException, CertificateException, IOException {
-		SecurityUtils.registerBC();
+		CryptoProvider.registerBC();
 		cryptoMaterial = new CmsCryptoMaterial();
 		cryptoMaterial.loadCryptoMaterial();
 		cmsCrypto = new CMS_Crypto();
@@ -94,12 +94,8 @@ public class CmsUtilsTest {
 	}
 	
 	
-	
-
-	
-	
 	@AfterAll
 	public void unregisterBcProviders() {
-		SecurityUtils.unregisterBC();
+		CryptoProvider.unregisterBC();
 	}
 }

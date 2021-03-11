@@ -29,6 +29,7 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 
 import ch.wenkst.sw_utils.Utils;
 import ch.wenkst.sw_utils.conversion.Conversion;
+import ch.wenkst.sw_utils.crypto.CryptoProvider;
 import ch.wenkst.sw_utils.crypto.SecurityUtils;
 import ch.wenkst.sw_utils.crypto.SecurityUtils.FileFormat;
 import ch.wenkst.sw_utils.crypto.SecurityUtils.KeyFormat;
@@ -42,7 +43,7 @@ public class MainCryptoTest {
 		
 		
 		// register the bouncy castle provider
-		SecurityUtils.registerBC();
+		CryptoProvider.registerBC();
 		
 		///////////////////////////////////////////////////////////////////////////////////////////////////
 		// 										CERTS 													 //

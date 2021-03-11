@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ch.wenkst.sw_utils.Utils;
+import ch.wenkst.sw_utils.crypto.CryptoProvider;
 import ch.wenkst.sw_utils.crypto.SecurityConstants;
 import ch.wenkst.sw_utils.crypto.SecurityUtils;
 import ch.wenkst.sw_utils.crypto.tls.SSLContextGenerator;
@@ -36,7 +37,7 @@ public class MainRabbitMQ {
 
 		// non-encrypted connections to the rabbitMQ server
 		// RabbitMQHander messageHandler = new RabbitMQHander("23.97.156.162", "efr", "efrserver");
-		SecurityUtils.registerBCJSSE();
+		CryptoProvider.registerBCJSSE();
 
 		// tls-encrypted connections to the rabbitMQ server
 		String p12FilePath = System.getProperty("user.dir") + File.separator + "rabbit_mq" + File.separator + "client" + File.separator + "client.cert.p12";

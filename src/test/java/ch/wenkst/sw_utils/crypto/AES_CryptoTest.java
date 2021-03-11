@@ -22,7 +22,7 @@ public class AES_CryptoTest {
 	
 	@BeforeAll
 	public static void registerBcPRovider() {
-		SecurityUtils.registerBC();
+		CryptoProvider.registerBC();
 	}
 	
 	
@@ -54,6 +54,6 @@ public class AES_CryptoTest {
 	
 	@AfterAll
 	public static void unregisterBcProvider() {
-		SecurityUtils.unregisterBC();
+		CryptoProvider.unregisterBC();
 	}
 }

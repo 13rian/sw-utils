@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -17,15 +18,12 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
-import java.security.Provider;
 import java.security.PublicKey;
-import java.security.SecureRandom;
 import java.security.Security;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -33,12 +31,6 @@ import java.security.spec.RSAPublicKeySpec;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManagerFactory;
 
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
@@ -53,32 +45,24 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ch.wenkst.sw_utils.Utils;
 import ch.wenkst.sw_utils.conversion.Conversion;
 import ch.wenkst.sw_utils.file.FileUtils;
 
 public class SecurityUtils {
 	private static final Logger logger = LoggerFactory.getLogger(SecurityUtils.class);
 	
-
-	
-	
 	public enum KeyType {
-		RSA, 		// rsa keys
-		EC 			// elliptic keys
+		RSA,
+		EC
 	}
 	
-	/**
-	 * file formats of the private key
-	 */
+
 	public enum FileFormat {
 		PEM,
 		DER
 	}
 	
-	/**
-	 * cryptographic standards how the key is stored in the file
-	 */
+
 	public enum KeyFormat {
 		PKCS1, 		// legacy format from openssl for rsa private keys
 		PKCS8, 		// new standard that should be used whenever possible, only standard supported by java
@@ -86,151 +70,21 @@ public class SecurityUtils {
 	}
 	
 
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// 								methods to register bouncy castle providers 								 //
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	/**
-	 * registers the bouncy castle provider as security provider, if it was not registered before
-	 */
-	public static void registerBC() {	
-		if (!bcProviderRegistered()) {
-			Security.addProvider(new BouncyCastleProvider());
-			setSourceOfRandom();
-			logger.info("successfully registered Bouncy Castle as crypto provider.");
-		}
-	}
-
-
-	/**
-	 * unregisters the bouncy castle provider as security provider
-	 */
-	public static void unregisterBC() {
-		if (bcProviderRegistered()) {
-			Security.removeProvider(SecurityConstants.BC);
-			logger.info("successfully unregistered Bouncy Castle as crypto provider.");
-		}
-	}
-
-
-	/**
-	 * registers the bouncy castle provider for tls handshakes (BCJSSE) at position 2 and the bouncy castle provider for
-	 * api crypto (BC) at position 3, if they were not registered before.
-	 * The Sun security provider needs to be in front of the BCJSSE provider since it is internally used by BCJSSE.
-	 * Note: The BCJSSE provider needs the JCE unlimited strength file installed
-	 */
-	public static void registerBCJSSE() {
-		if (!bcjsseProviderRegistered()) {
-			try {
-				// with this approach it is not necessary to have the bcjsse dependency in the class path
-				Object bc = Class.forName("org.bouncycastle.jsse.provider.BouncyCastleJsseProvider").newInstance();
-				Security.insertProviderAt((Provider) bc, 1);
-				logger.info("successfully registered bouncy castle bcjsse as security provider at position 1.");
-				
-			} catch (Exception e) {
-				logger.error("failed to register bouncy castle bcjsse as security provider: ", e);
-			}
-		}
-
-		if (!bcProviderRegistered()) {
-			Security.insertProviderAt(new BouncyCastleProvider(), 2);
-			logger.info("Successfully registered Bouncy Castle BC as security provider at position 2.");
-		}
-		
-		setSourceOfRandom();
-	}
-
-
-	/**
-	 * unregisters both bouncy castle providers BCJSSE and BC
-	 */
-	public static void unregisterBCJSSE() {
-		if (bcjsseProviderRegistered()) {
-			Security.removeProvider(SecurityConstants.BCJSSE);
-			logger.info("Successfully unregistered Bouncy Castle BCJSSE as crypto provider.");
-		}
-
-		if (bcProviderRegistered()) {
-			Security.removeProvider(SecurityConstants.BC);
-			logger.info("Successfully unregistered Bouncy Castle BC as crypto provider.");
-		}
-	}
-
-
-	public static boolean bcProviderRegistered() {
-		return Security.getProvider(SecurityConstants.BC) != null;
-	}
-	
-	
-	public static boolean bcjsseProviderRegistered() {
-		return Security.getProvider(SecurityConstants.BCJSSE) != null;
-	}
-
-
-
-
-
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 									methods to handle certificates		 									 //
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	/**
-	 * loads the base64 encoded key or certificate form the passed pem-file
-	 * @param path 	path to the pem-file
-	 * @return 		base64 encoded der content of the pem file
-	 */
-	private static List<String> loadPem(String path) {
-		ArrayList<String> result = new ArrayList<>();
-		try {
-			InputStream inputStream = new FileInputStream(path);
-			InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-			BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-			StringBuilder strBuilder = new StringBuilder();
-
-			boolean readContent = false;
-			String line;
-			while ((line = bufferedReader.readLine()) != null) {
-				// check for the first line
-				if (line.contains("BEGIN")) {
-					readContent = true;
-					continue;
-				} 
-
-				// check for the last line
-				if (line.contains("END")) {
-					String pemObj = strBuilder.toString();
-					result.add(pemObj);
-					strBuilder.setLength(0);
-					readContent = false;
-					continue;
-				}
-
-				// append the line to the cert
-				if (readContent) {
-					strBuilder.append(line.trim());
-				}
-			}
-
-			// close the resources
-			bufferedReader.close();
-			inputStreamReader.close();
-			inputStream.close();
-			return result;
-
-		} catch (Exception e) {
-			logger.error("error reading the private key from " + path, e);
-			return null;
-		}
-	}	
-	
-	
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////	
 	/**
 	 * loads a list of certificates form pem or der files. if a certificate could not be loaded
 	 * it will not be added to the list
 	 * @param paths 	list of absolute file paths to the certificates
 	 * @return 			list of certificates
+	 * @throws NoSuchProviderException 
+	 * @throws CertificateException 
+	 * @throws FileNotFoundException 
 	 */
-	public static List<Certificate> certsFromFiles(List<String> paths) {
-		ArrayList<Certificate> result = new ArrayList<>();
+	public static List<Certificate> certsFromFiles(List<String> paths) throws FileNotFoundException, CertificateException, NoSuchProviderException {
+		List<Certificate> result = new ArrayList<>();
 		for (String path: paths) {
 			Certificate cert = certFromFile(path);
 			if (cert != null) {
@@ -246,25 +100,15 @@ public class SecurityUtils {
 	 * loads a certificate from a pem or a der file
 	 * @param path 	the path to the certificate file
 	 * @return 		the certificate
+	 * @throws FileNotFoundException 
+	 * @throws NoSuchProviderException 
+	 * @throws CertificateException 
 	 */
-	public static Certificate certFromFile(String path) {
-		try {
-			File certFile = new File(path);
-			FileInputStream certInput = new FileInputStream(certFile);
-
-			CertificateFactory certFactory;
-			if (bcProviderRegistered()) {
-				certFactory = CertificateFactory.getInstance(SecurityConstants.X509, SecurityConstants.BC);
-			} else {
-				certFactory = CertificateFactory.getInstance(SecurityConstants.X509, new BouncyCastleProvider());
-			}
-			
-			return certFactory.generateCertificate(certInput);
-
-		} catch (Exception e) {
-			logger.error("error loading the certificate: ", e);
-			return null;
-		}
+	public static Certificate certFromFile(String path) throws FileNotFoundException, CertificateException, NoSuchProviderException {
+		File certFile = new File(path);
+		FileInputStream certInput = new FileInputStream(certFile);
+		CertificateFactory certFactory = certificateFactoryInstance();
+		return certFactory.generateCertificate(certInput);
 	}
 	
 	
@@ -272,21 +116,21 @@ public class SecurityUtils {
 	 * loads a security certificate from the byte array in the DER format
 	 * @param certBytes 	byte array containing the certificate information	
 	 * @return 				the Java object that contains the security certificate
+	 * @throws NoSuchProviderException 
+	 * @throws CertificateException 
 	 */
-	public static Certificate certFromDer(byte[] certBytes) {
-		try {
-			CertificateFactory certFactory;
-			if (bcProviderRegistered()) {
-				certFactory = CertificateFactory.getInstance(SecurityConstants.X509, SecurityConstants.BC);
-			} else {
-				certFactory = CertificateFactory.getInstance(SecurityConstants.X509, new BouncyCastleProvider());
-			}
-			ByteArrayInputStream is = new ByteArrayInputStream(certBytes); 
-			return certFactory.generateCertificate(is);
-
-		} catch (Exception e) {
-			logger.error("error creating a certificate from the passed bytes: ", e);
-			return null;
+	public static Certificate certFromDer(byte[] certBytes) throws CertificateException, NoSuchProviderException {
+		CertificateFactory certFactory = certificateFactoryInstance();
+		ByteArrayInputStream is = new ByteArrayInputStream(certBytes); 
+		return certFactory.generateCertificate(is);
+	}
+	
+	
+	private static CertificateFactory certificateFactoryInstance() throws CertificateException, NoSuchProviderException {
+		if (CryptoProvider.bcProviderRegistered()) {
+			return CertificateFactory.getInstance(SecurityConstants.X509, SecurityConstants.BC);
+		} else {
+			return CertificateFactory.getInstance(SecurityConstants.X509, new BouncyCastleProvider());
 		}
 	}
 	
@@ -298,20 +142,12 @@ public class SecurityUtils {
 	 * @return 			certificate der byte array
 	 * @throws IOException 
 	 */
-	public static byte[] derFromCertFile(String path, FileFormat fileFormat) throws IOException {
+	public static byte[] derFromCertFile(String path, FileFormat fileFormat) throws IOException {		
 		if (fileFormat.equals(FileFormat.DER)) {
 			return FileUtils.readByteArrFromFile(path);
 			
 		} else if (fileFormat.equals(FileFormat.PEM)) {
-			List<String> pemObjs = loadPem(path);
-			if (pemObjs != null && !pemObjs.isEmpty()) {
-				String b64CertStr =  pemObjs.get(0);
-				return Conversion.base64StrToByteArray(b64CertStr);
-
-			} else {
-				logger.error("no pem objects found in the passed pem file");
-				return null;
-			}
+			return derFromPem(path);
 			
 		} else {
 			logger.error("passed file format " + fileFormat + " is not implemented");
@@ -319,58 +155,71 @@ public class SecurityUtils {
 		}
 	}
 	
+	
+	private static byte[] derFromPem(String path) throws IOException {
+		List<String> pemObjs = loadPem(path);
+		if (pemObjs != null && !pemObjs.isEmpty()) {
+			String b64CertStr = pemObjs.get(0);
+			return Conversion.base64StrToByteArray(b64CertStr);
 
-
+		} else {
+			logger.error("no pem objects found in the passed pem file");
+			return null;
+		}
+	}
+	
+	
 	/**
-	 * verifies the server certificates against the certificates in the truststore, the signature is tested and
-	 * it is checked if one of the certificates are outdated. Note it is better to use the method checkServerTrusted
-	 * from the X509TrustManager 
-	 * @param chain			certificate chain from the server
-	 * @param trustedCerts 	the trusted certificates in the truststore
-	 * @return 				true if the certificates from the server are valid, false if they are invalid
+	 * loads the base64 encoded key or certificate form the passed pem-file
+	 * @param path 	path to the pem-file
+	 * @return 		base64 encoded der content of the pem file
+	 * @throws IOException 
 	 */
-	public static boolean verifyChain(X509Certificate[] chain, X509Certificate[] trustedCerts) {
+	private static List<String> loadPem(String path) throws IOException {
+		InputStream inputStream = new FileInputStream(path);
+		InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+		BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
 
-		// flag to set for each certificate in the chain if it was verified from at least one certificate in the chain
-		boolean isCertTrusted = false; 		
+		List<String> pemList = readPemFromBufferedReader(bufferedReader);
 
-		for (X509Certificate cert : chain) {
-			// check if it is outdated
-			if (System.currentTimeMillis() > cert.getNotAfter().getTime()) {
-				logger.error("server-certificate is outdated");
-				return false;
-			};
+		// close the resources
+		bufferedReader.close();
+		inputStreamReader.close();
+		inputStream.close();
+		return pemList;
+	}
+	
+	
+	private static List<String> readPemFromBufferedReader(BufferedReader bufferedReader) throws IOException {
+		List<String> pemList = new ArrayList<>();
+		StringBuilder strBuilder = new StringBuilder();
+		boolean readContent = false;
+		String line;
+		while ((line = bufferedReader.readLine()) != null) {
+			// check for the first line
+			if (line.contains("BEGIN")) {
+				readContent = true;
+				continue;
+			} 
 
-			for (X509Certificate trustedCert : trustedCerts) {
-				// check if the certificate in the trust store is ourdated
-				if (System.currentTimeMillis() > cert.getNotAfter().getTime()) {
-					logger.error("certificate in trust store is outdated");
-					return false;
-				};
-
-				// Verifying by public key
-				try {
-					cert.verify(trustedCert.getPublicKey());
-
-					// if no error is thrown the certificate is valid
-					isCertTrusted = true; 
-					break;
-
-				} catch (Exception e) {
-
-				} 
+			// check for the last line
+			if (line.contains("END")) {
+				String pemObj = strBuilder.toString();
+				pemList.add(pemObj);
+				strBuilder.setLength(0);
+				readContent = false;
+				continue;
 			}
 
-			// check if the cert is trusted
-			if (!isCertTrusted) {
-				return false;
+			// append the line
+			if (readContent) {
+				strBuilder.append(line.trim());
 			}
 		}
-
-
-		// all certificates are valid
-		return true;
+		
+		return pemList;
 	}
+	
 
 
 
@@ -457,19 +306,14 @@ public class SecurityUtils {
 	 * @param fileFormat 	format of the file
 	 * @param keyFormat 	format of the key
 	 * @return 				the private key or null if an error occurred
+	 * @throws KeyParsingException 
+	 * @throws InvalidKeySpecException 
+	 * @throws NoSuchProviderException 
+	 * @throws NoSuchAlgorithmException 
 	 */
-	public static PrivateKey keyFromFile(String path, KeyType keyType, FileFormat fileFormat, KeyFormat keyFormat) {
-		try {
-			// load the pkcs8 encoded key bytes
-			byte[] pkcs8KeyBytes = derFromKeyFile(path, keyType, fileFormat, keyFormat);	
-		
-			// create the private key from the der bytes
-			return keyFromDer(pkcs8KeyBytes, keyType);
-			
-		} catch (Exception e) {
-			logger.error("failed to parse the key file form path " + path, e);
-			return null;
-		}
+	public static PrivateKey keyFromFile(String path, KeyType keyType, FileFormat fileFormat, KeyFormat keyFormat) throws KeyParsingException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
+		byte[] pkcs8KeyBytes = derFromKeyFile(path, keyType, fileFormat, keyFormat);	
+		return keyFromDer(pkcs8KeyBytes, keyType);
 	}
 	
 	
@@ -659,7 +503,7 @@ public class SecurityUtils {
 
 		// key factory for ec curves
 		else if (keyType.equals(KeyType.EC)) {
-			if (bcProviderRegistered()) {
+			if (CryptoProvider.bcProviderRegistered()) {
 				keyFactory = KeyFactory.getInstance(SecurityConstants.EC, SecurityConstants.BC);
 			} else {
 				keyFactory = KeyFactory.getInstance(SecurityConstants.EC, new BouncyCastleProvider());
@@ -756,7 +600,7 @@ public class SecurityUtils {
 	public static PublicKey pubRsaKeyFromPrivKey(PrivateKey rsaPrivateKey) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
 		// get the key factory
 		KeyFactory keyFactory = null;
-		if (bcProviderRegistered()) {
+		if (CryptoProvider.bcProviderRegistered()) {
 			keyFactory = KeyFactory.getInstance(SecurityConstants.RSA, SecurityConstants.BC);
 		} else {
 			keyFactory = KeyFactory.getInstance(SecurityConstants.RSA, new BouncyCastleProvider());
@@ -780,7 +624,7 @@ public class SecurityUtils {
 	public static PublicKey pubEcKeyFromPrivKey(PrivateKey ecPrivateKey) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
 		// get the key factory
 		KeyFactory keyFactory = null;
-		if (bcProviderRegistered()) {
+		if (CryptoProvider.bcProviderRegistered()) {
 			keyFactory = KeyFactory.getInstance(SecurityConstants.EC, SecurityConstants.BC);
 		} else {
 			keyFactory = KeyFactory.getInstance(SecurityConstants.EC, new BouncyCastleProvider());
@@ -813,7 +657,7 @@ public class SecurityUtils {
 	 */
 	public static KeyStore keyStoreFromP12(String path, String password) throws KeyStoreException, NoSuchProviderException, NoSuchAlgorithmException, CertificateException, IOException {
 		KeyStore keyStore;
-		if (bcProviderRegistered()) {
+		if (CryptoProvider.bcProviderRegistered()) {
 			keyStore = KeyStore.getInstance(SecurityConstants.PKCS12, SecurityConstants.BC);
 		} else {
 			keyStore = KeyStore.getInstance(SecurityConstants.PKCS12, new BouncyCastleProvider());
@@ -824,182 +668,5 @@ public class SecurityUtils {
 		keyStore.load(fis, password.toCharArray());
 		
 		return keyStore;
-	}
-
-
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// 								methods to print security specific informations 							  //
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	/**
-	 * returns a string with the default providers that handle the security
-	 * @return 		a string containing all the default providers
-	 */
-	public static String getDefaultProviders() {
-		StringBuilder builder = new StringBuilder("\n");
-
-		try {
-			// provider of the SSLContext
-			String name = SSLContext.getInstance(SecurityConstants.TLS_1_2).getProvider().getName();
-			builder.append("TLSv1.2 SSLContext Provider: ").append(name).append("\n");
-
-			// provider of the CerificateFactory
-			name = CertificateFactory.getInstance(SecurityConstants.X509).getProvider().getName();
-			builder.append("X.509 CertificateFactory Provider: ").append(name).append("\n");
-
-			// provider of the default KeyStore
-			name = KeyStore.getInstance(KeyStore.getDefaultType()).getProvider().getName();
-			builder.append("Default KeyStore Provider: ").append(name).append("\n");
-
-			// provider of the PKCS12 KeyStore
-			name = KeyStore.getInstance(SecurityConstants.PKCS12).getProvider().getName();
-			builder.append("PKCS12 KeyStore Provider: ").append(name).append("\n");
-
-			// provider of the KeyManagerFactory
-			name = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm()).getProvider().getName();
-			builder.append("Default KeyManagerFactory Provider: ").append(name).append("\n");
-
-			// provider of the TrustManagerFactory
-			name = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).getProvider().getName();
-			builder.append("Default TrustManagerFactory Provider: ").append(name).append("\n");
-
-
-			// default keyStore type
-			name = KeyStore.getDefaultType();
-			builder.append("KeyStore.getDefaultType(): ").append(name).append("\n");
-
-
-			// default KeyManagerFactory algorithm
-			name = KeyManagerFactory.getDefaultAlgorithm();
-			builder.append("KeyStore.getDefaultType(): ").append(name).append("\n");
-
-
-			// default TrustManagerFactory provider
-			name = TrustManagerFactory.getDefaultAlgorithm();
-			builder.append("KeyStore.getDefaultType(): ").append(name).append("\n");
-
-			return builder.toString();
-
-
-		} catch (Exception e) {
-			logger.error("error getting the default security types: ", e);
-			return "";
-		}
-	}
-
-
-	/**
-	 * returns a String with the registered providers in the correct order they are registered
-	 * @return 		string with the registered security providers 
-	 */
-	public static String getRegisteredProviders() {
-		StringBuilder builder = new StringBuilder("[");
-
-		for (Provider provider : Security.getProviders()) {
-			builder.append(provider.getName()).append(", ");
-		}
-
-		builder.deleteCharAt(builder.length()-1);
-		builder.deleteCharAt(builder.length()-1);
-		builder.append("]");
-
-		return builder.toString();
-	}
-	
-	
-	
-	
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// 											methods to handle passwords 							  		  //
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	/** 
-	 * generates a password hash using the PBKDF2WithHmacSHA1 algorithm.
-	 * @param password 		the string password to hash
-	 * @return 				hash:salt:iterationCount, the hash and the salt is in base64 or null if an error occured
-	 */
-	public static String hashPassword(String password) {
-		try {
-			int iterations = 1000; 					// the number how often the password is hashed
-			char[] chars = password.toCharArray();
-
-			// create the salt
-			SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
-			byte[] salt = new byte[16];
-			sr.nextBytes(salt);
-
-			// generate the hash
-			PBEKeySpec spec = new PBEKeySpec(chars, salt, iterations, 64 * 8);
-			SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-			byte[] hash = skf.generateSecret(spec).getEncoded();
-
-			// concatenate the hash the salt and the number of iterations
-			return Conversion.byteArrayToBase64(hash) + ":" + Conversion.byteArrayToBase64(salt) + ":" + iterations;
-		
-		} catch (Exception e) {
-			logger.error("error hashing the password");
-			return null;
-		}
-	}
-
-
-	/** 
-	 * checks if the passed password has the same hash than the passed one 
-	 * @param password 			the password that is validated
-	 * @param pwHash 			hash:salt:iterationCount, the hash and the salt is in base64
-	 * @return 					true, if the passed password matches the passed hash
-	 */
-	public static boolean validatePassword(String password, String pwHash) {
-		try {
-			// get the specifications of the hash
-			String[] parts = pwHash.split(":");
-			byte[] hash = Conversion.base64StrToByteArray(parts[0]);
-			byte[] salt = Conversion.base64StrToByteArray(parts[1]);
-			int iterations = Integer.parseInt(parts[2]);
-			
-			
-			PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, iterations, hash.length * 8);
-			SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-			byte[] testHash = skf.generateSecret(spec).getEncoded();
-
-			int diff = hash.length ^ testHash.length;
-			for (int i = 0; i < hash.length && i < testHash.length; i++) {
-				diff |= hash[i] ^ testHash[i];
-			}
-			return diff == 0;
-
-		} catch (Exception e) {
-			logger.error("error validating the hash of the password: " + e.getMessage(), e);
-			return false;
-		}
-	}
-	
-	
-	
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//										utility methods 												     //
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	/**
-	 * changes the source of random to /dev/urandom if the operating system is linux
-	 * this source has a lower chance of blocking
-	 */
-	public static void setSourceOfRandom() {
-		if (Utils.isOSLinux()) {
-			logger.info("operating system is linux, change the source of random to /dev/urandom");
-			System.setProperty("java.security.egd", "file:/dev/./urandom");
-		}
-	}
-	
-	
-	public static class KeyInfo {
-		private byte[] pkcs8KeyBytes;
-		private FileFormat fileFormat;
-		private KeyType keyType;
-		private KeyFormat keyFormat;
-		
-		public void addKeyInfo(FileFormat fileFormat, KeyType keyType, KeyFormat keyFormat) {
-			this.fileFormat = fileFormat;
-			this.keyType = keyType;
-			this.keyFormat = keyFormat;
-		}
 	}
 }

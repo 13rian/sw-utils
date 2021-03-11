@@ -17,8 +17,8 @@ import javax.net.ssl.X509TrustManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ch.wenkst.sw_utils.crypto.CryptoProvider;
 import ch.wenkst.sw_utils.crypto.SecurityConstants;
-import ch.wenkst.sw_utils.crypto.SecurityUtils;
 
 public class TrustManagerTLS implements X509TrustManager {
 	private static final Logger logger = LoggerFactory.getLogger(TrustManagerTLS.class);
@@ -68,7 +68,7 @@ public class TrustManagerTLS implements X509TrustManager {
 	
 	private TrustManagerFactory setupTrustManagerFactory() throws NoSuchAlgorithmException, NoSuchProviderException, KeyStoreException {
 		TrustManagerFactory trustManagerFactory;
-		if (SecurityUtils.bcjsseProviderRegistered()) {
+		if (CryptoProvider.bcjsseProviderRegistered()) {
 			trustManagerFactory = TrustManagerFactory.getInstance(SecurityConstants.PKIX, SecurityConstants.BCJSSE);
 		} else {
 			trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
