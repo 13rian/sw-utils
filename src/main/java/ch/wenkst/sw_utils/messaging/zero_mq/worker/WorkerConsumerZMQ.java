@@ -50,7 +50,6 @@ public abstract class WorkerConsumerZMQ extends ClientZMQ implements Runnable {
 			}
 		}
 		
-		// close all connections
 		super.disconnect();
 	}
 	

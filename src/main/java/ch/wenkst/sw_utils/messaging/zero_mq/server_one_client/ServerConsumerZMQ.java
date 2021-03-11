@@ -33,8 +33,6 @@ public abstract class ServerConsumerZMQ extends ServerZMQ implements Runnable {
 	} 
 	
 	
-	
-	
 	/**
 	 * called when a new message form a client was received
 	 * @param reqBytes 	the message from the publisher
@@ -60,7 +58,6 @@ public abstract class ServerConsumerZMQ extends ServerZMQ implements Runnable {
 			logger.error("failed to receive the message: ", e); 
 		}
 		
-		// close all connections
 		super.disconnect();
 	}
 	

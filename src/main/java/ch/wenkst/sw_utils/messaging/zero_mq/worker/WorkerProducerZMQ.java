@@ -36,15 +36,11 @@ public class WorkerProducerZMQ extends ClientZMQ {
 	public synchronized byte[] sendRequest(byte[] message, int timeout) {
 		byte[] reply = null;
 		try {
-			// set the receive timeout
 			if (timeout > 0) {
 				socket.setReceiveTimeOut(timeout);
 			}
 
-			// send the message
 			super.sendMessage(message);
-
-			// wait for the reply
 			reply = socket.recv(0);
 
 			return reply;
@@ -63,5 +59,4 @@ public class WorkerProducerZMQ extends ClientZMQ {
 	public void disconnect() {
 		super.disconnect();
 	}
-
 }

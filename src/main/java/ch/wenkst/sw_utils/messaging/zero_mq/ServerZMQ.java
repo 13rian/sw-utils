@@ -32,6 +32,7 @@ public class ServerZMQ {
 		ports[0] = port;
 		protocols = new String[1];
 		protocols[0] = protocol;
+		context = ZMQ.context(1);
 	}
 	
 	
@@ -45,6 +46,7 @@ public class ServerZMQ {
 		this.hosts = hosts;
 		this.ports = ports;
 		this.protocols = protocols;
+		context = ZMQ.context(1);
 	}
 	
 	
@@ -54,26 +56,32 @@ public class ServerZMQ {
 	 * @param type 		the type of the client connection
 	 */
 	public void connect(SocketType type) {
-		// check if the length of the hosts, ports and protocols are the same
-		if (hosts.length != ports.length || hosts.length != protocols.length) {
+		if (!parametersValid()) {
 			logger.error("the number of ports/hosts/protocols do not match");
 			return;
 		}
 		
 		try {
-			context = ZMQ.context(1);
-			
-			// create the server socket and bind it to the different ports
-			socket = context.socket(type);
-			for (int i=0; i<ports.length; i++) {
-				String bindStr = protocols[i] + "://" + hosts[i] + ":" + ports[i];
-				socket.bind(bindStr);
-				logger.info("mq server socket bound to: " + bindStr);
-			}			
+			createAndBindServerSockets(type);	
 			
 		} catch (Exception e) {
 			logger.error("failed to create the server socket: ", e);
 		}
+	}
+	
+	
+	private boolean parametersValid() {
+		return hosts.length == ports.length && hosts.length == protocols.length;
+	}
+	
+	
+	private void createAndBindServerSockets(SocketType type) {
+		socket = context.socket(type);
+		for (int i=0; i<ports.length; i++) {
+			String bindStr = protocols[i] + "://" + hosts[i] + ":" + ports[i];
+			socket.bind(bindStr);
+			logger.info("mq server socket bound to: " + bindStr);
+		}	
 	}
 	
 	
@@ -100,78 +108,7 @@ public class ServerZMQ {
 		} catch (Exception e) {
 			logger.error("failed to send the message: ", e);
 		}
-	}
-	
-	
-	
-//	/**
-//	 * sends a message over the socket and waits for the response, string will be utf8-encoded
-//	 * @param message 		the message to send
-//	 * @param timeout 		maximal time in ms to wait for the response
-//	 * @return 				the response String or null if an error occurred
-//	 */
-//	public String sendMessage(String message, int timeout) {
-//		byte[] messageBytes = message.getBytes(StandardCharsets.UTF_8);
-//		byte[] replyBytes = sendMessage(messageBytes, timeout);
-//		
-//		// prepare the reply
-//		String reply = null;
-//		if (replyBytes != null) {
-//			reply = new String(replyBytes, StandardCharsets.UTF_8);
-//		}
-//		return reply;
-//	}
-//	
-//	
-//	
-//	/**
-//	 * sends a message over the socket and waits for the response
-//	 * @param message 		the message to send
-//	 * @param timeout 		maximal time in ms to wait for the response
-//	 * @return 				the response bytes or null if an error occurred
-//	 */
-//	public byte[] sendMessage(byte[] message, int timeout) {
-//		byte[] reply = null;
-//		try {
-//			// set the receive timeout
-//			if (timeout > 0) {
-//				socket.setReceiveTimeOut(timeout);
-//			}
-//			
-//			// send the message
-//			sendMessage(message);
-//
-//			// wait for the reply
-//			reply = socket.recv(0);
-//			
-//			// print the reply
-//			String replyStr = null;
-//			if (reply != null) {
-//				replyStr = new String(reply, StandardCharsets.UTF_8);
-//			}
-//			logger.debug("received message: " + replyStr);
-//			
-//			return reply;
-//
-//		} catch (Exception e) {
-//			logger.error("failed to send the message and wait for the response: ", e);
-//			return reply;
-//		}
-//	}
-//	
-//	
-//	public byte[] receiveBytes() {
-//		byte[] reply = socket.recv(0);
-//		return reply;
-//	}
-//	
-//	
-//	public String receiveStr() {
-//		byte[] reply = socket.recv(0);
-//		String replyStr = new String(reply, StandardCharsets.UTF_8);
-//		return replyStr;
-//	}
-	
+	}	
 	
 	
 	/**

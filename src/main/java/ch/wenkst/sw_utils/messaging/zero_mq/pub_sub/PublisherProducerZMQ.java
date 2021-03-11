@@ -51,5 +51,4 @@ public class PublisherProducerZMQ extends ClientZMQ {
 	public void disconnect() {
 		super.disconnect();
 	}
-
 }

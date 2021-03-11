@@ -8,6 +8,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ch.wenkst.sw_utils.Utils;
+import ch.wenkst.sw_utils.messaging.zero_mq.BrokerConfigZMQ;
 import ch.wenkst.sw_utils.messaging.zero_mq.pub_sub.PubSub_BrokerZMQ;
 import ch.wenkst.sw_utils.messaging.zero_mq.pub_sub.PublisherProducerZMQ;
 import ch.wenkst.sw_utils.messaging.zero_mq.pub_sub.SubscriberConsumerZMQ;
@@ -125,7 +126,15 @@ public class Main_ZMQ_Messaging {
 		logger.info("---------------------------------------------------------------------------------------------");
 		
 		// start the broker
-		WorkerBroker workerBroker = new WorkerBroker("localhost", 5000, "tcp", "localhost", 5001, "tcp");
+		BrokerConfigZMQ workerBrokerConfig = new BrokerConfigZMQ()
+				.frontendHost("localhost")
+				.frontendPort(5000)
+				.frontendProtocol("tcp")
+				.backendHost("localhost")
+				.backendPort(5001)
+				.backendProtocol("tcp");
+		
+		WorkerBroker workerBroker = new WorkerBroker(workerBrokerConfig);
 		workerBroker.connect();
 		
 		
@@ -198,7 +207,16 @@ public class Main_ZMQ_Messaging {
 		logger.info("---------------------------------------------------------------------------------------------");
 		
 		// start the broker
-		PubSub_BrokerZMQ pubsubBroker = new PubSub_BrokerZMQ("localhost", 6000, "tcp", "localhost", 6001, "tcp");
+		BrokerConfigZMQ pubSubBrokerConfig = new BrokerConfigZMQ()
+				.frontendHost("localhost")
+				.frontendPort(6000)
+				.frontendProtocol("tcp")
+				.backendHost("localhost")
+				.backendPort(6001)
+				.backendProtocol("tcp");
+		
+		
+		PubSub_BrokerZMQ pubsubBroker = new PubSub_BrokerZMQ(pubSubBrokerConfig);
 		pubsubBroker.connect();
 		
 		

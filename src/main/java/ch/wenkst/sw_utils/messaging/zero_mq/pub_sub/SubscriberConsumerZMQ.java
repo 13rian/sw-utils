@@ -79,15 +79,10 @@ public abstract class SubscriberConsumerZMQ extends ClientZMQ implements Runnabl
 	@Override
 	public void run() {
 		isRunning = true;
-		
 
 		try {
-			// set the socket timeout
 			socket.setReceiveTimeOut(2000);
-			
 			while (isRunning) {
-				
-				// get the key of the message
 				byte[] keyBytes = socket.recv();
 				
 				if (keyBytes != null) {
@@ -101,7 +96,6 @@ public abstract class SubscriberConsumerZMQ extends ClientZMQ implements Runnabl
 			logger.error("failed to receive the message: ", e); 
 		}
 		
-		// close all connections
 		super.disconnect();
 	}
 	

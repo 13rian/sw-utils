@@ -10,7 +10,7 @@ import org.zeromq.ZMQ.Socket;
 
 import ch.wenkst.sw_utils.threads.BaseThread;
 
-public class BrokerZMQ extends BaseThread {
+public abstract class BrokerZMQ extends BaseThread {
 	private static final Logger logger = LoggerFactory.getLogger(BrokerZMQ.class);
 	
 	private Socket frontend = null; 	// to face the client side of the connection, e.g. subscribers, routers
@@ -18,36 +18,23 @@ public class BrokerZMQ extends BaseThread {
 	private Context context = null; 	// the mq-context
 	private Poller poller = null; 		// the poller for the two sockets
 	
-	// to manage the frontend
-	private String frontendHost = null;
-	private int frontendPort = 0;
-	private String frontendProtocol = null;
 	
-	// to manage the backend
-	private String backendHost = null;
-	private int backendPort = 0;
-	private String backendProtocol = null;
+	private BrokerConfigZMQ brokerConfig;
 	
 	
 	/**
 	 * acts as a broker between a frontend and a backend, messages are send from one end to another like a proxy
 	 * both sides of the broker are server sides. To bind to all hosts use "*" for the host
-	 * @param frontendHost 			host of the frontend
-	 * @param frontendPort 			port of the frontend
-	 * @param frontendProtocol 		protocol of the frontend, e.g. tcp, ipc
-	 * @param backendHost 			host of the backend
-	 * @param backendPort 			port of the backend
-	 * @param backendProtocol 		protocol of the backend, e.g. tcp, ipc
+	 * @param brokerConfig 		broker configurtion
 	 */
-	public BrokerZMQ(String frontendHost, int frontendPort, String frontendProtocol, String backendHost, int backendPort, String backendProtocol) {
+	public BrokerZMQ(BrokerConfigZMQ brokerConfig) {
 		super(100);
-		this.frontendHost = frontendHost;
-		this.frontendPort = frontendPort;
-		this.frontendProtocol = frontendProtocol;
-		this.backendHost = backendHost;
-		this.backendPort = backendPort;
-		this.backendProtocol = backendProtocol;
+		this.brokerConfig = brokerConfig;
+		context = ZMQ.context(1);
 	}
+	
+	
+	public abstract void connect();
 	
 	
 	/**
@@ -57,33 +44,35 @@ public class BrokerZMQ extends BaseThread {
 	 */
 	protected void openSockets(SocketType frontendType, SocketType backendType) {
 		try {
-			context = ZMQ.context(1);
-
-			// create the frontend server socket
-			frontend = context.socket(frontendType); 	
-			String bindStr = frontendProtocol + "://" + frontendHost + ":" + frontendPort;
-			frontend.bind(bindStr);
-			logger.info("broker frontend bound to: " + bindStr);
-
-			// create the backend server socket
-			backend  = context.socket(backendType); 	
-			bindStr = backendProtocol + "://" + backendHost + ":" + backendPort;
-			backend.bind(bindStr);
-			logger.info("broker backend bound to: " + bindStr);
-			
-			// set the receive timeouts
-			frontend.setReceiveTimeOut(2000);
-			backend.setReceiveTimeOut(2000);
+			createFrontendServerSocket(frontendType);
+			createBackendServerSocket(backendType);
 		
 		} catch (Exception e) {
 			logger.error("failed to bind the two broker server sockets: ", e); 
 		}
 	}
 	
+	
+	private void createFrontendServerSocket(SocketType socketType) {
+		frontend = context.socket(socketType); 	
+		String bindStr = brokerConfig.getFrontendProtocol() + "://" + brokerConfig.getFrontendHost() + ":" + brokerConfig.getFrontendPort();
+		frontend.bind(bindStr);
+		frontend.setReceiveTimeOut(2000);
+		logger.info("broker frontend bound to: " + bindStr);
+	}
+	
+	
+	private void createBackendServerSocket(SocketType socketType) {
+		backend  = context.socket(socketType); 	
+		String bindStr = brokerConfig.getBackendProtocol() + "://" + brokerConfig.getBackendHost() + ":" + brokerConfig.getBackendPort();
+		backend.bind(bindStr);
+		backend.setReceiveTimeOut(2000);
+		logger.info("broker backend bound to: " + bindStr);
+	}
+	
 
 	@Override
 	public void startWork() {
-		// initialize the poll set
 		try {
 			poller = context.poller(2);
 			poller.register(frontend, Poller.POLLIN);
@@ -97,11 +86,7 @@ public class BrokerZMQ extends BaseThread {
 
 	@Override
 	public void doWork() {
-		try {
-			boolean more = false;
-			byte[] message;
-
-			
+		try {		
 			//  poll and memorize multi-part detection
 			int objCount = poller.poll(2000);
 			if (objCount < 1) {
@@ -112,51 +97,44 @@ public class BrokerZMQ extends BaseThread {
 			// redirect the messages between both sockets
 			// frontend -> backend
 			if (poller.pollin(0)) {
-				while (isRunning()) {
-					// receive message
-					message = frontend.recv(0);
-					more = frontend.hasReceiveMore();
-					if (message == null) {
-						// the message will be zero if the read timeout was reached
-						continue;
-					}
-
-					// send the message from the frontend to the backend
-					backend.send(message, more ? ZMQ.SNDMORE : 0);
-					if (!more) {
-						break;
-					}
-				}
+				redirectSocketMessages(frontend, backend);
 			}
 
 			// backend -> frontend 
 			if (poller.pollin(1)) {
-				while (isRunning()) {
-					// receive message
-					message = backend.recv(0);
-					more = backend.hasReceiveMore();
-					if (message == null) {
-						// the message will be zero if the read timout was reached
-						continue;
-					}
-					
-					// send the message from the backend to the frontend
-					frontend.send(message,  more ? ZMQ.SNDMORE : 0);
-					if (!more) {
-						break;
-					}
-				}
+				redirectSocketMessages(backend, frontend);
 			}
 
 		} catch (Exception e) {
 			logger.error("error in message broker, close the broker: ", e);
 		}
 	}
+	
+	
+	/**
+	 * redirects a message received from the fromSocket into the toSocket
+	 * @param fromSocket
+	 * @param toSocket
+	 */
+	private void redirectSocketMessages(Socket fromSocket, Socket toSocket) {
+		while (isRunning()) {
+			byte[] message = fromSocket.recv(0);
+			boolean more = fromSocket.hasReceiveMore();
+			if (message == null) {
+				continue;				// read timeout reached
+			}
+			
+			// send the message from the backend to the frontend
+			toSocket.send(message,  more ? ZMQ.SNDMORE : 0);
+			if (!more) {
+				break;
+			}
+		}
+	}
 
 
 	@Override
 	public void terminateWork() {
-		// close all sockets of the broker
 		try {
 			frontend.close();
 			backend.close();
@@ -175,5 +153,4 @@ public class BrokerZMQ extends BaseThread {
 	public void disconnect() {
 		stopWorker();
 	}
-
 }

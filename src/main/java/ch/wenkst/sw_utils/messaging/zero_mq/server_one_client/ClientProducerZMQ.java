@@ -50,14 +50,14 @@ public abstract class ClientProducerZMQ extends ClientZMQ implements Runnable {
 			socket.setReceiveTimeOut(2000);
 			
 			while (isRunning) {
-				byte[] msgBytes = socket.recv(); 		// receive the message				
+				byte[] msgBytes = socket.recv();			
 				if (msgBytes != null) {
 					onReceivedMessage(msgBytes);
 				}
 			}
 		} catch (ZMQException e) {
 			if (e.getMessage().contains("Errno 156384763")) {
-				logger.debug("no server connecte yet");
+				logger.debug("no server connected yet");
 				Utils.sleep(1000);
 			}
 
@@ -97,5 +97,4 @@ public abstract class ClientProducerZMQ extends ClientZMQ implements Runnable {
 	public void disconnect() {
 		isRunning = false;
 	}
-
 }
