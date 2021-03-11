@@ -1,5 +1,5 @@
 package ch.wenkst.sw_utils.db.sqlite;
 
-public interface IDBOperation {
+public interface DBOperation {
 	public void executeDBOperation(SQLiteConnector sqlConnector);
 }

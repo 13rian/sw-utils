@@ -1,20 +1,18 @@
 package ch.wenkst.sw_utils.db.sqlite;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * handles the connections to all needed dbs
- */
 public class SQLiteDBHandler {
 	private static final Logger logger = LoggerFactory.getLogger(SQLiteDBHandler.class);
 	
-	private static SQLiteDBHandler instance = null; 	// instance for the singleton access
+	private static SQLiteDBHandler instance = null;
 	
 	// holds the sql-handlers with the connection to the db
-	private ConcurrentHashMap<String, SQLiteConnector> dbMap = null;
+	private ConcurrentMap<String, SQLiteConnector> dbMap = null;
 	
 	
 	/**
@@ -83,7 +81,7 @@ public class SQLiteDBHandler {
 	 * @param dbPath 		 	the path of the db file
 	 * @param dbOperation 	 	the callback that defines the read operation
 	 */
-	public void readOperation(String dbPath, IDBOperation dbOperation) {
+	public void readOperation(String dbPath, DBOperation dbOperation) {
 		SQLiteConnector sqlHandler = dbMap.get(dbPath);
 		if (sqlHandler == null) {
 			logger.error("db with path: " + dbPath + " not found in the db-map");
@@ -97,7 +95,7 @@ public class SQLiteDBHandler {
 	 * @param dbPath 			the path of the db file
 	 * @param dbOperation 		the callback that defines the read operation
 	 */
-	public void writeOperation(String dbPath, IDBOperation dbOperation) {
+	public void writeOperation(String dbPath, DBOperation dbOperation) {
 		SQLiteConnector sqlHandler = dbMap.get(dbPath);
 		if (sqlHandler == null) {
 			logger.error("db with path: " + dbPath + " not found in the db-map");

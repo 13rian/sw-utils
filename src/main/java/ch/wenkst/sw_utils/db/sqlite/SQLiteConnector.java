@@ -175,7 +175,7 @@ public class SQLiteConnector {
 	 * @param callback 		the callback that is called when the result is here
 	 * @return 				the result set of the query
 	 */
-	public void selectAll(String tableName, IQueryCallback callback) {
+	public void selectAll(String tableName, QueryCallback callback) {
 		selectAll(tableName, null, callback);
 	}
 	
@@ -187,7 +187,7 @@ public class SQLiteConnector {
 	 * @param callback 		the callback that is called when the result is here
 	 * @return 				the result set of the query
 	 */
-	public void selectAll(String tableName, String condition, IQueryCallback callback) {
+	public void selectAll(String tableName, String condition, QueryCallback callback) {
 		// create the sql
 		StringBuilder sb = new StringBuilder();
 		sb.append("SELECT * FROM ").append(tableName);
@@ -210,7 +210,7 @@ public class SQLiteConnector {
 	 * @param callback 		the callback that is called when the result is here
 	 * @return 				the result set of the query
 	 */
-	public void select(String tableName, String[] columns, IQueryCallback callback) {
+	public void select(String tableName, String[] columns, QueryCallback callback) {
 		select(tableName, columns, null, callback);
 	}
 	
@@ -224,7 +224,7 @@ public class SQLiteConnector {
 	 * @param callback 		the callback that is called when the result is here
 	 * @return 				the result set of the query
 	 */
-	public void select(String tableName, String[] columns, String condition, IQueryCallback callback) {
+	public void select(String tableName, String[] columns, String condition, QueryCallback callback) {
 		// create the sql
 		StringBuilder sb = new StringBuilder();
 		sb.append("SELECT ");
@@ -253,7 +253,7 @@ public class SQLiteConnector {
 	 * @param callback 		the callback that is called when the result is here
 	 * @return 				the result set of the query
 	 */
-	public void select(String tableName, String filter, IQueryCallback callback) {
+	public void select(String tableName, String filter, QueryCallback callback) {
 		select(tableName, filter, null, callback);
 	}
 	
@@ -267,7 +267,7 @@ public class SQLiteConnector {
 	 * @param callback 		the callback that is called when the result is here
 	 * @return 				the result set of the query
 	 */
-	public void select(String tableName, String filter, String condition, IQueryCallback callback) {
+	public void select(String tableName, String filter, String condition, QueryCallback callback) {
 		// create the sql
 		StringBuilder sb = new StringBuilder();
 		sb.append("SELECT ").append(filter);
@@ -383,7 +383,7 @@ public class SQLiteConnector {
 	 * @param sql 			the sql string that is executed
 	 * @param callback 		the callback that is called when the result is here
 	 */
-	public void executeQuery(String sql, IQueryCallback callback) {
+	public void executeQuery(String sql, QueryCallback callback) {
 		Statement stmt = null;
 
 		try {
