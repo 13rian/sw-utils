@@ -235,67 +235,36 @@ public class SecurityUtils {
 	 *   				  if all combinations are tried
 	 * @param path 			the path to the key file
 	 * @return 				the private key
+	 * @throws KeyParsingException 
 	 */
-	public static PrivateKey keyFromFile(String path) {
-		try {
-			// try to load pkcs8 encoded ec keys
-			KeyInfo keyInfo = new KeyInfo();
+	public static PrivateKey keyFromFile(String path) throws KeyParsingException {
+		List<KeyInfo> keyInfoList = allKeyInfoCombinations();
+		
+		for (KeyInfo keyInfo : keyInfoList) {
 			try {
-				keyInfo.addKeyInfo(FileFormat.PEM, KeyType.EC, KeyFormat.SEC1);
 				derFromKeyFile(path, keyInfo);
 				return keyFromDer(keyInfo.pkcs8KeyBytes, keyInfo.keyType);
+				
 			} catch (Exception e) { }
-			
-			try {
-				keyInfo.addKeyInfo(FileFormat.PEM, KeyType.EC, KeyFormat.PKCS8);
-				derFromKeyFile(path, keyInfo);
-				return keyFromDer(keyInfo.pkcs8KeyBytes, keyInfo.keyType);
-			} catch (Exception e) { }
-			
-			try {
-				keyInfo.addKeyInfo(FileFormat.DER, KeyType.EC, KeyFormat.SEC1);
-				derFromKeyFile(path, keyInfo);
-				return keyFromDer(keyInfo.pkcs8KeyBytes, keyInfo.keyType);
-			} catch (Exception e) { }
-			
-			try {
-				keyInfo.addKeyInfo(FileFormat.DER, KeyType.EC, KeyFormat.PKCS8);
-				derFromKeyFile(path, keyInfo);
-				return keyFromDer(keyInfo.pkcs8KeyBytes, keyInfo.keyType);
-			} catch (Exception e) { }
-			
-			
-			// try to load pkcs8 encoded rsa keys
-			try {
-				keyInfo.addKeyInfo(FileFormat.PEM, KeyType.RSA, KeyFormat.PKCS1);
-				derFromKeyFile(path, keyInfo);
-				return keyFromDer(keyInfo.pkcs8KeyBytes, keyInfo.keyType);
-			} catch (Exception e) { }
-			
-			try {
-				keyInfo.addKeyInfo(FileFormat.PEM, KeyType.RSA, KeyFormat.PKCS8);
-				derFromKeyFile(path, keyInfo);
-				return keyFromDer(keyInfo.pkcs8KeyBytes, keyInfo.keyType);
-			} catch (Exception e) { }
-			
-			try {
-				keyInfo.addKeyInfo(FileFormat.DER, KeyType.RSA, KeyFormat.PKCS1);
-				derFromKeyFile(path, keyInfo);
-				return keyFromDer(keyInfo.pkcs8KeyBytes, keyInfo.keyType);
-			} catch (Exception e) { }
-			
-			try {
-				keyInfo.addKeyInfo(FileFormat.DER, KeyType.RSA, KeyFormat.PKCS8);
-				derFromKeyFile(path, keyInfo);
-				return keyFromDer(keyInfo.pkcs8KeyBytes, keyInfo.keyType);
-			} catch (Exception e) { }
-			
-			throw new KeyParsingException("key file from the path " + path + " could not be parsed, no supported file format");
-
-		} catch (Exception e) {
-			logger.error("failed to parse the key file form path " + path, e);
-			return null;
 		}
+		
+		throw new KeyParsingException("key file from the path " + path + " could not be parsed, no supported file format");
+	}
+	
+	
+	private static List<KeyInfo> allKeyInfoCombinations() {
+		List<KeyInfo> keyInfoList = new ArrayList<>();
+		for (FileFormat fileFormat : FileFormat.values()) { 
+			for (KeyType keyType : KeyType.values()) {
+				for (KeyFormat keyFormat : KeyFormat.values()) {
+					KeyInfo keyInfo = new KeyInfo();
+					keyInfo.addKeyInfo(fileFormat, keyType, keyFormat);
+					keyInfoList.add(keyInfo);
+				}
+			}
+		}
+		
+		return keyInfoList;
 	}
 	
 	
