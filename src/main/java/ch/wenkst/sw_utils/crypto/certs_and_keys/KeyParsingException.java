@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils.crypto;
+package ch.wenkst.sw_utils.crypto.certs_and_keys;
 
 public class KeyParsingException extends Exception {
 	private static final long serialVersionUID = 1L;

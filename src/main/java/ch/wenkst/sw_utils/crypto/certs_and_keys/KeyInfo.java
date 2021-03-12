@@ -1,8 +1,4 @@
-package ch.wenkst.sw_utils.crypto;
-
-import ch.wenkst.sw_utils.crypto.SecurityUtils.FileFormat;
-import ch.wenkst.sw_utils.crypto.SecurityUtils.KeyFormat;
-import ch.wenkst.sw_utils.crypto.SecurityUtils.KeyType;
+package ch.wenkst.sw_utils.crypto.certs_and_keys;
 
 public class KeyInfo {
 	public byte[] pkcs8KeyBytes;

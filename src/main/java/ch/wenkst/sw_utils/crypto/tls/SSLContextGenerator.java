@@ -21,6 +21,7 @@ import javax.net.ssl.TrustManager;
 
 import ch.wenkst.sw_utils.crypto.CryptoProvider;
 import ch.wenkst.sw_utils.crypto.SecurityConstants;
+import ch.wenkst.sw_utils.crypto.SecurityUtils;
 
 public class SSLContextGenerator {
 	
@@ -109,7 +110,7 @@ public class SSLContextGenerator {
 	
 	private static KeyStore keyStoreFromP12File(String p12File, String keyStorePassword)
 			throws KeyStoreException, NoSuchProviderException, NoSuchAlgorithmException, CertificateException, IOException {
-		KeyStore keyStore = keyStoreInstance();
+		KeyStore keyStore = SecurityUtils.keyStoreInstance();
 		File keyFile = new File(p12File);
 		FileInputStream keyInput = new FileInputStream(keyFile);
 		keyStore.load(keyInput, keyStorePassword.toCharArray());
@@ -120,21 +121,12 @@ public class SSLContextGenerator {
 	
 	private static KeyStore keyStoreFromCryptoObjects(PrivateKey privateKey, Certificate cert, Certificate caCert, String keyStorePassword)
 			throws KeyStoreException, NoSuchProviderException, NoSuchAlgorithmException, CertificateException, IOException {
-		KeyStore keyStore = keyStoreInstance();
+		KeyStore keyStore = SecurityUtils.keyStoreInstance();
 		keyStore.load(null); 
 
 		Certificate[] chain = new Certificate[] { cert, caCert };      
 		keyStore.setKeyEntry("own-private-key", privateKey, keyStorePassword.toCharArray(), chain);
 		return keyStore;
-	}
-	
-	
-	private static KeyStore keyStoreInstance() throws KeyStoreException, NoSuchProviderException {
-		if (CryptoProvider.bcProviderRegistered()) {
-			return KeyStore.getInstance(SecurityConstants.PKCS12, SecurityConstants.BC);
-		} else {
-			return KeyStore.getInstance(SecurityConstants.PKCS12);
-		}
 	}
 	
 	
