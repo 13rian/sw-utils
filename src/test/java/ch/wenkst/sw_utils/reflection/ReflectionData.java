@@ -1,13 +1,14 @@
 package ch.wenkst.sw_utils.reflection;
 
 import java.util.HashMap;
+import java.util.Map;
 
 
 public class ReflectionData {
 	private int intProp = 0;
 	private String strProp = null;
 	private int[] intArrProp = null;
-	private HashMap<String, Long> mapProp = null;
+	private Map<String, Long> mapProp = null;
 	
 	
 	/**
@@ -59,11 +60,11 @@ public class ReflectionData {
 		this.intArrProp = intArrProp;
 	}
 	
-	public HashMap<String, Long> getMapProp() {
+	public Map<String, Long> getMapProp() {
 		return mapProp;
 	}
 	
-	public void setMapProp(HashMap<String, Long> mapProp) {
+	public void setMapProp(Map<String, Long> mapProp) {
 		this.mapProp = mapProp;
 	}
 }

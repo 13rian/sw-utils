@@ -158,7 +158,4 @@ public class ConversionTest {
 		// reverse the string
 		Assertions.assertEquals("olleh", Conversion.strReverse(str), "reverse string");
 	}
-	
- 
- 
 }

@@ -56,5 +56,4 @@ public class Lifecycle {
 	public static void freeExternalResources() {
 		System.out.println("Freeing external resources...");
 	}
- 
 }
