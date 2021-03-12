@@ -14,12 +14,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
+import ch.wenkst.sw_utils.BaseTest;
 import ch.wenkst.sw_utils.Utils;
 import ch.wenkst.sw_utils.crypto.certs_and_keys.FileFormat;
 import ch.wenkst.sw_utils.crypto.certs_and_keys.KeyParsingException;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class SecurityUtilsTest {
+public class SecurityUtilsTest extends BaseTest {
 	private String certDir;
 	private String keyDir;
 	

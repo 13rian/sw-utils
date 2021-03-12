@@ -7,10 +7,12 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import ch.wenkst.sw_utils.BaseTest;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class ReflectionUtilsTest {
+public class ReflectionUtilsTest extends BaseTest {	
 	private ReflectionData data;
+	
 	
 	@BeforeAll
 	public void createDataObject() {

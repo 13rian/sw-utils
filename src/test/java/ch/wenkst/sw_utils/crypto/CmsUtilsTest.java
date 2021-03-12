@@ -18,8 +18,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
+import ch.wenkst.sw_utils.BaseTest;
+
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class CmsUtilsTest {
+public class CmsUtilsTest extends BaseTest {
 	private CmsCryptoMaterial cryptoMaterial;
 	private CMS_Crypto cmsCrypto;
 	private String clearText = "Hello";

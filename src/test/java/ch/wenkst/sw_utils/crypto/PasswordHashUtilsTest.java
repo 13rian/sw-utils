@@ -3,7 +3,9 @@ package ch.wenkst.sw_utils.crypto;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class PasswordHashUtilsTest {
+import ch.wenkst.sw_utils.BaseTest;
+
+public class PasswordHashUtilsTest extends BaseTest {
 	
 	@Test
 	public void correctPasswordHash() {
