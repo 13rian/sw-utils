@@ -95,6 +95,14 @@
 		    <version>1.8.0-beta2</version>
 		    <scope>test</scope>
 		</dependency>
+		
+		
+		<!-- akka configuration files -->
+			<dependency>
+		    <groupId>com.typesafe</groupId>
+		    <artifactId>config</artifactId>
+		    <version>1.4.1</version>
+		</dependency>
     	
     
     	<!-- gson to handle json -->

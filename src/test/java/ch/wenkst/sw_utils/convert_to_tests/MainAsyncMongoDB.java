@@ -45,7 +45,7 @@ public class MainAsyncMongoDB {
 		
 		try {
 			DbConnectOptions options = new DbConnectOptions()
-					.host("192.168.5.128")
+					.host("192.168.0.129")
 					.port(27017)
 					.connectTimeoutInSecs(10)
 					.dbName("AsyncTest")

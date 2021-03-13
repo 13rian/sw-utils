@@ -13,6 +13,14 @@ public abstract class BaseThread extends Thread {
 	
 	
 	/**
+	 * simple polling thread with a polling interval of 0, make sure that you have some safety sleep in the do work method
+	 */
+	public BaseThread() {
+
+	}
+	
+	
+	/**
 	 * simple polling thread
 	 * @param pollInterval 		poll interval in ms
 	 */

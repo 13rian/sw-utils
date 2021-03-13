@@ -48,7 +48,7 @@ public class EmailSender {
 	
 	
 	/**
-	 * configures the smtp host, e.g. smtp.gmail.com, smtp.celsi.ch
+	 * configures the smtp host, e.g. smtp.gmail.com
 	 * @param host
 	 * @return
 	 */

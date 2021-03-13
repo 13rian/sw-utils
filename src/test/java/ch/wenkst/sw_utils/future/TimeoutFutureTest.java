@@ -1,16 +1,17 @@
 package ch.wenkst.sw_utils.future;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import ch.wenkst.sw_utils.BaseTest;
 import ch.wenkst.sw_utils.Utils;
 
-public class TimeoutFutureTest {
+public class TimeoutFutureTest extends BaseTest {
 	private static ThreadPoolExecutor executor = null;
 
 	
@@ -21,42 +22,27 @@ public class TimeoutFutureTest {
 	}
 
 
-
-	/**
-	 * let the timeout future run into a timeout
-	 */
 	@Test()
-	@DisplayName("future that times out")
-	public void timedOutFutureTest() {
-		TimeoutFuture<Boolean> future = new TimeoutFuture<>(500);
-		
-		// wait for the future to time out
-		Assertions.assertDoesNotThrow(() -> {
-			Boolean result = future.get();
-			Assertions.assertEquals(null, result, "result of future that timed out");
-		});
+	public void timeoutOfTimeoutFuture() throws InterruptedException, ExecutionException {
+		TimeoutFuture<Boolean> future = new TimeoutFuture<>(100);
+		Boolean result = future.get();
+		Assertions.assertEquals(null, result);
 	}
 	
 	
-	
-	/**
-	 * complete a timeout future before the timeout is reached
-	 */
 	@Test()
-	@DisplayName("result of timeout future")
-	public void futureResultTest() {
+	public void resultFromTimeoutFuture() throws InterruptedException, ExecutionException {
 		TimeoutFuture<Boolean> future = new TimeoutFuture<>(1000);
-		
-		// asynchronously complete the future after some timeout
+		completeFutureAsync(future);
+		Boolean result = future.get();
+		Assertions.assertEquals(true, result);
+	}
+	
+	
+	private void completeFutureAsync(TimeoutFuture<Boolean> future) {
 		executor.execute(() -> {
-			Utils.sleep(200);
+			Utils.sleep(100);
 			future.complete(true);
-		});
-		
-		// wait for the result of the future
-		Assertions.assertDoesNotThrow(() -> {
-			Boolean result = future.get();
-			Assertions.assertEquals(true, result, "result of future");
 		});
 	}
 
@@ -65,5 +51,4 @@ public class TimeoutFutureTest {
 	public static void tearDownExternalResources() {
 		executor.shutdown();
 	}
-
 }

@@ -34,12 +34,12 @@ public class SecurityUtilsTest extends BaseTest {
 	
 	
 	private String certDir() {
-		return Utils.getWorkDir() + File.separator + "resource" + File.separator + "cryptoUtils" + File.separator + "certs" + File.separator;
+		return Utils.getWorkDir() + File.separator + "resource" + File.separator + "securityUtils" + File.separator + "certs" + File.separator;
 	}
 	
 	
 	private String keyDir() {
-		return Utils.getWorkDir() + File.separator + "resource" + File.separator + "keys" + File.separator;
+		return Utils.getWorkDir() + File.separator + "resource" + File.separator + "securityUtils" + File.separator + "keys" + File.separator;
 	}
 	
 	

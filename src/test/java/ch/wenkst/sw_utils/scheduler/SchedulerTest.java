@@ -15,8 +15,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import ch.wenkst.sw_utils.scheduler.Scheduler;
-
 public class SchedulerTest {
 	private static Scheduler scheduler = null; 	 	// the scheduler that handles added tasks
 	private static Executor executor = null; 		// thread pool executor for the scheduler

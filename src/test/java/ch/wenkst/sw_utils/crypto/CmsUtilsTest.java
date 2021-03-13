@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import ch.wenkst.sw_utils.BaseTest;
+import ch.wenkst.sw_utils.crypto.certs_and_keys.KeyParsingException;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class CmsUtilsTest extends BaseTest {
@@ -28,7 +29,7 @@ public class CmsUtilsTest extends BaseTest {
 	private byte[] clearTextBytes = clearText.getBytes(StandardCharsets.UTF_8);
 	
 	@BeforeAll
-	public void registerBcPRovider() throws UnrecoverableKeyException, KeyStoreException, NoSuchProviderException, NoSuchAlgorithmException, CertificateException, IOException {
+	public void registerBcPRovider() throws UnrecoverableKeyException, KeyStoreException, NoSuchProviderException, NoSuchAlgorithmException, CertificateException, IOException, KeyParsingException {
 		CryptoProvider.registerBC();
 		cryptoMaterial = new CmsCryptoMaterial();
 		cryptoMaterial.loadCryptoMaterial();

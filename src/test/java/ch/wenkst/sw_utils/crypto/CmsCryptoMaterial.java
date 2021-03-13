@@ -10,6 +10,9 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
+import ch.wenkst.sw_utils.crypto.certs_and_keys.KeyParsingException;
+import ch.wenkst.sw_utils.file.FileUtils;
+
 public class CmsCryptoMaterial {
 	private String cmsCertDir;
 	
@@ -28,7 +31,7 @@ public class CmsCryptoMaterial {
 	}
 	
 	
-	public void loadCryptoMaterial() throws UnrecoverableKeyException, KeyStoreException, NoSuchProviderException, NoSuchAlgorithmException, CertificateException, IOException {
+	public void loadCryptoMaterial() throws UnrecoverableKeyException, KeyStoreException, NoSuchProviderException, NoSuchAlgorithmException, CertificateException, IOException, KeyParsingException {
 		loadReceiverEncryptionMaterial();
 		loadSenderEncryptionMaterial();
 		loadSenderSignatureMaterial();
@@ -42,23 +45,29 @@ public class CmsCryptoMaterial {
 	}
 	
 	
-	private void loadReceiverEncryptionMaterial() throws UnrecoverableKeyException, KeyStoreException, NoSuchProviderException, NoSuchAlgorithmException, CertificateException, IOException {
-		String receiverEncDir = cmsCertDir + "encryption" + File.separator + "receiver" + File.separator;
-		receiverEncKey = SecurityUtils.keyFromP12(receiverEncDir + "key.p12", "celsi-pw");
-		receiverEncCert = (X509Certificate) SecurityUtils.certFromFile(receiverEncDir + "certificate.pem"); 
+	private void loadReceiverEncryptionMaterial() throws UnrecoverableKeyException, KeyStoreException, NoSuchProviderException, NoSuchAlgorithmException, CertificateException, IOException, KeyParsingException {
+		String receiverEncDir = cmsCertDir + "encryption" + File.separator + "receiver";
+		String certFile = FileUtils.findFileByPattern(receiverEncDir, "", "cer");
+		String keyFile = FileUtils.findFileByPattern(receiverEncDir, "", "pem");
+		receiverEncKey = SecurityUtils.keyFromFile(keyFile);
+		receiverEncCert = (X509Certificate) SecurityUtils.certFromFile(certFile);
 	}
 	
 	
-	private void loadSenderEncryptionMaterial() throws UnrecoverableKeyException, KeyStoreException, NoSuchProviderException, NoSuchAlgorithmException, CertificateException, IOException {
-		String senderEncDir = cmsCertDir + "encryption" + File.separator + "sender" + File.separator;
-		senderEncKey = SecurityUtils.keyFromP12(senderEncDir + "key.p12", "celsi-pw");   		
-		senderEncCert = (X509Certificate) SecurityUtils.certFromFile(senderEncDir + "certificate.pem");
+	private void loadSenderEncryptionMaterial() throws UnrecoverableKeyException, KeyStoreException, NoSuchProviderException, NoSuchAlgorithmException, CertificateException, IOException, KeyParsingException {
+		String senderEncDir = cmsCertDir + "encryption" + File.separator + "sender";
+		String certFile = FileUtils.findFileByPattern(senderEncDir, "", "cer");
+		String keyFile = FileUtils.findFileByPattern(senderEncDir, "", "pem");
+		senderEncKey = SecurityUtils.keyFromFile(keyFile);
+		senderEncCert = (X509Certificate) SecurityUtils.certFromFile(certFile); 
 	}
 	
 	
-	private void loadSenderSignatureMaterial() throws UnrecoverableKeyException, KeyStoreException, NoSuchProviderException, NoSuchAlgorithmException, CertificateException, IOException {
-		String senderSigDir = cmsCertDir + "signature" + File.separator + "sender" + File.separator;
-		senderSigKey = SecurityUtils.keyFromP12(senderSigDir + "key.p12", "celsi-pw");   		
-		senderSigCert = (X509Certificate) SecurityUtils.certFromFile(senderSigDir + "certificate.pem"); 
+	private void loadSenderSignatureMaterial() throws UnrecoverableKeyException, KeyStoreException, NoSuchProviderException, NoSuchAlgorithmException, CertificateException, IOException, KeyParsingException {
+		String senderSigDir = cmsCertDir + "signature" + File.separator + "sender";
+		String certFile = FileUtils.findFileByPattern(senderSigDir, "", "cer");
+		String keyFile = FileUtils.findFileByPattern(senderSigDir, "", "pem");
+		senderSigKey = SecurityUtils.keyFromFile(keyFile);	
+		senderSigCert = (X509Certificate) SecurityUtils.certFromFile(certFile); 
 	}
 }

@@ -58,7 +58,7 @@ public class KeyParser {
 			} catch (Exception e) { }
 		}
 		
-		throw new KeyParsingException("key file from the path " + path + " could not be parsed, no supported file format");
+		throw new KeyParsingException("key file from the path " + path + " could not be parsed");
 	}
 	
 	

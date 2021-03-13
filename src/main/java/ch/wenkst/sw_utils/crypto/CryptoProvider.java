@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 import ch.wenkst.sw_utils.Utils;
 
 public class CryptoProvider {
-	private static final Logger logger = LoggerFactory.getLogger(SecurityUtils.class);
+	private static final Logger logger = LoggerFactory.getLogger(CryptoProvider.class);
 	
 	
 	private CryptoProvider() {
@@ -31,7 +31,7 @@ public class CryptoProvider {
 		if (!bcProviderRegistered()) {
 			Security.addProvider(new BouncyCastleProvider());
 			setSourceOfRandom();
-			logger.info("successfully registered Bouncy Castle as crypto provider.");
+			logger.info("successfully registered bouncy castle as crypto provider.");
 		}
 	}
 	
@@ -54,7 +54,7 @@ public class CryptoProvider {
 	public static void unregisterBC() {
 		if (bcProviderRegistered()) {
 			Security.removeProvider(SecurityConstants.BC);
-			logger.info("successfully unregistered Bouncy Castle as crypto provider.");
+			logger.info("successfully unregistered bouncy castle as crypto provider.");
 		}
 	}
 
@@ -80,7 +80,7 @@ public class CryptoProvider {
 
 		if (!bcProviderRegistered()) {
 			Security.insertProviderAt(new BouncyCastleProvider(), 2);
-			logger.info("Successfully registered Bouncy Castle BC as security provider at position 2.");
+			logger.info("successfully registered bouncy castle bc as security provider at position 2.");
 		}
 		
 		setSourceOfRandom();
@@ -93,12 +93,12 @@ public class CryptoProvider {
 	public static void unregisterBCJSSE() {
 		if (bcjsseProviderRegistered()) {
 			Security.removeProvider(SecurityConstants.BCJSSE);
-			logger.info("Successfully unregistered Bouncy Castle BCJSSE as crypto provider.");
+			logger.info("successfully unregistered bouncy castle bcjsse as crypto provider.");
 		}
 
 		if (bcProviderRegistered()) {
 			Security.removeProvider(SecurityConstants.BC);
-			logger.info("Successfully unregistered Bouncy Castle BC as crypto provider.");
+			logger.info("successfully unregistered bouncy castle bc as crypto provider.");
 		}
 	}
 

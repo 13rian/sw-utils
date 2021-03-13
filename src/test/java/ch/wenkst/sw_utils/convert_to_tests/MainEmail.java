@@ -23,11 +23,11 @@ public class MainEmail {
 	 */
 	@SuppressWarnings("unused")
 	public static void main(String[] args) {
-		String fromEmail = "stefan.wenk@celsi.ch"; 	// email of the sender
-		String password = "pP1_abcd"; 				// password of the sender
-		String host = "smtp.celsi.ch"; 				// the smtp host
-		String toEmail1 = "wenkst@gmail.com"; 		// email of the receiver1
-		String toEmail2 = "stefan.wenk@celsi.ch"; 	// email of the receiver2
+		String fromEmail = "test@test.ch"; 			// email of the sender
+		String password = "test"; 					// password of the sender
+		String host = "smtp.gmail.comh"; 			// the smtp host
+		String toEmail1 = "test@gmail.com"; 		// email of the receiver1
+		String toEmail2 = "test2@gmail.ch"; 		// email of the receiver2
 		
 		// define the attachments for the email
 		String attachment1 = emailDir + "attachment1.txt";
