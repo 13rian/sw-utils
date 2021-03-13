@@ -1,6 +1,6 @@
 package ch.wenkst.sw_utils.scheduler;
 
-import java.util.ArrayList;
+import java.time.Instant;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -11,122 +11,97 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 public class SchedulerTest {
-	private static Scheduler scheduler = null; 	 	// the scheduler that handles added tasks
-	private static Executor executor = null; 		// thread pool executor for the scheduler
+	private static Executor executor;
+	private static Scheduler scheduler; 
 	
 	
-	/**
-	 * sets up a thread pool for the scheduler
-	 */
 	@BeforeAll
-	public static void initializeExternalResources() {
-		int nThreads = 10;
-		executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
-		((ThreadPoolExecutor) executor).setCorePoolSize(nThreads); 
+	public static void createExecutor() {
+		int threadCount = 3;
+		executor = Executors.newCachedThreadPool();
+		((ThreadPoolExecutor) executor).setCorePoolSize(threadCount); 
 	}
 	
-	/**
-	 * sets up a new scheduler for each test
-	 */
-	@BeforeEach
-	public void initScheduler() {
-		// create the scheduler with a poll interval of 100ms
+	
+	private void initConcurrentScheduler() {
 		scheduler = new Scheduler();
-		scheduler.init(100, executor);
+		scheduler.init(50, executor);
+		scheduler.start();
+	}
+	
+	private void initSynchronizedScheduler() {
+		scheduler = new Scheduler();
+		scheduler.init(50, null);
 		scheduler.start();
 	}
 	
 	
-	/**
-	 * execute two tasks with different start times
-	 */
+	
 	@Test
-	@DisplayName("non-periodic task, distinct start times")
-	public void distinctStartTimeTaskTest() {
-		// schedule the task1 300 ms into the future
-		long startTime1 = System.currentTimeMillis() + 300;
-		OneTimeTestTask task1 = new OneTimeTestTask(startTime1);
-		scheduler.addToTasks(task1);
+	public void concurrentOneTimeTaskExecution() {
+		initConcurrentScheduler();
+		OneTimeTestTask task1 = scheduleOneTimeTask(0, 200);
+		OneTimeTestTask task2 = scheduleOneTimeTask(0, 200);
 		
-		// schedule the task2 500 ms into the future
-		long startTime2 = System.currentTimeMillis() + 500;
-		OneTimeTestTask task2 = new OneTimeTestTask(startTime2);
-		scheduler.addToTasks(task2);
-		
-		// check the state of the scheduler
-		Assertions.assertEquals(2, scheduler.getScheduledTaskCount(), "tasks scheduled");
-		
-		// wait until the task1 completed
-		Awaitility.await().atMost(2000, TimeUnit.MILLISECONDS).until(() -> {
-			return task1.getExecutedTime() > 0;
-		});
-		
-		// check if task 1 was successfully executed
-		Assertions.assertEquals(1, scheduler.getScheduledTaskCount(), "task1 removed");
-		long executionTime1 = task1.getExecutedTime();
-		Assertions.assertTrue(executionTime1 >= startTime1, "task1 executed");
-		Assertions.assertTrue(executionTime1 <= startTime1 + 150, "task1 executed");
-		
-		
-		// wait until the task2 completed
-		Awaitility.await().atMost(2000, TimeUnit.MILLISECONDS).until(() -> {
-			return task2.getExecutedTime() > 0;
-		});
-		
-		// check if task 1 was successfully executed
-		Assertions.assertEquals(0, scheduler.getScheduledTaskCount(), "executed task removed");
-		long executionTime2 = task2.getExecutedTime();
-		Assertions.assertTrue(executionTime2 >= startTime2, "task2 executed");
-		Assertions.assertTrue(executionTime2 <= startTime2 + 150, "task2 executed");
+		waitForOneTimeTasks(task1, task2, 390);
+		Assertions.assertFalse(oneTimeTasksExecutedSynchronized(task1, task2, 100));
+		Assertions.assertEquals(0, scheduler.getScheduledTaskCount());
 	}
 	
 	
-	/**
-	 * execute two tasks with the same start times
-	 */
-	@Test
-	@DisplayName("non-periodic task, same start times")
-	public void sameStartTimeTaskTest() {
-		// schedule the task1 300 ms into the future
-		long startTime1 = System.currentTimeMillis() + 300;
-		OneTimeTestTask task1 = new OneTimeTestTask(startTime1);
-		scheduler.addToTasks(task1);
-		
-		// schedule the task2 300 ms into the future
-		long startTime2 = System.currentTimeMillis() + 300;
-		OneTimeTestTask task2 = new OneTimeTestTask(startTime2);
-		scheduler.addToTasks(task2);
-		
-		// check the state of the scheduler
-		Assertions.assertEquals(2, scheduler.getScheduledTaskCount(), "tasks scheduled");
-		
-		// wait until both tasks completed
-		Awaitility.await().atMost(2000, TimeUnit.MILLISECONDS).until(() -> {
-			boolean bothTasksExecuted = task1.getExecutedTime() > 0 && task2.getExecutedTime() > 0;
+	private OneTimeTestTask scheduleOneTimeTask(int msIntoFuture, int processTimeInMs) {
+		long startTime = Instant.now().toEpochMilli() + msIntoFuture;
+		OneTimeTestTask task = new OneTimeTestTask(startTime, processTimeInMs);
+		scheduler.addToTasks(task);
+		return task;
+	}
+	
+	
+	private void waitForOneTimeTasks(OneTimeTestTask task1, OneTimeTestTask task2, long maxWaitTime) {
+		Awaitility.await().atMost(maxWaitTime, TimeUnit.MILLISECONDS).until(() -> {
+			boolean bothTasksExecuted = task1.isExecuted() && task2.isExecuted();
 			return bothTasksExecuted;
 		});
-		
-		// check the state of the scheduler
-		Assertions.assertEquals(0, scheduler.getScheduledTaskCount(), "task1 removed");
-		
-		
-		// check if both task 1 was successfully executed
-		long executionTime1 = task1.getExecutedTime();
-		Assertions.assertTrue(executionTime1 >= startTime1, "task1 executed");
-		Assertions.assertTrue(executionTime1 <= startTime1 + 150, "task1 executed");
-		
-		// check if task 2 was successfully executed
-		long executionTime2 = task2.getExecutedTime();
-		Assertions.assertTrue(executionTime2 >= startTime2, "task2 executed");
-		Assertions.assertTrue(executionTime2 <= startTime2 + 150, "task2 executed");
 	}
 	
 	
+	@Test
+	public void synchronizedOneTimeTaskExecution() {
+		initSynchronizedScheduler();
+		OneTimeTestTask task1 = scheduleOneTimeTask(0, 100);
+		OneTimeTestTask task2 = scheduleOneTimeTask(0, 100);
+		
+		waitForOneTimeTasks(task1, task2, 400);
+		Assertions.assertTrue(oneTimeTasksExecutedSynchronized(task1, task2, 100));
+		Assertions.assertEquals(0, scheduler.getScheduledTaskCount());
+	}
+	
+	
+	private boolean oneTimeTasksExecutedSynchronized(OneTimeTestTask task1, OneTimeTestTask task2, long minEndTimeDif) {
+		long timeDif = task2.getTaskFinishedTime() - task1.getTaskFinishedTime();
+		return timeDif >= minEndTimeDif;
+	}
+	
+	
+	@Test
+	public void taskExecutedAtCorrectTime() {
+		initConcurrentScheduler();
+		long now = Instant.now().toEpochMilli();
+		OneTimeTestTask task1 = scheduleOneTimeTask(100, 0);
+		OneTimeTestTask task2 = scheduleOneTimeTask(200, 0);
+		
+		waitForOneTimeTasks(task1, task2, 300);
+		
+		Assertions.assertTrue(task1.getTaskFinishedTime() >= now + 100);
+		Assertions.assertTrue(task2.getTaskFinishedTime() >= now + 200);
+	}
+
+	
+
 	
 	/**
 	 * execute two periodic tasks with a different interval
@@ -134,71 +109,54 @@ public class SchedulerTest {
 	@Test
 	@DisplayName("periodic task")
 	public void periodicTaskTest() {
-		// start time of both tasks are 100ms into the future
-		long startTime = System.currentTimeMillis() + 100;
+		initConcurrentScheduler();
+		long now = Instant.now().toEpochMilli();
+		PeriodicTestTask task1 = schedulePeriodicTask(100, 100);
+		PeriodicTestTask task2 = schedulePeriodicTask(100, 150);
 		
-		// schedule a periodic task with an interval of 200ms
-		PeriodicTestTask task1 = new PeriodicTestTask(startTime, 200);
-		scheduler.addToTasks(task1);
+		stopTaskAfter3Runs(task1);
+		stopTaskAfter3Runs(task2);
 		
-		// schedule a periodic task with an interval of 300ms
-		PeriodicTestTask task2 = new PeriodicTestTask(startTime, 300);
-		scheduler.addToTasks(task2);
-		
-		// check the state of the scheduler
-		Assertions.assertEquals(2, scheduler.getScheduledTaskCount(), "tasks scheduled");
-		
-		
-		// wait for task1 to run 3 times
+		correctIntervalExecutionTimes(task1, now, 100);
+		correctIntervalExecutionTimes(task2, now, 150);	
+	}
+	
+	
+	private PeriodicTestTask schedulePeriodicTask(int msIntoFuture, int interval) {
+		long startTime = Instant.now().toEpochMilli() + msIntoFuture;
+		PeriodicTestTask task = new PeriodicTestTask(startTime, interval);
+		scheduler.addToTasks(task);
+		return task;
+	}
+	
+	
+	private void stopTaskAfter3Runs(PeriodicTestTask task) {
 		Awaitility.await().atMost(2000, TimeUnit.MILLISECONDS).until(() -> {
-			return task1.getExecutionCount() == 3;
+			return task.getExecutionCount() == 3;
 		});
-		
-		scheduler.removeFromTasks(task1);
-		Assertions.assertEquals(1, scheduler.getScheduledTaskCount(), "tasks scheduled");
-		
-		
-		// wait for task2 to run 3 times
-		Awaitility.await().atMost(2000, TimeUnit.MILLISECONDS).until(() -> {
-			return task2.getExecutionCount() == 3;
-		});
-		
-		scheduler.removeFromTasks(task2);
-		Assertions.assertEquals(0, scheduler.getScheduledTaskCount(), "tasks scheduled");
-		
-		
-		
-
-		// check if both task 1 was successfully executed
-		ArrayList<Long> executionTimes1 = task1.getExecutionTimes();
-		Assertions.assertTrue(executionTimes1.get(0) >= startTime && executionTimes1.get(0) <= startTime + 150, "task1 first run executed");
-		Assertions.assertTrue(executionTimes1.get(1) >= startTime + 200 && executionTimes1.get(1) <= startTime + 350, "task1 second run executed");
-		Assertions.assertTrue(executionTimes1.get(2) >= startTime + 400 && executionTimes1.get(2) <= startTime + 550, "task1 third run executed");
-		
-
-		// check if task 2 was successfully executed
-		ArrayList<Long> executionTimes2 = task2.getExecutionTimes();
-		Assertions.assertTrue(executionTimes2.get(0) >= startTime && executionTimes2.get(0) <= startTime + 150, "task2 first run executed");
-		Assertions.assertTrue(executionTimes2.get(1) >= startTime + 300 && executionTimes2.get(1) <= startTime + 450, "task2 second run executed");
-		Assertions.assertTrue(executionTimes2.get(2) >= startTime + 600 && executionTimes2.get(2) <= startTime + 750, "task2 third run executed");	
+		scheduler.removeFromTasks(task);
+	}
+	
+	
+	private void correctIntervalExecutionTimes(PeriodicTestTask task, long startTime, int interval) {
+		int intervalCount = 0;
+		for (long executionTime : task.getExecutionTimes()) {
+			System.out.println(executionTime);
+			Assertions.assertTrue(executionTime + intervalCount * interval >= startTime);
+			Assertions.assertTrue(executionTime <= startTime + (intervalCount+1) * interval + 60);  // add some tolerance
+			intervalCount++;
+		}
 	}
 
 
-	
-	/**
-	 * stops the scheduler
-	 */
 	@AfterEach
 	public void stopScheduler() {
 		scheduler.stopScheduler();
 	}
 	
 	
-	/**
-	 * stops the executor
-	 */
 	@AfterAll
-	public static void tearDownResources() {
+	public static void shutdownExecutor() {
 		((ThreadPoolExecutor) executor).shutdown();
 	}
 }

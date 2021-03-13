@@ -1,22 +1,32 @@
 package ch.wenkst.sw_utils.scheduler;
 
+import java.time.Instant;
+
+import ch.wenkst.sw_utils.Utils;
+
 public class OneTimeTestTask extends OneTimeTask {
-	private long executedTime = 0; 		// timestamp when the task was executed
+	private long taskFinishedTime = 0;
+	private int processTimeInMs;
 	
-	/**
-	 * task that is executed once and sets is execution time after it was started
-	 * @param startTime
-	 */
-	public OneTimeTestTask(long startTime) {
+
+	public OneTimeTestTask(long startTime, int processTimeInMs) {
 		super(startTime);
+		this.processTimeInMs = processTimeInMs;
 	}
 
 	@Override
 	public void onExecuteTask() {
-		executedTime = System.currentTimeMillis();
+		Utils.sleep(processTimeInMs);
+		taskFinishedTime = Instant.now().toEpochMilli();
+	}
+	
+	
+	public boolean isExecuted() {
+		return taskFinishedTime > 0;
 	}
 
-	public long getExecutedTime() {
-		return executedTime;
+	
+	public long getTaskFinishedTime() {
+		return taskFinishedTime;
 	}	
 }
