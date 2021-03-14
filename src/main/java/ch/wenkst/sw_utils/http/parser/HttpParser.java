@@ -165,8 +165,6 @@ public class HttpParser {
 	private void processBodyByte(byte b) {
 		if (isChunked) {
 			processChunkSizeByte(b);
-
-
 		} else {
 			processRegularBodyByte(b);
 		}
