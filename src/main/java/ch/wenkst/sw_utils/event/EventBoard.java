@@ -8,7 +8,7 @@ import ch.wenkst.sw_utils.event.managers.EventManager;
 import ch.wenkst.sw_utils.event.managers.EventManagerFactory;
 
 public class EventBoard {
-	private EventOperationMode opertionMode = EventOperationMode.SYNC;
+	private EventOperationMode operationMode = EventOperationMode.SYNC;
 	private Map<String, EventManager> eventManagerMap = new ConcurrentHashMap<>();;
 	private Executor executor;
 	
@@ -30,9 +30,9 @@ public class EventBoard {
 	 */
 	public EventBoard(Executor executor, boolean isSameEventAsync) {
 		if (isSameEventAsync) {
-			opertionMode = EventOperationMode.ASYNC;
+			operationMode = EventOperationMode.ASYNC;
 		} else {
-			opertionMode = EventOperationMode.SYNC_SAME_EVENT;
+			operationMode = EventOperationMode.SYNC_SAME_EVENT;
 		}
 		
 		this.executor = executor;
@@ -49,7 +49,7 @@ public class EventBoard {
 	public EventListener registerListener(String eventName, EventListener listener) {
 		EventManager eventManager = eventManagerMap.get(eventName);
 		if (eventManager == null) {
-			eventManager = EventManagerFactory.getEventManager(opertionMode, eventName, executor);
+			eventManager = EventManagerFactory.getEventManager(operationMode, eventName, executor);
 			eventManagerMap.put(eventName, eventManager);			
 		}
 		

@@ -3,21 +3,26 @@ package ch.wenkst.sw_utils.event;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ch.wenkst.sw_utils.Utils;
 
 public class TestEventListener implements EventListener {
-	private int processTime = 10; 			// duration in ms to simulate some processing time
+	private static final Logger logger = LoggerFactory.getLogger(TestEventListener.class);
 	
-	private ArrayList<ProcessedEvent> receivedEvents = new ArrayList<>(); 	// list of the received parameters
+	private String name;
+	private int eventProcessingTime = 10;
+	
+	private List<ProcessedEvent> receivedEvents = new ArrayList<>();
 	
 	
-	/**
-	 * event that simulates some processing time after the event is received
-	 * @param processTime 	fake processing time in ms
-	 */
-	public TestEventListener(int processTime) {
-		this.processTime = processTime;
+	public TestEventListener(String name, int eventProcessingTime) {
+		this.name = name;
+		this.eventProcessingTime = eventProcessingTime;
 	}
 	
 	
@@ -25,71 +30,35 @@ public class TestEventListener implements EventListener {
 	public void handleEvent(String eventName, Object params) {
 		String param = (String) params;
 		
-		// add the received parameters to the list
 		synchronized (receivedEvents) {
 			receivedEvents.add(new ProcessedEvent(System.currentTimeMillis(), param));
 		}
 		
-		System.out.println("event received " + eventName + " time" + Instant.now().toEpochMilli());
-		
-		// simulate some processing time
-		Utils.sleep(processTime);
+		logger.debug(name + ": event received " + eventName + " param: " + params + " time " + Instant.now().toEpochMilli());
+		Utils.sleep(eventProcessingTime); 		// simulate some processing time
 	}
 
 	
-	/**
-	 * returns a list of the received parameters
-	 * @return 		array of received string parameters
-	 */
 	public String[] getReceivedParams() {
-		String[] result = new String[receivedEvents.size()];
-		for (int i=0; i<receivedEvents.size(); i++) {
-			result[i] = receivedEvents.get(i).param;
-		}
-		return result;
+		return receivedEvents.stream()
+				.map((event) -> event.param)
+				.collect(Collectors.toList())
+				.toArray(new String[receivedEvents.size()]);
 	}
 	
-	/**
-	 * returns a list of the received timestamps
-	 * @return 		array of timestamps when the parameters were received
-	 */
 	public long[] getReceivedTimestamps() {
-		long[] result = new long[receivedEvents.size()];
-		for (int i=0; i<receivedEvents.size(); i++) {
-			result[i] = receivedEvents.get(i).timestamp;
-		}
-		return result;
+		return receivedEvents.stream()
+				.map((event) -> event.timestamp)
+				.mapToLong(l -> l).toArray();
 	}
 	
-	/**
-	 * sorts the received events by parameter
-	 */
-	public void sortReceivedEvents() {
+
+	public void sortByParameters() {
 		Collections.sort(receivedEvents);
 	}
 	
 
-	public ArrayList<ProcessedEvent> getReceivedEvents() {
+	public List<ProcessedEvent> getReceivedEvents() {
 		return receivedEvents;
 	}
-	
-	
-	
-	
-	protected class ProcessedEvent implements Comparable<ProcessedEvent> {
-		private ProcessedEvent(long timestamp, String param) {
-			this.timestamp = timestamp;
-			this.param = param;
-		}
-		
-		public long timestamp; 		// the time the event was processed
-		public String param; 		// the received parameter
-		
-		@Override
-		public int compareTo(ProcessedEvent o) {
-			return param.compareTo(o.param);
-		}
-	}
-	
-	
 }

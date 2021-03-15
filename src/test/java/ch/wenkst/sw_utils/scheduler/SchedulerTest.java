@@ -94,7 +94,7 @@ public class SchedulerTest {
 		OneTimeTestTask task1 = scheduleOneTimeTask(100, 0);
 		OneTimeTestTask task2 = scheduleOneTimeTask(200, 0);
 		
-		waitForOneTimeTasks(task1, task2, 300);
+		waitForOneTimeTasks(task1, task2, 500);
 		
 		Assertions.assertTrue(task1.getTaskFinishedTime() >= now + 100);
 		Assertions.assertTrue(task2.getTaskFinishedTime() >= now + 200);
