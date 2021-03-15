@@ -389,8 +389,8 @@ public class FileUtils {
 	 * @return 				array list that contains the last lines of the passed file or null if an error occurred
 	 * @throws IOException 
 	 */
-	public static ArrayList<String> readLastLines(String filePath, int lineCount) throws IOException {
-		ArrayList<String> lines = new ArrayList<>();
+	public static List<String> readLastLines(String filePath, int lineCount) throws IOException {
+		List<String> lines = new ArrayList<>();
 
 		// create a new random access file instance
 		RandomAccessFile raFile = new RandomAccessFile(filePath, "r");
@@ -444,7 +444,6 @@ public class FileUtils {
 	private static String getLine(ByteArrayOutputStream baOutputStream) {
 		byte[] a = baOutputStream.toByteArray();
 
-		// reverse bytes
 		for (int i = 0, j = a.length - 1; j > i; i++, j--) {
 			byte tmp = a[j];
 			a[j] = a[i];

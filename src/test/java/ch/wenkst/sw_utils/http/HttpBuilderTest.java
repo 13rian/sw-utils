@@ -30,7 +30,6 @@ public class HttpBuilderTest {
 	@Test
 	public void createHttpResponse() {
 		HttpResponseBuilder respBuilder = new HttpResponseBuilder();
-
 		respBuilder.status(403)
 		.headerProperty("Content-Type", "text/plain")
 		.headerProperty("Authorization", "Some secret code")

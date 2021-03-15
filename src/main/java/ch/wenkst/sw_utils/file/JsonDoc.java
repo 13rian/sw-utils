@@ -2,6 +2,7 @@ package ch.wenkst.sw_utils.file;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,7 +34,6 @@ public class JsonDoc {
 	 * handles a json document
 	 */
 	public JsonDoc() {
-		// create a new json parser
 		parser = new JsonParser();  
 	}
 
@@ -53,24 +53,12 @@ public class JsonDoc {
 	 * @param filePath 		the path of the file to which the json string is saved
 	 * @param obj 			the object that is converted to a json string
 	 * @param prettyPrint 	true if the json should be well formatted
-	 * @return 				true if the files was successfully written, false if an error occurred
+	 * @throws IOException 
 	 */
-	public static boolean objToJsonFile(String filePath, Object obj, boolean prettyPrint) {
-		try {
-			String jsonSring = objToJsonStr(obj, prettyPrint);
-			if (jsonSring == null) {
-				return false;
-			}
-			
-			// write the string to a json file
-			Path path = Paths.get(filePath);
-			Files.write(path, jsonSring.getBytes(StandardCharsets.UTF_8));
-			return true;
-
-		} catch (Exception e) {
-			logger.error("failed to write the object to a json file with path " + filePath, e);
-			return false;
-		}
+	public void objToJsonFile(String filePath, Object obj, boolean prettyPrint) throws IOException {
+		String jsonSring = objToJsonStr(obj, prettyPrint);
+		Path path = Paths.get(filePath);
+		Files.write(path, jsonSring.getBytes(StandardCharsets.UTF_8));
 	}
 	
 	
@@ -82,18 +70,12 @@ public class JsonDoc {
 	 */
 	public static String objToJsonStr(Object obj, boolean prettyPrint) {
 		Gson gson = null;
-		try {
-			if (prettyPrint) {
-				gson = new GsonBuilder().setPrettyPrinting().create();
-			} else {
-				gson = new Gson();
-			}
-			return gson.toJson(obj);
-			
-		} catch (Exception e) {
-			logger.error("failed to convert the passed object to a json string: ", e);
-			return null;
+		if (prettyPrint) {
+			gson = new GsonBuilder().setPrettyPrinting().create();
+		} else {
+			gson = new Gson();
 		}
+		return gson.toJson(obj);
 	}
 	
 	
@@ -111,10 +93,10 @@ public class JsonDoc {
 	 * writes the json document to a file
 	 * @param filePath 		path of the file to which the json document should be written
 	 * @param prettyPrint 	true if the json should be well formatted
-	 * @return 				true if the files was successfully written, false if an error occurred
+	 * @throws IOException 
 	 */
-	public boolean writeToFile(String filePath, boolean prettyPrint) {
-		return objToJsonFile(filePath, rootEl, prettyPrint);
+	public void writeToFile(String filePath, boolean prettyPrint) throws IOException {
+		objToJsonFile(filePath, rootEl, prettyPrint);
 	}
 	
 	
@@ -139,18 +121,11 @@ public class JsonDoc {
 	 * adds a new json element to the passed parent
 	 * @param parent 	the parent element to which a new element is added
 	 * @param tag 		the tag name of the element that is added
-	 * @return 			the child element or null if an error occurred
 	 */
 	public JsonElement addElement(JsonElement parent, String tag) {
-		try {
-			JsonElement child = new JsonObject(); 				// create a new json object
-			parent.getAsJsonObject().add(tag, child); 			// add the element to the passed parent
-			return child;
-		
-		} catch (Exception e) {
-			logger.error("failed to add a new element with tag name " + tag, e);
-			return null;
-		}
+		JsonElement child = new JsonObject();
+		parent.getAsJsonObject().add(tag, child);
+		return child;
 	}
 	
 	
@@ -169,14 +144,9 @@ public class JsonDoc {
 	 * @param tag 		name of the element that is removed
 	 */
 	public void removeElementByName(JsonElement parent, String tag) {
-		try {
-			parent.getAsJsonObject().remove(tag);
-		
-		} catch (Exception e) {
-			logger.error("failed to remove the element with tag name " + tag, e);
-		}
+		parent.getAsJsonObject().remove(tag);
 	}
-	
+
 	
 	/**
 	 * adds a string to the passed json element with the passed tag name
@@ -185,11 +155,7 @@ public class JsonDoc {
 	 * @param str 		the string value of the element
 	 */
 	public void addString(JsonElement parent, String tag, String str) {
-		try {
-			parent.getAsJsonObject().addProperty(tag, str);
-		} catch (Exception e) {
-			logger.error("failed to add the string to the parent with tag name: " + tag, e);
-		}
+		parent.getAsJsonObject().addProperty(tag, str);
 	}
 	
 	
@@ -200,11 +166,7 @@ public class JsonDoc {
 	 * @param number 	the number value of the element
 	 */
 	public void addNumber(JsonElement parent, String tag, Number number) {
-		try {
-			parent.getAsJsonObject().addProperty(tag, number);
-		} catch (Exception e) {
-			logger.error("failed to add the number to the parent with tag name: " + tag, e);
-		}
+		parent.getAsJsonObject().addProperty(tag, number);
 	}
 	
 	
@@ -215,21 +177,18 @@ public class JsonDoc {
 	 * @param bool 		the boolean value of the element
 	 */
 	public void addBoolean(JsonElement parent, String tag, Boolean bool) {
-		try {
-			parent.getAsJsonObject().addProperty(tag, bool);
-		} catch (Exception e) {
-			logger.error("failed to add the boolean to the parent with tag name: " + tag, e);
-		}
+		parent.getAsJsonObject().addProperty(tag, bool);
 	}
 	
 	
 	/**
 	 * adds an array to the passed json element with the passed tag name
+	 * @param <T>
 	 * @param parent 		the json element to which the array is added
 	 * @param tag 			tag name of the property that is added
 	 * @param valuesArr 	the array value of the element
 	 */
-	public void addArray(JsonElement parent, String tag, List<Object> valuesArr) {
+	public <T> void addArray(JsonElement parent, String tag, List<T> valuesArr) {
 		JsonArray jsonArr = new JsonArray();
 		
 		for (Object value : valuesArr) {
@@ -266,55 +225,31 @@ public class JsonDoc {
 	/**
 	 * creates a json document from the passed file name
 	 * @param fileName	 	path to the json-file
-	 * @return	 			true if successfully read
+	 * @throws IOException 
 	 */
-	public boolean openJsonFromFile(String fileName) {
-		try {
-			FileReader reader = new FileReader(new File(fileName)); 	// open the file
-			rootEl = parser.parse(reader); 								// get the json root element
-			
-			reader.close();
-			return true;
-
-		} catch (Exception e) {
-			logger.error("Exception reading json file: " + e);
-			return false;
-		}		
+	public void openJsonFromFile(String fileName) throws IOException {
+		FileReader reader = new FileReader(new File(fileName));
+		rootEl = parser.parse(reader);
+		reader.close();	
 	}
 
 	
 	/**
 	 * reads an json document from the passed xml string, the encoding is set to utf-8
 	 * @param jsonString 	JSON-String
-	 * @return	 			true if successfully read
 	 */
-	public boolean openJsonFromString(String jsonString) {
-		try {
-			rootEl = parser.parse(jsonString); 					// get the json root element
-			return true;
-
-		} catch (Exception e) {
-			logger.error("Exception reading json string: " + e);
-			return false;
-		}		
+	public void openJsonFromString(String jsonString) {
+		rootEl = parser.parse(jsonString);
 	}
 
 
 	/**
 	 * reads an json document from the passed byte array
 	 * @param jsonBytes 	the byte array containing the json data (utf-8)
-	 * @return	 			true if successfully read
 	 */
-	public boolean openJsonFromByteArray(byte[] jsonBytes) {
-		try {
-			String jsonString = new String(jsonBytes, StandardCharsets.UTF_8);
-			rootEl = parser.parse(jsonString); 									// get the json root element
-			return true;
-
-		} catch (Exception e) {
-			logger.error("Exception reading json byte array: " + e);
-			return false;
-		}	
+	public void openJsonFromByteArray(byte[] jsonBytes) {
+		String jsonString = new String(jsonBytes, StandardCharsets.UTF_8);
+		rootEl = parser.parse(jsonString);
 	}
 
 
@@ -334,14 +269,8 @@ public class JsonDoc {
 	 * @return 				json element
 	 */
 	public JsonElement getChildElementByName(JsonElement parent, String tag) {
-		try {
-			JsonObject parentObj = parent.getAsJsonObject();
-			return parentObj.get(tag);
-			
-		} catch (Exception e) {
-			logger.error("failed to read the child element of the tag " + tag, e);
-			return null;
-		}
+		JsonObject parentObj = parent.getAsJsonObject();
+		return parentObj.get(tag);
 	}
 	
 	
@@ -353,21 +282,15 @@ public class JsonDoc {
 	 * @return 				json element
 	 */
 	public JsonElement[] getChildElementsByName(JsonElement parent, String tag) {
-		try {
-			JsonObject parentObj = parent.getAsJsonObject();
-			JsonArray jsonArr = parentObj.get(tag).getAsJsonArray();
-			
-			JsonElement[] jsonElArr = new JsonElement[jsonArr.size()];
-			for (int i=0; i<jsonArr.size(); i++) {
-				jsonElArr[i] = jsonArr.get(i);
-			}
-			
-			return jsonElArr;	
-			
-		} catch (Exception e) {
-			logger.error("failed to read the child elements of the tag " + tag, e);
-			return null;
+		JsonObject parentObj = parent.getAsJsonObject();
+		JsonArray jsonArr = parentObj.get(tag).getAsJsonArray();
+
+		JsonElement[] jsonElArr = new JsonElement[jsonArr.size()];
+		for (int i=0; i<jsonArr.size(); i++) {
+			jsonElArr[i] = jsonArr.get(i);
 		}
+
+		return jsonElArr;	
 	}	
 	
 	
@@ -394,24 +317,18 @@ public class JsonDoc {
 	 * reads the string array form an element
 	 * @param element 		the parent element
 	 * @param tag 			the name of the element to read the string form
-	 * @return 				the string array or an empty array if an error occurred
+	 * @return 				the string array
 	 */
 	public String[] readStringArray(JsonElement element, String tag) {
-		try {
-			JsonObject jsonObj = element.getAsJsonObject();
-			JsonArray jsonArr = jsonObj.get(tag).getAsJsonArray();
-			
-			String[] strArr = new String[jsonArr.size()];
-			for (int i=0; i<jsonArr.size(); i++) {
-				strArr[i] = jsonArr.get(i).getAsString();
-			}
-			
-			return strArr;
+		JsonObject jsonObj = element.getAsJsonObject();
+		JsonArray jsonArr = jsonObj.get(tag).getAsJsonArray();
 
-		} catch (Exception e) {
-			logger.error("failed to read the string array form tag " + tag);
-			return new String[0];
+		String[] strArr = new String[jsonArr.size()];
+		for (int i=0; i<jsonArr.size(); i++) {
+			strArr[i] = jsonArr.get(i).getAsString();
 		}
+
+		return strArr;
 	}
 	
 	
@@ -438,24 +355,18 @@ public class JsonDoc {
 	 * reads the integer array form an element
 	 * @param element 		the parent element
 	 * @param tag 			the name of the element to read the string form
-	 * @return 				the integer array or an empty array if an error occurred
+	 * @return 				the integer array
 	 */
 	public int[] readIntArray(JsonElement element, String tag) {
-		try {
-			JsonObject jsonObj = element.getAsJsonObject();
-			JsonArray jsonArr = jsonObj.get(tag).getAsJsonArray();
-			
-			int[] intArr = new int[jsonArr.size()];
-			for (int i=0; i<jsonArr.size(); i++) {
-				intArr[i] = jsonArr.get(i).getAsInt();
-			}
-			
-			return intArr;
+		JsonObject jsonObj = element.getAsJsonObject();
+		JsonArray jsonArr = jsonObj.get(tag).getAsJsonArray();
 
-		} catch (Exception e) {
-			logger.error("failed to read the int array form tag " + tag);
-			return new int[0];
+		int[] intArr = new int[jsonArr.size()];
+		for (int i=0; i<jsonArr.size(); i++) {
+			intArr[i] = jsonArr.get(i).getAsInt();
 		}
+
+		return intArr;
 	}
 	
 	
@@ -482,10 +393,10 @@ public class JsonDoc {
 	 * reads the long array form an element
 	 * @param element 		the parent element
 	 * @param tag 			the name of the element to read the string form
-	 * @return 				the long array or an empty array if an error occurred
+	 * @return 				the long array
 	 */
 	public long[] readLongArray(JsonElement element, String tag) {
-		try {
+
 			JsonObject jsonObj = element.getAsJsonObject();
 			JsonArray jsonArr = jsonObj.get(tag).getAsJsonArray();
 			
@@ -495,11 +406,6 @@ public class JsonDoc {
 			}
 			
 			return longArr;
-
-		} catch (Exception e) {
-			logger.error("failed to read the long array form tag " + tag);
-			return new long[0];
-		}
 	}
 	
 	
@@ -526,26 +432,20 @@ public class JsonDoc {
 	 * reads the double array form an element
 	 * @param element 		the parent element
 	 * @param tag 			the name of the element to read the string form
-	 * @return 				the long array or an empty array if an error occurred
+	 * @return 				the long array or an empty array
 	 */
 	public double[] readDoubleArray(JsonElement element, String tag) {
-		try {
-			JsonObject jsonObj = element.getAsJsonObject();
-			JsonArray jsonArr = jsonObj.get(tag).getAsJsonArray();
-			
-			double[] doubleArr = new double[jsonArr.size()];
-			for (int i=0; i<jsonArr.size(); i++) {
-				doubleArr[i] = jsonArr.get(i).getAsDouble();
-			}
-			
-			return doubleArr;
+		JsonObject jsonObj = element.getAsJsonObject();
+		JsonArray jsonArr = jsonObj.get(tag).getAsJsonArray();
 
-		} catch (Exception e) {
-			logger.error("failed to read the double array form tag " + tag);
-			return new double[0];
+		double[] doubleArr = new double[jsonArr.size()];
+		for (int i=0; i<jsonArr.size(); i++) {
+			doubleArr[i] = jsonArr.get(i).getAsDouble();
 		}
+
+		return doubleArr;
 	}
-	
+
 	
 	/**
 	 * reads the boolean form an element
@@ -570,23 +470,17 @@ public class JsonDoc {
 	 * reads the boolean array form an element
 	 * @param element 		the parent element
 	 * @param tag 			the name of the element to read the string form
-	 * @return 				the long array or an empty array if an error occurred
+	 * @return 				the long array
 	 */
 	public boolean[] readBooleanArray(JsonElement element, String tag) {
-		try {
-			JsonObject jsonObj = element.getAsJsonObject();
-			JsonArray jsonArr = jsonObj.get(tag).getAsJsonArray();
-			
-			boolean[] booleanArr = new boolean[jsonArr.size()];
-			for (int i=0; i<jsonArr.size(); i++) {
-				booleanArr[i] = jsonArr.get(i).getAsBoolean();
-			}
-			
-			return booleanArr;
+		JsonObject jsonObj = element.getAsJsonObject();
+		JsonArray jsonArr = jsonObj.get(tag).getAsJsonArray();
 
-		} catch (Exception e) {
-			logger.error("failed to read the boolean array form tag " + tag);
-			return new boolean[0];
+		boolean[] booleanArr = new boolean[jsonArr.size()];
+		for (int i=0; i<jsonArr.size(); i++) {
+			booleanArr[i] = jsonArr.get(i).getAsBoolean();
 		}
+
+		return booleanArr;
 	}
 }

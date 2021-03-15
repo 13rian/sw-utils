@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import ch.wenkst.sw_utils.BaseTest;
 
-public class AES_CryptoTest  extends BaseTest {
+public class AES_CryptoTest extends BaseTest {
 	private AES_Crypto aesCrypto;
 	private String clearText = "Secret message to encrypt";
 	
