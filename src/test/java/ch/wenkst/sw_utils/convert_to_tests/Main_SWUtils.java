@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ch.wenkst.sw_utils.Utils;
-import ch.wenkst.sw_utils.crypto.CryptoProvider;
 import ch.wenkst.sw_utils.file.FileUtils;
 import ch.wenkst.sw_utils.logging.Log;
 import ch.wenkst.sw_utils.map.MapUtils;
@@ -36,21 +35,6 @@ public class Main_SWUtils {
 		
 		
 		
-		/////////////////////////////////////////////////////////////////////////////////////////////////
-		// 										test Security Utils									   //
-		/////////////////////////////////////////////////////////////////////////////////////////////////
-	
-		Test test = new Test();
-		test.print();
-		
-		// print all registered providers
-		log.info(CryptoProvider.getRegisteredProviders());
-		
-		// print the default providers
-		log.info(CryptoProvider.getDefaultProviders());
-		
-		
-		
 		
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// 											utils 													   //
@@ -78,13 +62,8 @@ public class Main_SWUtils {
 		
 		
 		Map<String, Object> dataHm = MapUtils.objToMap(data);
-		
-
-
+	
 		
 		log.info("end of main test routine reached");
 	}
-	
-	
-	
 }

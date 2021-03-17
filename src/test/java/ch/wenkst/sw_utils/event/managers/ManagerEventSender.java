@@ -1,10 +1,6 @@
 package ch.wenkst.sw_utils.event.managers;
 
 import ch.wenkst.sw_utils.event.TestEventSender;
-import ch.wenkst.sw_utils.event.managers.AsyncEventManager;
-import ch.wenkst.sw_utils.event.managers.EventManager;
-import ch.wenkst.sw_utils.event.managers.SyncEventManager;
-import ch.wenkst.sw_utils.event.managers.SyncSameEventEventManager;
 
 public class ManagerEventSender extends TestEventSender {
 	private EventManager eventManager0;

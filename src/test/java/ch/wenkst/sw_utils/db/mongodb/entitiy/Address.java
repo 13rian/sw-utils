@@ -1,4 +1,4 @@
-package ch.wenkst.sw_utils.convert_to_tests;
+package ch.wenkst.sw_utils.db.mongodb.entitiy;
 
 
 public final class Address {
