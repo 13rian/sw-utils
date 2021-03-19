@@ -7,6 +7,11 @@ public abstract class ScheduledTask {
 	protected long interval = 0;
 	
 	
+	public ScheduledTask() {
+		
+	}
+	
+	
 	public ScheduledTask(long startTime) {
 		this.startTime = startTime;
 	}

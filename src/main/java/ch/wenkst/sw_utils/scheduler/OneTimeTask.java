@@ -1,6 +1,10 @@
 package ch.wenkst.sw_utils.scheduler;
 
 public abstract class OneTimeTask extends ScheduledTask {
+	public OneTimeTask() {
+		
+	}
+	
 	
 	/**
 	 * task that is only executed once at the passed start time
@@ -8,6 +12,11 @@ public abstract class OneTimeTask extends ScheduledTask {
 	 */
 	public OneTimeTask(long startTime) {
 		super(startTime);
+	}
+	
+	
+	protected void init(long startTime) {
+		this.startTime = startTime;
 	}
 	
 	

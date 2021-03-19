@@ -3,6 +3,10 @@ package ch.wenkst.sw_utils.scheduler;
 import java.time.Instant;
 
 public abstract class PeriodicTask extends ScheduledTask {
+	public PeriodicTask() {
+		
+	}
+	
 	
 	/**
 	 * task is executed periodically, if it has finished there is a pause with the length of the passed interval 
@@ -12,6 +16,12 @@ public abstract class PeriodicTask extends ScheduledTask {
 	 */
 	public PeriodicTask(long startTime, long pause) {
 		super(startTime, pause);
+	}
+	
+	
+	protected void init(long startTime, long pause) {
+		this.startTime = startTime;
+		this.interval = pause;
 	}
 	
 	
