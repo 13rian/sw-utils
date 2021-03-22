@@ -48,11 +48,6 @@ public class Main_SWUtils {
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// 											new methods 											   //
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////
-		String fileExtension = FileUtils.fileExtension("hallo/test.qq");
-		System.out.println("file-extension: " + fileExtension);
-		
-		String rawName = FileUtils.rawFileName("hallo/test");
-		System.out.println("file-extension: " + rawName);
 	
 		
 		log.info("end of main test routine reached");

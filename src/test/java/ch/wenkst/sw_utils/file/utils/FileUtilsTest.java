@@ -158,14 +158,14 @@ public class FileUtilsTest {
 	
 	
 	@Test
-	void findOneFileByPatternWithNonExistingEnding() {
+	public void findOneFileByPatternWithNonExistingEnding() {
 		String filePath = FileUtils.findFileByPattern(testFiles.fileUtilsDir, "test", "der");
 		Assertions.assertNull(filePath);
 	}
 	
 	
 	@Test
-	void findOneFileByPatternWithNonExistingPattern() {
+	public void findOneFileByPatternWithNonExistingPattern() {
 		String filePath = FileUtils.findFileByPattern(testFiles.fileUtilsDir, "noFile", "csv");
 		Assertions.assertEquals(null, filePath);	
 	}
@@ -184,15 +184,29 @@ public class FileUtilsTest {
 	
 	
 	@Test
-	void findMultipleFilesByPatternWithNonExistingEnding() {
+	public void findMultipleFilesByPatternWithNonExistingEnding() {
 		List<String> fileList = FileUtils.findFilesByPattern(testFiles.fileUtilsDir, "test", "der");
 		Assertions.assertEquals(0, fileList.size());
 	}
 	
 	
 	@Test
-	void findMultipleFilesByPatternWithNonExistingPattern() {
+	public void findMultipleFilesByPatternWithNonExistingPattern() {
 		List<String> fileList = FileUtils.findFilesByPattern(testFiles.fileUtilsDir, "noFile", "csv");
 		Assertions.assertEquals(0, fileList.size());	
+	}
+	
+	
+	@Test
+	public void readFileExtension() {
+		String fileExtension = FileUtils.fileExtension("hallo/test.json");
+		Assertions.assertEquals(".json", fileExtension);
+	}
+	
+	
+	@Test
+	public void readRawFileName() {
+		String rawName = FileUtils.rawFileName("hallo/test.xml");
+		Assertions.assertEquals("test", rawName);
 	}
 }
