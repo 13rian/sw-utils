@@ -1,18 +1,9 @@
 package ch.wenkst.sw_utils.convert_to_tests;
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-
 import ch.wenkst.sw_utils.Utils;
-import ch.wenkst.sw_utils.file.FileUtils;
 import ch.wenkst.sw_utils.logging.Log;
-import ch.wenkst.sw_utils.map.Data;
-import ch.wenkst.sw_utils.map.MapUtils;
 
 public class Main_SWUtils {
-//	// define a class initializer that is executed before any other properties and classes are loaded (since it is the 
-//	// initializer for the main program). It sets the needed system property for the logger
-//	// no need to set the JVM arguments anymore in the Debug Configurations
 	static {
 		System.setProperty("log4j.configurationFile", "config/log4j2.xml");
 	}
