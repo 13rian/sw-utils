@@ -6,6 +6,7 @@ import java.util.Map;
 import ch.wenkst.sw_utils.Utils;
 import ch.wenkst.sw_utils.file.FileUtils;
 import ch.wenkst.sw_utils.logging.Log;
+import ch.wenkst.sw_utils.map.Data;
 import ch.wenkst.sw_utils.map.MapUtils;
 
 public class Main_SWUtils {
@@ -52,16 +53,6 @@ public class Main_SWUtils {
 		
 		String rawName = FileUtils.rawFileName("hallo/test");
 		System.out.println("file-extension: " + rawName);
-		
-		
-		Map<String, Object> hm = new HashMap<>();
-		hm.put("name", "Temperature");
-		hm.put("timestamp", 1532274524000L);
-		hm.put("value", 29.3);
-		Data data = MapUtils.mapToObj(hm, Data.class);
-		
-		
-		Map<String, Object> dataHm = MapUtils.objToMap(data);
 	
 		
 		log.info("end of main test routine reached");

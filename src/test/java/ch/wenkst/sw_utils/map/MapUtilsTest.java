@@ -1,5 +1,6 @@
 package ch.wenkst.sw_utils.map;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.jupiter.api.Assertions;
@@ -168,5 +169,30 @@ public class MapUtilsTest extends BaseTest {
 		Assertions.assertEquals(2, (int) filteredMap.get("intVal"));
 		Assertions.assertEquals(4.11f, (float) filteredMap.get("floatVal"));
 		Assertions.assertEquals(6.78d, (double) filteredMap.get("doubleVal"));
+	}
+	
+	
+	@Test
+	public void mapToObject() {
+		Map<String, Object> hm = new HashMap<>();
+		hm.put("name", "Temperature");
+		hm.put("timestamp", 1532274524000L);
+		hm.put("value", 29.3);
+		Data data = MapUtils.mapToObj(hm, Data.class);
+		
+		Assertions.assertEquals("Temperature", data.name);
+		Assertions.assertEquals(1532274524000L, data.timestamp);
+		Assertions.assertEquals(29.3, data.value, 0.001);
+	}
+	
+	
+	@Test
+	public void objectToMap() {
+		Data data = new Data("Temperature", 1532274524000L, 29.3);
+		Map<String, Object> dataMap = MapUtils.objToMap(data);
+		
+		Assertions.assertEquals("Temperature", dataMap.get("name"));
+		Assertions.assertEquals(1532274524000L, MapUtils.longFromMap(dataMap, "timestamp", 0L));
+		Assertions.assertEquals(29.3D, (double) dataMap.get("value"), 0.001);
 	}
 }
