@@ -67,11 +67,10 @@ public abstract class TlsSession extends BaseThread implements ISession {
 	
 	@Override
 	public void doWork() {
-		// read the data from the client socket regularly
 		try {
-			int len = socket.getInputStream().read(inputBuffer); 		// len=-1 if socket is closed
+			int len = socket.getInputStream().read(inputBuffer);
 			if (len > 0) {
-				byte[] message = Arrays.copyOf(inputBuffer, len); 		// truncate the buffer to its actual size
+				byte[] message = Arrays.copyOf(inputBuffer, len);
 				processMessage(message);
 
 			} else if (len < 0) {

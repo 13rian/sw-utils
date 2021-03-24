@@ -22,10 +22,6 @@ public abstract class TcpClient extends BaseThread {
 	protected byte[] inputBuffer = new byte[10000];
 
 	
-
-	/**
-	 * handles the client side of the tcp connection
-	 */
 	public TcpClient() {		
 		
 	}
@@ -50,23 +46,20 @@ public abstract class TcpClient extends BaseThread {
 	@Override
 	public void doWork() {
 		try {
-			int len = socket.getInputStream().read(inputBuffer); 		// len=-1 if socket is closed
+			int len = socket.getInputStream().read(inputBuffer);
 
 			if (len > 0) {
-				byte[] message = Arrays.copyOf(inputBuffer, len); 		// truncate the buffer to its actual size
-				processMessage(message); 								// send the message to the gcu
+				byte[] message = Arrays.copyOf(inputBuffer, len);
+				processMessage(message);
 
 			} else if (len < 0) {
-				// print the deviceId
 				logger.info(clientName + ": found tcp client socket closed - terminate session");
 				stopWorker();
 			}
 
 		} catch (SocketTimeoutException soEx) {
-			// do nothing
 
 		} catch (Exception e) {
-			// catch all other exceptions
 			logger.error(clientName + ": error reading from socket: ", e);
 			stopWorker();
 		}				
@@ -87,7 +80,6 @@ public abstract class TcpClient extends BaseThread {
 	public boolean connect() {
 		logger.info(clientName +  ": open a tcp socket to host: " + host + ", " + port);
 		try {
-			// try to open the socket on the client side
 			socket = new Socket(host, port);
 			socket.setSoTimeout(socketTimeout);
 		
@@ -148,5 +140,4 @@ public abstract class TcpClient extends BaseThread {
 	public Socket getSocket() {
 		return socket;
 	}
-
 }

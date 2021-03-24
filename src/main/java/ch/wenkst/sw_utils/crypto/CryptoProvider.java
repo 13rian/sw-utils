@@ -68,7 +68,6 @@ public class CryptoProvider {
 	public static void registerBCJSSE() {
 		if (!bcjsseProviderRegistered()) {
 			try {
-				// with this approach it is not necessary to have the bcjsse dependency in the class path
 				Object bc = Class.forName("org.bouncycastle.jsse.provider.BouncyCastleJsseProvider").getDeclaredConstructor().newInstance();
 				Security.insertProviderAt((Provider) bc, 1);
 				logger.info("successfully registered bouncy castle bcjsse as security provider at position 1.");

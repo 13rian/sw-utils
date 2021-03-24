@@ -64,14 +64,11 @@ public abstract class TlsServer extends BaseThread {
 			SSLSocket socket =  (SSLSocket) serverSocket.accept();   
 			logger.debug(serverName + ": server socket accept");
 
-			// create a new session for the client socket and add them to the session list
 			ISession tlsSession = onNewConnection(this, socket);
 			addToSessions(tlsSession);
-
 			logger.debug(serverName + ": end server socket accept");
 
 		} catch (SocketTimeoutException soEx) {
-			// do nothing
 
 		} catch (Exception e) {
 			logger.error(serverName + ": error in socket accept: ", e);
@@ -132,7 +129,6 @@ public abstract class TlsServer extends BaseThread {
 			logger.info(serverName + " close the tls server, port: " + port);
 			serverSocket.close();
 
-			// close all sessions
 			logger.info(serverName + ": close all server sessions");
 			for (ISession session : sessions) {
 				session.stopSession();
@@ -181,5 +177,4 @@ public abstract class TlsServer extends BaseThread {
 	public void setHealthy(boolean isHealthy) {
 		this.isHealthy = isHealthy;
 	}	
-
 }

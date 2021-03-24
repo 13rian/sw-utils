@@ -26,9 +26,6 @@ public abstract class TcpServer extends BaseThread {
 	protected List<ISession> sessions;
 	
 		
-	/**
-	 * tcp server that accepts incoming tcp client connections
-	 */
 	public TcpServer() {
 		sessions = new ArrayList<>();	
 	}
@@ -52,12 +49,9 @@ public abstract class TcpServer extends BaseThread {
 		try {
 			isHealthy = true; 
 			Socket socket =  serverSocket.accept();   
-			logger.debug(serverName + ": server socket accept");
-
-			// set the read timeout of the socket
+			logger.debug(serverName + ": server socket accept");			
 			socket.setSoTimeout(readTimeout);
 
-			// create a new session for the client socket and add them to the session list
 			ISession tcpSession = onNewConnection(this, socket);
 			if (tcpSession != null) {
 				addToSessions(tcpSession);
@@ -66,7 +60,6 @@ public abstract class TcpServer extends BaseThread {
 			logger.debug(serverName + ": end server socket accept");
 
 		} catch (SocketTimeoutException soEx) {
-			// do nothing
 
 		} catch (Exception e) {
 			logger.error(serverName + ": error in socket accept: ", e);
@@ -103,7 +96,7 @@ public abstract class TcpServer extends BaseThread {
 		
 		try {
 			serverSocket = new ServerSocket(port);
-			serverSocket.setSoTimeout(acceptTimeout); 		// set the socket timeout
+			serverSocket.setSoTimeout(acceptTimeout);
 			logger.info(serverName + ": server socket listening on port " + port);
 
 		} catch (Exception e) {
@@ -121,7 +114,6 @@ public abstract class TcpServer extends BaseThread {
 			logger.info(serverName + " close the tcp server, port: " + port);
 			serverSocket.close();
 
-			// close all sessions
 			logger.info(serverName + ": close all server sessions");
 			for (ISession session : sessions) {
 				session.stopSession();

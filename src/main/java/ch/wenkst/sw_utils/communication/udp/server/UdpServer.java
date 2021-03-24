@@ -44,7 +44,7 @@ public abstract class UdpServer extends BaseThread {
 			serverSocket.receive(packet);
 			
 			int len = packet.getLength();
-			byte[] message = Arrays.copyOf(inputBuffer, len); 					// truncate the buffer to its actual size
+			byte[] message = Arrays.copyOf(inputBuffer, len);
 			processMessage(message, packet.getAddress(), packet.getPort());
 
 		} catch (SocketTimeoutException ex) {
@@ -58,7 +58,6 @@ public abstract class UdpServer extends BaseThread {
 	
 	public void sendMessage(byte[] message, String host, int remotePort) {
 		try {
-			// create a new packet and send it
 			InetAddress address= InetAddress.getByName(host);
 			DatagramPacket packet = new DatagramPacket(message, message.length, address, remotePort);
 			serverSocket.send(packet);
@@ -149,5 +148,4 @@ public abstract class UdpServer extends BaseThread {
 	public void setHealthy(boolean isHealthy) {
 		this.isHealthy = isHealthy;
 	}
-		
 }

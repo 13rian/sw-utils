@@ -52,7 +52,7 @@ public abstract class UdpClient extends BaseThread {
 			socket.receive(packet);
 			
 			int len = packet.getLength();
-			byte[] message = Arrays.copyOf(inputBuffer, len); 		// truncate the buffer to its actual size
+			byte[] message = Arrays.copyOf(inputBuffer, len);
 			processMessage(message);
 
 		} catch (SocketTimeoutException ex) {
@@ -128,7 +128,6 @@ public abstract class UdpClient extends BaseThread {
 	 */
 	public void sendMessage(byte[] message) {
 		try {
-			// create a new packet and send it to the server
 			DatagramPacket packet = new DatagramPacket(message, message.length, address, port);
 			socket.send(packet);
 		
@@ -141,5 +140,4 @@ public abstract class UdpClient extends BaseThread {
 	public DatagramSocket getSocket() {
 		return socket;
 	}
-
 }

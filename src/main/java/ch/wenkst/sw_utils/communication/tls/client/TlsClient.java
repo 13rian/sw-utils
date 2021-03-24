@@ -54,23 +54,20 @@ public abstract class TlsClient extends BaseThread {
 	@Override
 	public void doWork() {
 		try {
-			int len = socket.getInputStream().read(inputBuffer); 	// len=-1 if socket is closed
+			int len = socket.getInputStream().read(inputBuffer);
 
 			if (len > 0) {
-				byte[] message = Arrays.copyOf(inputBuffer, len); 		// truncate the buffer to its actual size
-				processMessage(message); 								// send the message to the gcu
+				byte[] message = Arrays.copyOf(inputBuffer, len);
+				processMessage(message);
 
 			} else if (len < 0) {
-				// print the deviceId
 				logger.info(clientName + ": found tls client socket closed - terminate session");
 				stopWorker();
 			}
 
 		} catch (SocketTimeoutException soEx) {
-			// do nothing
-
+			
 		} catch (Exception e) {
-			// catch all other exceptions
 			logger.error(clientName + ": error reading from socket: ", e);
 			stopWorker();
 		}				
@@ -104,19 +101,14 @@ public abstract class TlsClient extends BaseThread {
 		try {
 			logger.debug(clientName + ": open a tls client socket, host: " + host + ", " + port);
 			
-			// create the socket
 			socket = null;
 			SSLSocketFactory ssf = sslContext.getSocketFactory();
 			socket = (SSLSocket) ssf.createSocket(host, port);
 			socket.setSoTimeout(handshakeTimeout);
 			
-
-			// start handshake
 			logger.debug(clientName + ": start the handshake");
 			socket.startHandshake();
 			logger.debug(clientName + ": handshake finished");
-
-			// set timeout
 			socket.setSoTimeout(socketTimeout);
 			return true;
 
@@ -165,7 +157,6 @@ public abstract class TlsClient extends BaseThread {
 	 */
 	public void sendMessage(byte[] message) {
 		try {
-			// write the message into the socket
 			socket.getOutputStream().write(message);
 		
 		} catch (Exception e) {
