@@ -32,7 +32,11 @@ public class FileUtilsFiles extends BaseTest {
 
 	
 	public void deleteAllTestFiles() throws IOException {
+		new File(copyDir).mkdirs();
 		FileUtils.deleteDirContent(copyDir);
+		
+		new File(dumpObjectFile).mkdirs();
+		FileUtils.deleteFile(dumpObjectFile);
 	}
 	
 	

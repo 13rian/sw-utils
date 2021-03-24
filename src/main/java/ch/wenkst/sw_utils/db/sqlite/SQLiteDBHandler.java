@@ -1,5 +1,6 @@
 package ch.wenkst.sw_utils.db.sqlite;
 
+import java.sql.SQLException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -10,8 +11,6 @@ public class SQLiteDBHandler {
 	private static final Logger logger = LoggerFactory.getLogger(SQLiteDBHandler.class);
 	
 	private static SQLiteDBHandler instance = null;
-	
-	// holds the sql-handlers with the connection to the db
 	private ConcurrentMap<String, SQLiteConnector> dbMap = null;
 	
 	
@@ -38,25 +37,23 @@ public class SQLiteDBHandler {
 	/**
 	 * opens a new connection to a db
 	 * @param dbPath 	path to the db to connect to
-	 * @return 			true if successfully connected, false if an error occurred
+	 * @throws SQLException 
+	 * @throws ClassNotFoundException 
 	 */
-	public boolean openConnection(String dbPath) {
+	public void openConnection(String dbPath) throws ClassNotFoundException, SQLException {
 		// check if the db is already connected
 		if (dbMap.containsKey(dbPath)) {
 			logger.debug(dbPath + ": db is already connected");
-			return true;
+			return;
 		}
 		
 		// create a new connection to the db
 		SQLiteConnector sqlHandler = new SQLiteConnector();
-		boolean connected = sqlHandler.connect(dbPath);
-		if (!connected) {
-			return false;
-		}
+		sqlHandler.connect(dbPath);
+		
 		
 		// add the db connection to the db map
 		dbMap.put(dbPath, sqlHandler);
-		return true;
 	}
 	
 	
@@ -80,8 +77,9 @@ public class SQLiteDBHandler {
 	 * performs a read operation on one db
 	 * @param dbPath 		 	the path of the db file
 	 * @param dbOperation 	 	the callback that defines the read operation
+	 * @throws SQLException 
 	 */
-	public void readOperation(String dbPath, DBOperation dbOperation) {
+	public void readOperation(String dbPath, DBOperation dbOperation) throws SQLException {
 		SQLiteConnector sqlHandler = dbMap.get(dbPath);
 		if (sqlHandler == null) {
 			logger.error("db with path: " + dbPath + " not found in the db-map");
@@ -94,8 +92,9 @@ public class SQLiteDBHandler {
 	 * performs a write operation on the db, only one thread at a time is allowed to write to the same db
 	 * @param dbPath 			the path of the db file
 	 * @param dbOperation 		the callback that defines the read operation
+	 * @throws SQLException 
 	 */
-	public void writeOperation(String dbPath, DBOperation dbOperation) {
+	public void writeOperation(String dbPath, DBOperation dbOperation) throws SQLException {
 		SQLiteConnector sqlHandler = dbMap.get(dbPath);
 		if (sqlHandler == null) {
 			logger.error("db with path: " + dbPath + " not found in the db-map");
