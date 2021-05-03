@@ -90,6 +90,7 @@ public class SQLiteConnector {
 	 * @param tableName 	the name of the table
 	 * @param columns 		the name of the columns without the id
 	 * @param dataTypes 	the data types of the columns, e.g. CHAR(50) or TEXT NOT NULL
+	 * @param callback 		the callback that is called when the db operation has finsihed
 	 * @throws SQLException 
 	 */
 	public void createTable(String tableName, String[] columns, String[] dataTypes) throws SQLException {
@@ -114,7 +115,6 @@ public class SQLiteConnector {
 	/**
 	 * drops the table with the passed name if it exists
 	 * @param tableName 	the name of the table to drop
-	 * @throws SQLException 
 	 */
 	public void dropTable(String tableName) throws SQLException {
 		String sql = "DROP TABLE IF EXISTS " + tableName;
@@ -127,7 +127,6 @@ public class SQLiteConnector {
 	 * @param tableName 	the name of the table
 	 * @param columns 		the columns of the new row
 	 * @param values 		the values of the new row
-	 * @return 			
 	 * @throws SQLException 
 	 */
 	public void insertRow(String tableName, String[] columns, Object[] values) throws SQLException {
@@ -163,10 +162,9 @@ public class SQLiteConnector {
 	 * loads all rows with all columns from the table
 	 * @param tableName 	the name of the table
 	 * @param callback 		the callback that is called when the result is here
-	 * @return 				the result set of the query
 	 * @throws SQLException 
 	 */
-	public void selectAll(String tableName, QueryCallback callback) throws SQLException {
+	public void selectAll(String tableName, ResultQueryCallback callback) throws SQLException {
 		selectAll(tableName, null, callback);
 	}
 
@@ -176,10 +174,9 @@ public class SQLiteConnector {
 	 * @param tableName 	the name of the table
 	 * @param condition 	the query condition. e.g. salary<20000 can be null if it should be omitted
 	 * @param callback 		the callback that is called when the result is here
-	 * @return 				the result set of the query
 	 * @throws SQLException 
 	 */
-	public void selectAll(String tableName, String condition, QueryCallback callback) throws SQLException {
+	public void selectAll(String tableName, String condition, ResultQueryCallback callback) throws SQLException {
 		// create the sql
 		StringBuilder sb = new StringBuilder();
 		sb.append("SELECT * FROM ").append(tableName);
@@ -200,10 +197,9 @@ public class SQLiteConnector {
 	 * @param tableName 	the name of the table
 	 * @param columns 		the name of the columns to load from the db
 	 * @param callback 		the callback that is called when the result is here
-	 * @return 				the result set of the query
 	 * @throws SQLException 
 	 */
-	public void select(String tableName, String[] columns, QueryCallback callback) throws SQLException {
+	public void select(String tableName, String[] columns, ResultQueryCallback callback) throws SQLException {
 		select(tableName, columns, null, callback);
 	}
 
@@ -215,10 +211,9 @@ public class SQLiteConnector {
 	 * @param columns 		the name of the columns to load from the db
 	 * @param condition 	the query condition. e.g. salary<20000
 	 * @param callback 		the callback that is called when the result is here
-	 * @return 				the result set of the query
 	 * @throws SQLException 
 	 */
-	public void select(String tableName, String[] columns, String condition, QueryCallback callback) throws SQLException {
+	public void select(String tableName, String[] columns, String condition, ResultQueryCallback callback) throws SQLException {
 		// create the sql
 		StringBuilder sb = new StringBuilder();
 		sb.append("SELECT ");
@@ -245,10 +240,9 @@ public class SQLiteConnector {
 	 * @param tableName 	the name of the table
 	 * @param filter 		the selection filter, i.e. SELECT filter FROM ... 
 	 * @param callback 		the callback that is called when the result is here
-	 * @return 				the result set of the query
 	 * @throws SQLException 
 	 */
-	public void select(String tableName, String filter, QueryCallback callback) throws SQLException {
+	public void select(String tableName, String filter, ResultQueryCallback callback) throws SQLException {
 		select(tableName, filter, null, callback);
 	}
 
@@ -259,11 +253,10 @@ public class SQLiteConnector {
 	 * @param tableName 	the name of the table
 	 * @param filter 		the selection filter, i.e. SELECT filter FROM ...
 	 * @param condition 	the query condition. e.g. salary<20000
-	 * @param callback 		the callback that is called when the result is here
-	 * @return 				the result set of the query
+	 * @param callback 		the callback that is called when the result is here		the result set of the query
 	 * @throws SQLException 
 	 */
-	public void select(String tableName, String filter, String condition, QueryCallback callback) throws SQLException {
+	public void select(String tableName, String filter, String condition, ResultQueryCallback callback) throws SQLException {
 		// create the sql
 		StringBuilder sb = new StringBuilder();
 		sb.append("SELECT ").append(filter);
@@ -302,7 +295,6 @@ public class SQLiteConnector {
 	 * @param columns 			columns to update
 	 * @param values 			values to update
 	 * @param condition 		the query condition, e.g. weight=63.5 or name='Brian'
-	 * @return
 	 * @throws SQLException 
 	 */
 	public void update(String tableName, String[] columns, Object[] values, String condition) throws SQLException {
@@ -352,29 +344,30 @@ public class SQLiteConnector {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/**
 	 * executes an update operation, usually used for insert, create, update
-	 * @param sql 		the sql string that is executed
+	 * @param sql 			the sql string that is executed
 	 * @throws SQLException 
 	 */
 	public void executeUpdate(String sql) throws SQLException {
 		logger.trace("executed the update-sql: " + sql);
+
 		Statement stmt = connection.createStatement();
 		stmt.executeUpdate(sql);
 		stmt.close();
-
 	}
 
 
 	/**
 	 * executes an query operation, usually used for select
 	 * @param sql 			the sql string that is executed
-	 * @param callback 		the callback that is called when the result is here
+	 * @param callback 		the callback that is called when the db operation has finsihed
 	 * @throws SQLException 
 	 */
-	public void executeQuery(String sql, QueryCallback callback) throws SQLException {
+	public void executeQuery(String sql, ResultQueryCallback callback) throws SQLException {
 		logger.trace("executed the query-sql: " + sql);
+		
 		Statement stmt = connection.createStatement();
 		ResultSet rs = stmt.executeQuery(sql);
-		callback.processResult(rs);
+		callback.onFinish(rs);		
 		stmt.close();
 	}
 }

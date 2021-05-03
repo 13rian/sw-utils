@@ -178,7 +178,6 @@ public class SQLiteTest extends BaseTest {
 	}
 
 
-
 	@AfterAll
 	public void dropTestCollection() throws IOException {
 		testManager.closeAndDeleteDbFile();

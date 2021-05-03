@@ -77,7 +77,6 @@ public class SQLiteDBHandler {
 	 * performs a read operation on one db
 	 * @param dbPath 		 	the path of the db file
 	 * @param dbOperation 	 	the callback that defines the read operation
-	 * @throws SQLException 
 	 */
 	public void readOperation(String dbPath, DBOperation dbOperation) throws SQLException {
 		SQLiteConnector sqlHandler = dbMap.get(dbPath);
@@ -92,7 +91,6 @@ public class SQLiteDBHandler {
 	 * performs a write operation on the db, only one thread at a time is allowed to write to the same db
 	 * @param dbPath 			the path of the db file
 	 * @param dbOperation 		the callback that defines the read operation
-	 * @throws SQLException 
 	 */
 	public void writeOperation(String dbPath, DBOperation dbOperation) throws SQLException {
 		SQLiteConnector sqlHandler = dbMap.get(dbPath);
