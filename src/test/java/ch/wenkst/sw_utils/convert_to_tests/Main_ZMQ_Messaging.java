@@ -19,12 +19,6 @@ import ch.wenkst.sw_utils.messaging.zero_mq.worker.WorkerConsumerZMQ;
 import ch.wenkst.sw_utils.messaging.zero_mq.worker.WorkerProducerZMQ;
 
 
-/**
- * start on the smgw:
- * 
- * /JRE_SMGW/bin/java -jar smgw_messaging.jar
- * 
- */
 public class Main_ZMQ_Messaging {
 	static {
 		// set the system property for the logger config path
@@ -80,7 +74,6 @@ public class Main_ZMQ_Messaging {
 		
 		// create the client, the message can be sent before the server is started
 		ClientProducerZMQ client = new ClientProducerZMQ("localhost", 7000, "tcp") {
-			
 			@Override
 			protected void onReceivedMessage(byte[] msgBytes) {
 				logger.info("received message form the server: " + new String(msgBytes, StandardCharsets.UTF_8));				
@@ -92,7 +85,6 @@ public class Main_ZMQ_Messaging {
 		
 		// create the server
 		ServerConsumerZMQ server = new ServerConsumerZMQ("localhost", 7000, "tcp") {
-			
 			@Override
 			protected void onReceivedMessage(byte[] msgBytes) {
 				// received message form the client

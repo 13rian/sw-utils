@@ -99,6 +99,36 @@ public class SSLContextGenerator {
 	}
 	
 	
+	/**
+	 * sets up the ssl context which can be used for a client with no certificate
+	 * @param keyStorePassword	keyStore password (must be the same as chosen to create the certificate)
+	 * @param trustedCerts		a list of trusted certificates, can be null to trust all
+	 * @param protocol 			the used tls protocol
+	 * @return	 				the SSLContext
+	 * @throws NoSuchProviderException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws IOException 
+	 * @throws CertificateException 
+	 * @throws KeyStoreException 
+	 * @throws UnrecoverableKeyException 
+	 * @throws KeyManagementException 
+	 */
+	public static SSLContext createSSLContext(
+			String keyStorePassword,
+			List<Certificate> trustedCerts,
+			String protocol)
+					throws NoSuchAlgorithmException, NoSuchProviderException, KeyStoreException, CertificateException, 
+					IOException, UnrecoverableKeyException, KeyManagementException {
+
+		SSLContext sslContext = sslContextInstance(protocol);
+		KeyStore keyStore = emptyKeyStore(keyStorePassword);
+		KeyManagerFactory kmf = keyManagerFactoryInstance(keyStore, keyStorePassword);
+		TrustManager[] trustManagers = createTrustManagers(trustedCerts);
+		sslContext.init(kmf.getKeyManagers(), trustManagers, new SecureRandom());
+		return sslContext;
+	}
+	
+	
 	private static SSLContext sslContextInstance(String protocol) throws NoSuchAlgorithmException, NoSuchProviderException {
 		if (CryptoProvider.bcjsseProviderRegistered()) {
 			return SSLContext.getInstance(protocol, SecurityConstants.BCJSSE);
@@ -126,6 +156,14 @@ public class SSLContextGenerator {
 
 		Certificate[] chain = new Certificate[] { cert, caCert };      
 		keyStore.setKeyEntry("own-private-key", privateKey, keyStorePassword.toCharArray(), chain);
+		return keyStore;
+	}
+	
+	
+	private static KeyStore emptyKeyStore(String keyStorePassword)
+			throws KeyStoreException, NoSuchProviderException, NoSuchAlgorithmException, CertificateException, IOException {
+		KeyStore keyStore = SecurityUtils.keyStoreInstance();
+		keyStore.load(null); 
 		return keyStore;
 	}
 	
